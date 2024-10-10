@@ -9,6 +9,10 @@ api:
     - route: "api/customer"
       method: get
       actionId: get_customer
+    
+    - route: "api/customer"
+      method: get2
+      actionId: get_customer
 
 actions:
   - id: get_customer
