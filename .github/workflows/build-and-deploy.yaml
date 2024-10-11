@@ -1,0 +1,41 @@
+name: Build and Push Docker Image with Git Tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+    - name: Extract Git tag version
+      id: extract_tag
+      run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+
+    - name: Build the Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gowrench:${{ steps.extract_tag.outputs.tag }} .
+
+    - name: Push the Docker image
+      run: |
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/gowrench:${{ steps.extract_tag.outputs.tag }}
+
+    - name: Tag the image as latest
+      run: |
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/gowrench:${{ steps.extract_tag.outputs.tag }} ${{ secrets.DOCKERHUB_USERNAME }}/gowrench:latest
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/gowrench:latest
