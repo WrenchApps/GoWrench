@@ -2,25 +2,16 @@ package api_settings
 
 import (
 	"fmt"
+	"wrench/app/manifest/types"
 	"wrench/app/manifest/validation"
 )
 
 type EndpointSettings struct {
-	Route        string     `yaml:"route"`
-	Method       HttpMethod `yaml:"method"`
-	ActionID     string     `yaml:"actionId"`
-	FlowActionID string     `yaml:"flowActionId"`
+	Route        string           `yaml:"route"`
+	Method       types.HttpMethod `yaml:"method"`
+	ActionID     string           `yaml:"actionId"`
+	FlowActionID string           `yaml:"flowActionId"`
 }
-
-type HttpMethod string
-
-const (
-	HttpMethodGet    HttpMethod = "get"
-	HttpMethodPost   HttpMethod = "post"
-	HttpMethodPut    HttpMethod = "put"
-	HttpMethodPatch  HttpMethod = "patch"
-	HttpMethodDelete HttpMethod = "delete"
-)
 
 func (setting EndpointSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
@@ -30,15 +21,20 @@ func (setting EndpointSettings) Valid() validation.ValidateResult {
 		result.AddError(msg)
 	}
 
+	if setting.Route[0] != '/' {
+		var msg = fmt.Sprintf("api.endpoints[%s].route should start with '/' ex: /api/hello", setting.ActionID)
+		result.AddError(msg)
+	}
+
 	if len(setting.Method) == 0 {
 		var msg = fmt.Sprintf("api.endpoints[%s].method is required", setting.ActionID)
 		result.AddError(msg)
 	} else {
-		if (setting.Method == HttpMethodGet ||
-			setting.Method == HttpMethodPost ||
-			setting.Method == HttpMethodPut ||
-			setting.Method == HttpMethodPatch ||
-			setting.Method == HttpMethodDelete) == false {
+		if (setting.Method == types.HttpMethodGet ||
+			setting.Method == types.HttpMethodPost ||
+			setting.Method == types.HttpMethodPut ||
+			setting.Method == types.HttpMethodPatch ||
+			setting.Method == types.HttpMethodDelete) == false {
 
 			var msg = fmt.Sprintf("api.endpoints[%s].method should contain valid value (get, post, put, patch or delete)", setting.ActionID)
 			result.AddError(msg)
