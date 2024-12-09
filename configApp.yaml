@@ -32,7 +32,7 @@ actions:
     http:
       request:
         method: get
-        url: 'http://localhost:8085/api/mock'
+        url: 'http://localhost:{{PORT}}/api/mock'
         mapRequestHeaders:
           - "mock1"
           - "mock2:change2"
@@ -48,3 +48,6 @@ actions:
           "resp2": "value2"
 
 
+contractMap:
+  id: before_customer
+  
