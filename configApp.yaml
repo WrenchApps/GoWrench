@@ -44,6 +44,12 @@ actions:
       request:
         method: get
         url: 'http://localhost:{{PORT}}/api/mock'
+        do:
+          before:
+            contractMapId: 
+          after:
+            contractMapId: 
+            
         mapRequestHeaders:
           - "mock1"
           - "mock2:change2"
@@ -65,4 +71,13 @@ actions:
         method: get
         tokenCredentialId: auth_client
         url: 'http://localhost:5250/hello'
-  
+
+        
+contract:
+  maps:
+  - id: customer_create
+    properties: 
+    - "name:name2"
+    - "address.district:adress.district2"
+    remove:
+    - "observation"
