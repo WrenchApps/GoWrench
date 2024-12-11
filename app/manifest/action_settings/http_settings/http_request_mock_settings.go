@@ -1,4 +1,4 @@
-package action_settings
+package http_settings
 
 import (
 	"wrench/app/manifest/validation"

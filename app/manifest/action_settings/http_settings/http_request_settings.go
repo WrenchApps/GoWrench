@@ -1,4 +1,4 @@
-package action_settings
+package http_settings
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ type HttpRequestSetting struct {
 	Url               string            `yaml:"url"`
 	MapFixedHeaders   map[string]string `yaml:"mapFixedHeaders"`
 	MapRequestHeaders []string          `yaml:"mapRequestHeaders"`
+	TokenCredentialId string            `yaml:"tokenCredentialId"`
 }
 
 func (setting HttpRequestSetting) Valid() validation.ValidateResult {
@@ -60,6 +61,31 @@ func (setting HttpRequestSetting) Valid() validation.ValidateResult {
 			}
 		}
 	}
+
+	// TODO to validate the TokenCredentialId is causing "import cycle not allowed", this I will see later
+	// if len(setting.TokenCredentialId) > 0 {
+	// 	appSetting := application_settings.ApplicationSettingsStatic
+	// 	credentials := appSetting.TokenCredentials
+
+	// 	if credentials == nil {
+	// 		result.AddError(fmt.Sprintf("actions.http.request.tokenCredentialId %v don't exist in tokenCredentials", setting.TokenCredentialId))
+	// 	} else {
+	// 		var hasTokenCredentialId bool = false
+	// 		for _, credential := range credentials {
+	// 			if setting.TokenCredentialId == credential.Id {
+	// 				hasTokenCredentialId = true
+	// 			}
+
+	// 			if hasTokenCredentialId {
+	// 				break
+	// 			}
+	// 		}
+
+	// 		if hasTokenCredentialId == false {
+	// 			result.AddError(fmt.Sprintf("actions.http.request.tokenCredentialId %v don't exist in tokenCredentials", setting.TokenCredentialId))
+	// 		}
+	// 	}
+	// }
 
 	return result
 }

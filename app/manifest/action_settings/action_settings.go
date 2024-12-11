@@ -2,13 +2,14 @@ package action_settings
 
 import (
 	"fmt"
+	"wrench/app/manifest/action_settings/http_settings"
 	"wrench/app/manifest/validation"
 )
 
 type ActionSettings struct {
-	Id   string       `yaml:"id"`
-	Type ActionType   `yaml:"type"`
-	Http *HttpSetting `yaml:"http"`
+	Id   string                     `yaml:"id"`
+	Type ActionType                 `yaml:"type"`
+	Http *http_settings.HttpSetting `yaml:"http"`
 }
 
 type ActionType string

@@ -41,6 +41,14 @@ func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[strin
 	}
 }
 
+func (httpResponse *HttpClientResponseData) StatusCodeSuccess() bool {
+	if httpResponse.StatusCode <= 399 {
+		return true
+	}
+
+	return false
+}
+
 func (httpClientRequestData *HttpClientRequestData) SetHeader(key string, value string) {
 	if len(key) > 0 {
 		if httpClientRequestData.Headers == nil {

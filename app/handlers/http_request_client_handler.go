@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	client "wrench/app/clients/http"
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
+	"wrench/app/startup/token_credentials"
 )
 
 type HttpRequestClientHandler struct {
@@ -23,6 +25,14 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		request.Url = handler.ActionSettings.Http.Request.Url
 		request.SetHeaders(handler.ActionSettings.Http.Request.MapFixedHeaders)
 		request.SetHeaders(mapHttpRequestHeaders(wrenchContext, handler.ActionSettings.Http.Request.MapRequestHeaders))
+
+		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
+			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
+			if tokenData != nil {
+				bearerToken := fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken)
+				request.SetHeader("Authorization", bearerToken)
+			}
+		}
 
 		response, err := client.HttpClientDo(ctx, request)
 
