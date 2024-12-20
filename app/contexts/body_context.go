@@ -60,11 +60,17 @@ func (bodyContext *BodyContext) ParseBodyToMapObjectArray() []map[string]interfa
 }
 
 func (bodyContext *BodyContext) SetMapObject(jsonMap map[string]interface{}) {
+	if jsonMap == nil {
+		return
+	}
 	jsonArray, _ := json.Marshal(jsonMap)
 	bodyContext.BodyByteArray = jsonArray
 }
 
 func (bodyContext *BodyContext) SetArrayMapObject(arrayJsonMap []map[string]interface{}) {
+	if arrayJsonMap == nil {
+		return
+	}
 	jsonArray, _ := json.Marshal(arrayJsonMap)
 	bodyContext.BodyByteArray = jsonArray
 }
