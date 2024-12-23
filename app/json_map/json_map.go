@@ -9,17 +9,22 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (string, map[string]interface{}) {
-	value := ""
+func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (interface{}, map[string]interface{}) {
+	var value interface{}
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
-
-	for _, property := range propertyNameSplitted {
-		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
+	index := 0
+	for i, property := range propertyNameSplitted {
+		index++
+		valueObject, ok := jsonMapCurrent[property].(map[string]interface{})
 		if ok {
-			jsonMapCurrent = valueTemp
+			jsonMapCurrent = valueObject
+			if i == index {
+				value = jsonMapCurrent
+				break
+			}
 			continue
 		}
 
@@ -37,7 +42,33 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 	return value, jsonMap
 }
 
-func SetValue(jsonMap map[string]interface{}, propertyName string, newValue string) map[string]interface{} {
+func getArrayValue(jsonMap map[string]interface{}, propertyName string) []map[string]interface{} {
+	var value []map[string]interface{}
+
+	jsonMapCurrent := jsonMap
+	propertyNameSplitted := strings.Split(propertyName, ".")
+	index := 0
+	for i, property := range propertyNameSplitted {
+
+		valueObject, ok := jsonMapCurrent[property].(map[string]interface{})
+		if ok {
+			jsonMapCurrent = valueObject
+			continue
+		}
+
+		valueArray, ok := jsonMapCurrent[property].([]map[string]interface{})
+		if ok {
+			if i == index {
+				value = valueArray
+				break
+			}
+		}
+		index++
+	}
+	return value
+}
+
+func SetValue(jsonMap map[string]interface{}, propertyName string, newValue interface{}) map[string]interface{} {
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
@@ -58,7 +89,7 @@ func SetValue(jsonMap map[string]interface{}, propertyName string, newValue stri
 	return jsonMap
 }
 
-func CreateProperty(jsonMap map[string]interface{}, propertyName string, value string) map[string]interface{} {
+func CreateProperty(jsonMap map[string]interface{}, propertyName string, value interface{}) map[string]interface{} {
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
@@ -215,34 +246,101 @@ func getValueWrenchContext(command string, wrenchContext *contexts.WrenchContext
 const bodyContext = "bodyContext."
 
 func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[string]interface{} {
+
 	jsonValueCurrent := jsonMap
-	if parse.WhenEquals != nil {
-		for _, whenEqual := range parse.WhenEquals {
-			if calculatedValue(whenEqual) {
-				whenEqual = strings.ReplaceAll(whenEqual, bodyContext, "")
-				rawWhenEqual := replaceCalculatedValue(whenEqual)
 
-				whenEqualSplitted := strings.Split(rawWhenEqual, ":")
-				propertyNameWithEqualValue := whenEqualSplitted[0]
-				propertyNameWithEqualValueSplitted := strings.Split(propertyNameWithEqualValue, ".")
+	if len(parse.WhenEquals) > 0 {
+		jsonValueCurrent = parseWhenEqualValue(jsonValueCurrent, parse.WhenEquals)
+	} else if len(parse.Operator) > 0 {
+		jsonValueCurrent = parseOperatorValues(jsonValueCurrent, parse.Operator)
+	}
 
-				lenWithEqual := len(propertyNameWithEqualValueSplitted)
+	return jsonValueCurrent
+}
 
-				valueArray := propertyNameWithEqualValueSplitted[:lenWithEqual-1]
+func parseWhenEqualValue(jsonMap map[string]interface{}, whenEqual []string) map[string]interface{} {
+	jsonValueCurrent := jsonMap
 
-				propertyName := strings.Join(valueArray, ".")
-				equalValue := propertyNameWithEqualValueSplitted[lenWithEqual-1] // value to compare
+	for _, whenEqual := range whenEqual {
+		if calculatedValue(whenEqual) {
+			whenEqual = strings.ReplaceAll(whenEqual, bodyContext, "")
+			rawWhenEqual := replaceCalculatedValue(whenEqual)
 
-				parseToValue := whenEqualSplitted[1] // value if equals should be used
+			whenEqualSplitted := strings.Split(rawWhenEqual, ":")
+			propertyNameWithEqualValue := whenEqualSplitted[0]
+			propertyNameWithEqualValueSplitted := strings.Split(propertyNameWithEqualValue, ".")
 
-				valueCurrent, _ := GetValue(jsonMap, propertyName, false)
+			lenWithEqual := len(propertyNameWithEqualValueSplitted)
 
-				if valueCurrent == equalValue {
-					jsonValueCurrent = SetValue(jsonValueCurrent, propertyName, parseToValue)
-				}
+			valueArray := propertyNameWithEqualValueSplitted[:lenWithEqual-1]
+
+			propertyName := strings.Join(valueArray, ".")
+			equalValue := propertyNameWithEqualValueSplitted[lenWithEqual-1] // value to compare
+
+			parseToValue := whenEqualSplitted[1] // value if equals should be used
+
+			valueCurrent, _ := GetValue(jsonMap, propertyName, false)
+
+			if valueCurrent == equalValue {
+				jsonValueCurrent = SetValue(jsonValueCurrent, propertyName, parseToValue)
 			}
 		}
 	}
 
 	return jsonValueCurrent
+}
+
+func parseOperatorValues(jsonMap map[string]interface{}, operator []maps.Operator) map[string]interface{} {
+	jsonValueCurrent := jsonMap
+
+	for _, operatorValue := range operator {
+
+		operatorValueSplitted := strings.Split(string(operatorValue), ".")
+		operatorValue := operatorValueSplitted[0]
+		operatorCommand := operatorValueSplitted[1]
+
+		if calculatedValue(operatorValue) {
+			operatorValue = replaceCalculatedValue(operatorValue)
+
+			if operatorValue == "bodyContext" {
+				if operatorCommand == "to_array" {
+					arrayJsonMap := make([]map[string]interface{}, 1)
+					arrayJsonMap[0] = jsonMap
+
+					jsonMapTemp := map[string]interface{}{
+						"root": arrayJsonMap,
+					}
+					jsonValueCurrent = jsonMapTemp
+				}
+			}
+
+		} else {
+			propertyName := operatorValue
+			value, jsonValueCurrent := GetValue(jsonMap, propertyName, true)
+
+			if operatorCommand == "to_array" {
+				arrayJsonMap := make([]interface{}, 1)
+				arrayJsonMap[0] = value
+				jsonValueCurrent = SetValue(jsonValueCurrent, propertyName, arrayJsonMap)
+			} else if operatorCommand == "get_first" {
+				arrayValue := json_map.Get
+			}
+		}
+	}
+
+	return jsonValueCurrent
+}
+
+func SetObjectRoot(jsonMap map[string]interface{}, propertyName string) map[string]interface{} {
+	value, _ := GetValue(jsonMap, propertyName, false)
+
+	objectValue, isObject := value.(map[string]interface{})
+	if isObject {
+		return objectValue
+	}
+	return nil
+}
+
+func SetArrayRoot(jsonMap map[string]interface{}, propertyName string) []map[string]interface{} {
+	return getArrayValue(jsonMap, propertyName)
 }

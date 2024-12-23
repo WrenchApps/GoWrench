@@ -76,6 +76,16 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 		currentBodyContext = json_map.ParseValues(currentBodyContext, handler.ContractMap.Parse)
 	}
 
+	if len(handler.ContractMap.SetObjectRoot) > 0 {
+		currentBodyContext = json_map.SetObjectRoot(currentBodyContext, handler.ContractMap.SetObjectRoot)
+	}
+
+	if len(handler.ContractMap.SetArrayRoot) > 0 {
+		currentBodyContextArray := json_map.SetArrayRoot(currentBodyContext, handler.ContractMap.SetArrayRoot)
+		bodyContext.SetArrayMapObject(currentBodyContextArray)
+		currentBodyContext = nil
+	}
+
 	return currentBodyContext
 }
 
@@ -95,6 +105,12 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 			currentBodyContext = json_map.DuplicatePropertiesValue(currentBodyContext, handler.ContractMap.Duplicate)
 		} else if action == "parse" {
 			currentBodyContext = json_map.ParseValues(currentBodyContext, handler.ContractMap.Parse)
+		} else if action == "setObjectRoot" {
+			currentBodyContext = json_map.SetObjectRoot(currentBodyContext, handler.ContractMap.SetObjectRoot)
+		} else if action == "setArrayRoot" {
+			currentBodyContextArray := json_map.SetArrayRoot(currentBodyContext, handler.ContractMap.SetArrayRoot)
+			bodyContext.SetArrayMapObject(currentBodyContextArray)
+			currentBodyContext = nil
 		}
 	}
 
