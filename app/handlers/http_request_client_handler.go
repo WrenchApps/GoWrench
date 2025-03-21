@@ -17,15 +17,15 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if wrenchContext.HasError == false {
+	if !wrenchContext.HasError {
 
 		request := new(client.HttpClientRequestData)
 		request.Body = bodyContext.BodyByteArray
-		request.Method = string(handler.ActionSettings.Http.Request.Method)
-		request.Url = handler.ActionSettings.Http.Request.Url
+		request.Method = handler.getMethod(wrenchContext)
+		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
 		request.SetHeaders(handler.ActionSettings.Http.Request.MapFixedHeaders)
-		request.SetHeaders(mapHttpRequestHeaders(wrenchContext, handler.ActionSettings.Http.Request.MapRequestHeaders))
+		request.SetHeaders(mapHttpRequestHeaders(handler.ActionSettings.Http.Request.MapRequestHeaders))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
@@ -58,11 +58,33 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	}
 }
 
-func (httpRequestClientHandler *HttpRequestClientHandler) SetNext(handler Handler) {
-	httpRequestClientHandler.Next = handler
+func (handler *HttpRequestClientHandler) SetNext(next Handler) {
+	handler.Next = next
 }
 
-func mapHttpRequestHeaders(wrenchContext *contexts.WrenchContext, mapRequestHeader []string) map[string]string {
+func (handler *HttpRequestClientHandler) getMethod(wrenchContext *contexts.WrenchContext) string {
+
+	if !wrenchContext.Endpoint.IsProxy {
+		return string(handler.ActionSettings.Http.Request.Method)
+	} else {
+		return wrenchContext.Request.Method
+	}
+}
+
+func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchContext) string {
+
+	if !wrenchContext.Endpoint.IsProxy {
+		return handler.ActionSettings.Http.Request.Url
+	} else {
+		prefix := wrenchContext.Endpoint.Route
+		routeTriggered := wrenchContext.Request.RequestURI
+
+		routeWithoutPrefix := strings.ReplaceAll(routeTriggered, prefix, "")
+		return handler.ActionSettings.Http.Request.Url + routeWithoutPrefix
+	}
+}
+
+func mapHttpRequestHeaders(mapRequestHeader []string) map[string]string {
 	if mapRequestHeader == nil {
 		return nil
 	}

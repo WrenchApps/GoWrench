@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	action_settings "wrench/app/manifest/action_settings"
 	settings "wrench/app/manifest/application_settings"
 )
@@ -22,18 +21,11 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		return
 	}
 
-	for _, endpoint := range settings.Api.Endpoints {
+	for _, action := range settings.Actions {
 
 		var firstHandler = new(HttpFirstHandler)
 		var currentHandler Handler
 		currentHandler = firstHandler
-
-		var action, err = settings.GetActionById(endpoint.ActionID)
-
-		if err != nil {
-			log.Print(err)
-			continue
-		}
 
 		if action.Trigger != nil && action.Trigger.Before != nil {
 			httpContractMapHandler := new(HttpContractMapHandler)
@@ -47,28 +39,28 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 
 		if action.Type == action_settings.ActionTypeHttpRequest {
 			httpRequestHadler := new(HttpRequestClientHandler)
-			httpRequestHadler.ActionSettings = action
+			httpRequestHadler.ActionSettings = &action
 			currentHandler.SetNext(httpRequestHadler)
 			currentHandler = httpRequestHadler
 		}
 
 		if action.Type == action_settings.ActionTypeHttpRequestMock {
 			httpRequestMockHadler := new(HttpRequestClientMockHandler)
-			httpRequestMockHadler.ActionSettings = action
+			httpRequestMockHadler.ActionSettings = &action
 			currentHandler.SetNext(httpRequestMockHadler)
 			currentHandler = httpRequestMockHadler
 		}
 
 		if action.Type == action_settings.ActionTypeSnsPublish {
 			snsPublishHandler := new(SnsPublishHandler)
-			snsPublishHandler.ActionSettings = action
+			snsPublishHandler.ActionSettings = &action
 			currentHandler.SetNext(snsPublishHandler)
 			currentHandler = snsPublishHandler
 		}
 
 		if action.Type == action_settings.ActionTypeFileReader {
 			fileReaderHandler := new(FileReaderHandler)
-			fileReaderHandler.ActionSettings = action
+			fileReaderHandler.ActionSettings = &action
 			currentHandler.SetNext(fileReaderHandler)
 			currentHandler = fileReaderHandler
 		}
@@ -85,10 +77,10 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 
 		currentHandler.SetNext(new(HttpLastHandler))
 
-		chain.MapHandle[endpoint.Route] = firstHandler
+		chain.MapHandle[action.Id] = firstHandler
 	}
 }
 
-func (chain *Chain) GetByRoute(route string) Handler {
-	return chain.MapHandle[route]
+func (chain *Chain) GetByActionId(actionId string) Handler {
+	return chain.MapHandle[actionId]
 }

@@ -1,0 +1,19 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: '/jsons'
+      isProxy: true
+      actionId: action_proxy
+
+actions:
+  - id: action_proxy
+    type: httpRequest
+    http:
+      request:
+        #insecure: true
+        url: 'https://acquirer-jsons.snb.55tech.com.br'

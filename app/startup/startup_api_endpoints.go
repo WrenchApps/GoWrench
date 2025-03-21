@@ -28,20 +28,32 @@ func LoadApiEndpoint() *mux.Router {
 	initialPage.Append("<h2>Endpoints</h2>")
 
 	for _, endpoint := range endpoints {
-		method := strings.ToUpper(string(endpoint.Method))
-		route := endpoint.Route
-
+		shouldConfigureAuthorization := endpoint.ShouldConfigureAuthorization(hasAuthorization)
 		var delegate = new(handler.RequestDelegate)
 		delegate.SetEndpoint(&endpoint)
-		shouldConfigureAuthorization := endpoint.ShouldConfigureAuthorization(hasAuthorization)
 
-		if shouldConfigureAuthorization {
-			r.Handle(route, authMiddleware(app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler))).Methods(method)
+		if !endpoint.IsProxy {
+			method := strings.ToUpper(string(endpoint.Method))
+			route := endpoint.Route
+
+			if shouldConfigureAuthorization {
+				r.Handle(route, authMiddleware(app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler))).Methods(method)
+			} else {
+				r.HandleFunc(route, delegate.HttpHandler).Methods(method)
+			}
+			initialPage.Append("Route: <i>" + route + "</i> Method: <i>" + method + "</i> <b>Not is proxy</b>")
 		} else {
-			r.HandleFunc(route, delegate.HttpHandler).Methods(method)
-		}
+			initialPage.Append("Route: <i>" + endpoint.Route + "</i> <b> IS PROXY</b>")
+			if endpoint.Route == "/" {
+				endpoint.Route = ""
+			}
 
-		initialPage.Append("Route: <i>" + route + "</i> Method: <i>" + method + "</i>")
+			if shouldConfigureAuthorization {
+				r.Handle(endpoint.Route+"/{path:.*}", authMiddleware(app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler)))
+			} else {
+				r.HandleFunc(endpoint.Route+"/{path:.*}", delegate.HttpHandler)
+			}
+		}
 	}
 
 	initialPage.Append("</br></br>")
@@ -71,7 +83,7 @@ func authMiddleware(authorizationSettings *api_settings.AuthorizationSettings, e
 			tokenIsValid := auth.JwksValidationAuthentication(tokenString, authorizationSettings)
 			if tokenIsValid {
 				tokenIsAuthorized := auth.JwksValidationAuthorization(tokenString, endpoint.Roles, endpoint.Scopes, endpoint.Claims)
-				if tokenIsAuthorized == false {
+				if !tokenIsAuthorized {
 					w.WriteHeader(http.StatusForbidden)
 					w.Write([]byte("Forbidden"))
 					return

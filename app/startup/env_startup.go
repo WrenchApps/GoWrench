@@ -44,19 +44,20 @@ func EnvInterpolation(value []byte) []byte {
 
 func setEnvFileToSystemEnv(pathEnvFile string) {
 	file, err := os.Open(pathEnvFile)
-	defer file.Close()
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Print(fmt.Sprintf("Env file %s not found ", pathEnvFile))
+			log.Printf("Env file %s not found ", pathEnvFile)
 			return
 		} else {
 			log.Fatal(err)
 		}
 	}
+
+	defer file.Close()
 	r := bufio.NewReader(file)
 
-	log.Print(fmt.Sprintf("Loading file %s", pathEnvFile))
+	log.Printf("Loading file %s", pathEnvFile)
 	for {
 		line, _, err := r.ReadLine()
 		if err != nil && fmt.Sprint(err) != "EOF" {
@@ -78,5 +79,5 @@ func setEnvFileToSystemEnv(pathEnvFile string) {
 			break
 		}
 	}
-	log.Print(fmt.Sprintf("Done file %s", pathEnvFile))
+	log.Printf("Done file %s", pathEnvFile)
 }

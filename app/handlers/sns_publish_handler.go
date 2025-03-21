@@ -36,7 +36,7 @@ func (snsActions *SnsActions) Load() {
 }
 
 func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
-	if wrenchContext.HasError == false {
+	if !wrenchContext.HasError {
 		settings := handler.ActionSettings.SNS
 		message := bodyContext.GetBodyString()
 		actor := new(SnsActions)

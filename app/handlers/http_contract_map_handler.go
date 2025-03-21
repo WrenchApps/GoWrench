@@ -14,7 +14,7 @@ type HttpContractMapHandler struct {
 
 func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if wrenchContext.HasError == false {
+	if !wrenchContext.HasError {
 		isArray := bodyContext.IsArray()
 
 		if isArray {

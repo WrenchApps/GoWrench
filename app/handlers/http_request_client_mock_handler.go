@@ -13,8 +13,8 @@ type HttpRequestClientMockHandler struct {
 
 func (handler *HttpRequestClientMockHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if wrenchContext.HasError == false {
-		if handler.ActionSettings.Http.Mock.MirrorBody == false {
+	if !wrenchContext.HasError {
+		if !handler.ActionSettings.Http.Mock.MirrorBody {
 			bodyContext.BodyByteArray = []byte(handler.ActionSettings.Http.Mock.Body)
 		}
 		bodyContext.ContentType = handler.ActionSettings.Http.Mock.ContentType

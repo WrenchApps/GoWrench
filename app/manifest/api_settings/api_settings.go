@@ -21,7 +21,7 @@ func (setting ApiSettings) GetEndpointByRoute(route string) (*EndpointSettings, 
 		}
 	}
 
-	return nil, errors.New("Endpoint not found")
+	return nil, errors.New("endpoint not found")
 }
 
 func (setting ApiSettings) Valid() validation.ValidateResult {

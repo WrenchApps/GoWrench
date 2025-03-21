@@ -34,6 +34,16 @@ func (settings ApplicationSettings) GetActionById(actionId string) (*action_sett
 	return nil, errors.New("action not found")
 }
 
+func (settings ApplicationSettings) GetEndpointByActionId(actionId string) (*api_settings.EndpointSettings, error) {
+	for _, endpoint := range settings.Api.Endpoints {
+		if endpoint.ActionID == actionId {
+			return &endpoint, nil
+		}
+	}
+
+	return nil, errors.New("endpoint not found")
+}
+
 func (settings ApplicationSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
@@ -44,11 +54,13 @@ func (settings ApplicationSettings) Valid() validation.ValidateResult {
 	if settings.Actions != nil {
 		for _, validable := range settings.Actions {
 			result.AppendValidable(validable)
+			result.Append(actionValidation(validable))
 		}
 	}
 
 	if settings.Api != nil {
 		result.AppendValidable(settings.Api)
+		result.Append(apiEndpointsValidation())
 	}
 
 	if settings.TokenCredentials != nil {
