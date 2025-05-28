@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats-container
+        image: nats:latest
+        args: ["-js"]
+        ports:
+        - containerPort: 4222
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-service
+spec:
+  selector:
+    app: nats
+  ports:
+    - protocol: TCP
+      port: 4222
+      targetPort: 4222
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-config
+data:
+  app-config.yaml: |
+    version: 1
+
+    service:
+      name: "{{SERVICE_NAME}}"
+      version: 1.0.0
+
+    connections:
+      nats:
+      - id: nats_default
+        serverAddress: "{{NATS_SERVER_ADDRESS}}"
+
+    api:
+      endpoints:
+        - route: '/api/push_message'
+          method: post
+          actionId: action_publish_nats
+
+    actions:
+      - id: action_publish_nats
+        type: natsPublish
+        nats:
+          connectionId: nats_default
+          isStream: true
+          subjectName: 'events.test.publish'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp-container
+        image: wrenchapps/wrench
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/myapp/config
+          readOnly: true
+        env:
+        - name: PATH_FILE_CONFIG
+          value: /etc/myapp/config/app-config.yaml
+        - name: SERVICE_NAME
+          value: wrench-test
+        - name: NATS_SERVER_ADDRESS
+          value: nats://nats-service:4222
+        - name: PORT
+          value: "9092"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: myapp-config
