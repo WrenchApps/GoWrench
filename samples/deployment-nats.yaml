@@ -59,7 +59,7 @@ data:
         type: natsPublish
         nats:
           connectionId: nats_default
-          isStream: true
+          isStream: false
           subjectName: 'events.test.publish'
 ---
 apiVersion: apps/v1
