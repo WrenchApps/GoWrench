@@ -17,3 +17,5 @@ docker run -d -p 8080:8080 --name gowrench wrenchapps/gowrench:latest
 ## Contributing
 
 ## License
+This project is licensed under the Apache License 2.0.  
+See the [LICENSE](../LICENSE) file for more information.

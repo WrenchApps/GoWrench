@@ -1,0 +1,27 @@
+name: License Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for LICENSE file changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            license:
+              - 'LICENSE'
+
+      - name: Fail if LICENSE changed without legal-approved label
+        if: steps.changes.outputs.license == 'true' && !contains(github.event.pull_request.labels.*.name, 'legal-approved')
+        run: |
+          echo "🚫 LICENSE file was changed but this PR is missing the 'legal-approved' label."
+          exit 1
