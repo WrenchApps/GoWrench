@@ -1,0 +1,31 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: /api/hmac_test
+      method: post
+      flowActionId: 
+        - func_hash
+        - call_client
+
+actions:
+  - id: func_hash
+    type: funcHash
+    preserveCurrentBody: true
+    hash:
+      alg: SHA-512  #SHA-1, MD5 ...
+      key: '{{KEY_SECRET_VALUE}}'
+
+  - id: call_client
+    type: httpRequest
+    http:
+      request:
+        headers: 
+          "hmac": "{{wrenchContext.actions.func_hash}}"
+        method: put
+        url: 'https://webhook.site/e08a967f-59ba-463a-8fe2-cf173b493f34'
+

@@ -3,6 +3,7 @@ package action_settings
 import (
 	"fmt"
 	"wrench/app/manifest/action_settings/file_settings"
+	"wrench/app/manifest/action_settings/func_settings"
 	"wrench/app/manifest/action_settings/http_settings"
 	"wrench/app/manifest/action_settings/nats_settings"
 	"wrench/app/manifest/action_settings/sns_settings"
@@ -11,13 +12,15 @@ import (
 )
 
 type ActionSettings struct {
-	Id      string                           `yaml:"id"`
-	Type    ActionType                       `yaml:"type"`
-	Http    *http_settings.HttpSetting       `yaml:"http"`
-	SNS     *sns_settings.SnsSettings        `yaml:"sns"`
-	Trigger *trigger_settings.TriggerSetting `yaml:"trigger"`
-	File    *file_settings.FileSettings      `yaml:"file"`
-	Nats    *nats_settings.NatsSettings      `yaml:"nats"`
+	Id                  string                           `yaml:"id"`
+	Type                ActionType                       `yaml:"type"`
+	PreserveCurrentBody bool                             `yaml:"preserveCurrentBody"`
+	Http                *http_settings.HttpSetting       `yaml:"http"`
+	SNS                 *sns_settings.SnsSettings        `yaml:"sns"`
+	Trigger             *trigger_settings.TriggerSetting `yaml:"trigger"`
+	File                *file_settings.FileSettings      `yaml:"file"`
+	Nats                *nats_settings.NatsSettings      `yaml:"nats"`
+	Hash                *func_settings.FuncHashSettings  `yaml:"hash"`
 }
 
 type ActionType string
@@ -28,6 +31,7 @@ const (
 	ActionTypeSnsPublish      ActionType = "snsPublish"
 	ActionTypeFileReader      ActionType = "fileReader"
 	ActionTypeNatsPublish     ActionType = "natsPublish"
+	ActionTypeFuncHash        ActionType = "funcHash"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -45,7 +49,8 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeHttpRequestMock ||
 			setting.Type == ActionTypeSnsPublish ||
 			setting.Type == ActionTypeFileReader ||
-			setting.Type == ActionTypeNatsPublish) == false {
+			setting.Type == ActionTypeNatsPublish ||
+			setting.Type == ActionTypeFuncHash) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)
 			result.AddError(msg)
@@ -74,6 +79,10 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 
 	if setting.Nats != nil {
 		result.AppendValidable(setting.Nats)
+	}
+
+	if setting.Hash != nil {
+		result.AppendValidable(setting.Hash)
 	}
 
 	return result

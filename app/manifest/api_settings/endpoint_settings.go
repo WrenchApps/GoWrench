@@ -10,7 +10,7 @@ type EndpointSettings struct {
 	Route           string           `yaml:"route"`
 	Method          types.HttpMethod `yaml:"method"`
 	ActionID        string           `yaml:"actionId"`
-	FlowActionID    string           `yaml:"flowActionId"`
+	FlowActionID    []string         `yaml:"flowActionId"`
 	EnableAnonymous bool             `yaml:"enableAnonymous"`
 	Roles           []string         `yaml:"roles"`
 	Scopes          []string         `yaml:"scopes"`
