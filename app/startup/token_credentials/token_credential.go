@@ -143,18 +143,31 @@ func basicCredentials(setting *credential.TokenCredentialSetting) (*auth.TokenDa
 
 func customAuthentication(setting *credential.TokenCredentialSetting) (*auth.TokenData, error) {
 	request := new(client.HttpClientRequestData)
-
-	if len(setting.Custom.RequestBody) > 0 {
-		request.Body = getBodyCustomAuthentication(setting.Custom.RequestBody)
-	}
-	request.Method = string(setting.Custom.Method)
-	request.Url = setting.AuthEndpoint
-
+	isFormUrlencoded := false
 	if len(setting.Custom.RequestHeaders) > 0 {
 		for key, value := range setting.Custom.RequestHeaders {
 			request.SetHeader(key, value)
 		}
+		value := setting.Custom.RequestHeaders["Content-Type"]
+		isFormUrlencoded = value == "application/x-www-form-urlencoded"
 	}
+
+	if isFormUrlencoded {
+		data := url.Values{}
+
+		for prop, value := range setting.Custom.RequestBody {
+			data.Set(prop, value)
+		}
+
+		request.Body = []byte(data.Encode())
+	} else {
+		if len(setting.Custom.RequestBody) > 0 {
+			request.Body = getBodyCustomAuthentication(setting.Custom.RequestBody)
+		}
+	}
+
+	request.Method = string(setting.Custom.Method)
+	request.Url = setting.AuthEndpoint
 
 	ctx := context.Background()
 	response, err := client.HttpClientDo(ctx, request)
@@ -174,7 +187,8 @@ func customAuthentication(setting *credential.TokenCredentialSetting) (*auth.Tok
 
 			tokenData.LoadCustomToken(setting.GetForceReloadTimeSecondsValue(),
 				setting.Custom.Configs.AccessTokenPropertyName,
-				setting.Custom.Configs.TokenType)
+				setting.Custom.Configs.TokenType,
+				setting.Custom.Configs.HeaderName)
 
 			return tokenData, nil
 		}

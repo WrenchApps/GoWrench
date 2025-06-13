@@ -21,6 +21,7 @@ type TokenData struct {
 
 	ForceReloadSeconds int64
 	IsNotJwt           bool
+	HeaderName         string
 }
 
 func (token *TokenData) LoadJwtPayload() {
@@ -56,7 +57,7 @@ func (token *TokenData) IsExpired(lessTimeMinutes float64, isOpaque bool) bool {
 	}
 }
 
-func (token *TokenData) LoadCustomToken(forceReloadSeconds int64, accessTokenPropertyName string, tokenType string) {
+func (token *TokenData) LoadCustomToken(forceReloadSeconds int64, accessTokenPropertyName string, tokenType string, headerName string) {
 	token.IsNotJwt = true
 	token.ForceReloadSeconds = forceReloadSeconds
 	var now = time.Now().UTC().Add(time.Second * time.Duration(token.ForceReloadSeconds))
@@ -64,6 +65,7 @@ func (token *TokenData) LoadCustomToken(forceReloadSeconds int64, accessTokenPro
 	accessToken, _ := json_map.GetValue(token.CustomToken, accessTokenPropertyName, false)
 	token.AccessToken = accessToken
 	token.TokenType = tokenType
+	token.HeaderName = headerName
 }
 
 func ConvertJwtPayloadBase64ToJwtPaylodData(jwtPayload string) map[string]interface{} {

@@ -1,0 +1,52 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+tokenCredentials:
+  - id: custom_client
+    type: custom_authentication
+    authEndpoint: https://cat.api.firstdata.com/sba/token/
+    forceReload: 10m
+    custom:
+      method: post
+      requestHeaders:
+        Content-Type: application/x-www-form-urlencoded
+      requestBody:
+        grant_type: "password"
+        client_id: "bwa"
+        username: "int_afinz_apis"
+        password: "vK8FIxggtB28UHW4U9VG95d@"
+      configs:
+        accessTokenPropertyName: "access_token"
+        tokenType: ""
+        headerName: "auth"
+
+api:
+  endpoints:
+    - route: /api/hmac_test
+      method: post
+      flowActionId: 
+        - func_hash
+        - call_client
+
+actions:
+  - id: func_hash
+    type: funcHash
+    preserveCurrentBody: true
+    hash:
+      alg: SHA-512  #SHA-1, MD5 ...
+      key: '{{KEY_SECRET_VALUE}}'
+
+  - id: call_client
+    type: httpRequest
+    http:
+      request:
+        headers: 
+          "Message-Signature": "{{bodyContext.actions.func_hash}}"
+          "Api-Key": "X0GW3QGOYFn4r7DHcVC8KuatUnNs6MGB"
+        method: post
+        tokenCredentialId: custom_client
+        url: 'https://cat.api.firstdata.com/bwa/wsm/prepayments/consultations/consultPrepayment'
+

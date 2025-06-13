@@ -29,8 +29,12 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
 			if tokenData != nil {
-				bearerToken := fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken)
-				request.SetHeader("Authorization", bearerToken)
+				bearerToken := strings.Trim(fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken), " ")
+				if len(tokenData.HeaderName) == 0 {
+					request.SetHeader("Authorization", bearerToken)
+				} else {
+					request.SetHeader(tokenData.HeaderName, bearerToken)
+				}
 			}
 		}
 
