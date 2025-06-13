@@ -8,6 +8,7 @@ type FuncHashAlg string
 
 const (
 	FuncHashAlgSHA512 FuncHashAlg = "SHA-512"
+	FuncHashAlgSHA256 FuncHashAlg = "SHA-256"
 	FuncHashAlgSHA1   FuncHashAlg = "SHA-1"
 	FuncHashAlgMD5    FuncHashAlg = "MD5"
 )
@@ -28,6 +29,10 @@ func (setting FuncHashSettings) Valid() validation.ValidateResult {
 			setting.Alg == FuncHashAlgMD5) == false {
 			result.AddError("actions.hash.alg should contain valid values SHA-512, SHA-1 or MD5")
 		}
+	}
+
+	if len(setting.Key) == 0 {
+		result.AddError("actions.hash.key is required")
 	}
 
 	return result

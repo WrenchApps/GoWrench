@@ -7,9 +7,26 @@ import (
 
 type BodyContext struct {
 	BodyByteArray  []byte
+	BodyPreserved  map[string][]byte
 	HttpStatusCode int
 	ContentType    string
 	Headers        map[string]string
+}
+
+func (bodyContext *BodyContext) SetBodyPreserved(id string, body []byte) {
+	if bodyContext.BodyPreserved == nil {
+		bodyContext.BodyPreserved = make(map[string][]byte)
+	}
+
+	bodyContext.BodyPreserved[id] = body
+}
+
+func (bodyContext *BodyContext) GetBodyPreserved(id string) []byte {
+	if bodyContext.BodyPreserved == nil {
+		return nil
+	}
+
+	return bodyContext.BodyPreserved[id]
 }
 
 func (bodyContext *BodyContext) IsArray() bool {
