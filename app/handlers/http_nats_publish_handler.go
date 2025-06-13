@@ -35,13 +35,17 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 			err = natsConn.PublishMsg(msg)
 		}
 
-		if err != nil {
-			wrenchContext.SetHasError()
-			bodyContext.HttpStatusCode = 500
-			bodyContext.BodyByteArray = []byte(err.Error())
+		if settings.PreserveCurrentBody {
+			bodyContext.SetBodyPreserved(settings.Id, []byte(""))
 		} else {
-			bodyContext.HttpStatusCode = 204
-			bodyContext.BodyByteArray = []byte("")
+			if err != nil {
+				wrenchContext.SetHasError()
+				bodyContext.HttpStatusCode = 500
+				bodyContext.BodyByteArray = []byte(err.Error())
+			} else {
+				bodyContext.HttpStatusCode = 204
+				bodyContext.BodyByteArray = []byte("")
+			}
 		}
 	}
 

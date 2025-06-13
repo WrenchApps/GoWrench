@@ -25,7 +25,7 @@ actions:
     http:
       request:
         headers: 
-          "hmac": "{{wrenchContext.actions.func_hash}}"
+          "hmac": "{{bodyContext.actions.func_hash}}"
         method: put
         url: 'https://webhook.site/e08a967f-59ba-463a-8fe2-cf173b493f34'
 

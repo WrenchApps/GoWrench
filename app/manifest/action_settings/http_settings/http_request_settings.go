@@ -2,7 +2,6 @@ package http_settings
 
 import (
 	"fmt"
-	"strings"
 
 	//"wrench/app/cross_cutting"
 	"wrench/app/manifest/types"
@@ -12,8 +11,7 @@ import (
 type HttpRequestSetting struct {
 	Method            types.HttpMethod  `yaml:"method"`
 	Url               string            `yaml:"url"`
-	MapFixedHeaders   map[string]string `yaml:"mapFixedHeaders"`
-	MapRequestHeaders []string          `yaml:"mapRequestHeaders"`
+	Headers           map[string]string `yaml:"headers"`
 	TokenCredentialId string            `yaml:"tokenCredentialId"`
 	Insecure          bool              `yaml:"insecure"`
 }
@@ -40,30 +38,17 @@ func (setting HttpRequestSetting) Valid() validation.ValidateResult {
 		result.AddError("actions.http.request.url is required")
 	}
 
-	if setting.MapFixedHeaders != nil {
-		for _, mapHeader := range setting.MapFixedHeaders {
-			mapSplitted := strings.Split(mapHeader, ":")
-			if len(mapSplitted) != 2 {
-				result.AddError("actions.http.request.mapFixedHeaders invalid")
-			}
-			if len(mapSplitted[0]) == 0 {
-				result.AddError("actions.http.request.mapFixedHeaders header key is required")
-			}
-		}
-	}
-
-	if setting.MapRequestHeaders != nil {
-		for _, mapHeader := range setting.MapRequestHeaders {
-			mapSplitted := strings.Split(mapHeader, ":")
-			if len(mapSplitted) > 2 {
-				result.AddError("actions.http.request.mapRequestHeaders should contains only one splitter ':'")
-			}
-
-			if len(mapHeader) == 0 {
-				result.AddError("actions.http.request.mapRequestHeaders itens can't contains empty values")
-			}
-		}
-	}
+	// if setting.Headers != nil {
+	// 	for _, mapHeader := range setting.Headers {
+	// 		mapSplitted := strings.Split(mapHeader, ":")
+	// 		if len(mapSplitted) != 2 {
+	// 			result.AddError("actions.http.request.headers invalid")
+	// 		}
+	// 		if len(mapSplitted[0]) == 0 {
+	// 			result.AddError("actions.http.request.headers header key is required")
+	// 		}
+	// 	}
+	// }
 
 	// if len(setting.TokenCredentialId) > 0 {
 	// 	tokenCredential := cross_cutting.GetTokenCredentialById(setting.TokenCredentialId)

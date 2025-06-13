@@ -6,6 +6,7 @@ import (
 
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
 const prefixBodyContext = "bodyContext."
+const prefixBodyContextPreserved = "bodyContext.actions."
 
 func IsCalculatedValue(value string) bool {
 	return strings.HasPrefix(value, "{{") && strings.HasSuffix(value, "}}")
@@ -44,13 +45,38 @@ func ReplacePrefixBodyContext(command string) string {
 	return command
 }
 
+func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContext *BodyContext) string {
+	command = ReplaceCalculatedValue(command)
+
+	if IsBodyContextCommand(command) {
+		return GetValueBodyContext(command, bodyContext)
+	} else if IsWrenchContextCommand(command) {
+		return GetValueWrenchContext(command, wrenchContext)
+	} else {
+		return ""
+	}
+}
+
 func GetValueBodyContext(command string, bodyContext *BodyContext) string {
 
 	if IsCalculatedValue(command) {
 		command = ReplaceCalculatedValue(command)
 	}
 
-	if strings.HasPrefix(command, prefixBodyContext) {
+	if strings.HasPrefix(command, prefixBodyContextPreserved) {
+		bodyPreservedMap := strings.ReplaceAll(command, prefixBodyContextPreserved, "")
+		bodyPreservedMapSplitted := strings.Split(bodyPreservedMap, ".")
+		actionId := bodyPreservedMapSplitted[0]
+		if len(bodyPreservedMapSplitted) == 1 {
+			bodyPreserved := bodyContext.GetBodyPreserved(actionId)
+			return string(bodyPreserved)
+		} else {
+			jsonMap := bodyContext.ParseBodyToMapObjectPreserved(actionId)
+			propertyName := strings.ReplaceAll(bodyPreservedMap, actionId+".", "")
+			return getBodyValue(jsonMap, propertyName)
+		}
+
+	} else if strings.HasPrefix(command, prefixBodyContext) {
 		propertyName := strings.ReplaceAll(command, prefixBodyContext, "")
 		jsonMap := bodyContext.ParseBodyToMapObject()
 		return getBodyValue(jsonMap, propertyName)

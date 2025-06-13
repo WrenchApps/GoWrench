@@ -66,6 +66,17 @@ func (bodyContext *BodyContext) ParseBodyToMapObject() map[string]interface{} {
 	return jsonMap
 }
 
+func (bodyContext *BodyContext) ParseBodyToMapObjectPreserved(actionId string) map[string]interface{} {
+	var jsonMap map[string]interface{}
+	bodyBytePreserved := bodyContext.GetBodyPreserved(actionId)
+	jsonErr := json.Unmarshal(bodyBytePreserved, &jsonMap)
+
+	if jsonErr != nil {
+		return nil
+	}
+	return jsonMap
+}
+
 func (bodyContext *BodyContext) ParseBodyToMapObjectArray() []map[string]interface{} {
 	var jsonMap []map[string]interface{}
 	jsonErr := json.Unmarshal(bodyContext.BodyByteArray, &jsonMap)

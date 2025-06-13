@@ -24,8 +24,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
-		request.SetHeaders(handler.ActionSettings.Http.Request.MapFixedHeaders)
-		request.SetHeaders(mapHttpRequestHeaders(handler.ActionSettings.Http.Request.MapRequestHeaders))
+		request.SetHeaders(mapHttpRequestHeaders(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
@@ -84,11 +83,22 @@ func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchCo
 	}
 }
 
-func mapHttpRequestHeaders(mapRequestHeader []string) map[string]string {
+func mapHttpRequestHeaders(mapRequestHeader map[string]string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) map[string]string {
 	if mapRequestHeader == nil {
 		return nil
 	}
 	mapRequestHeaderResult := make(map[string]string)
+
+	for key, value := range mapRequestHeader {
+		var finalValue string
+		if contexts.IsCalculatedValue(value) {
+			finalValue = contexts.GetCalculatedValue(value, wrenchContext, bodyContext)
+		} else {
+			finalValue = value
+		}
+
+		mapRequestHeaderResult[key] = finalValue
+	}
 
 	return mapRequestHeaderResult
 }
