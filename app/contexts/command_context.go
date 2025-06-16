@@ -7,6 +7,7 @@ import (
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
 const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
+const prefixFunc = "func."
 
 func IsCalculatedValue(value string) bool {
 	return strings.HasPrefix(value, "{{") && strings.HasSuffix(value, "}}")
@@ -22,6 +23,10 @@ func IsWrenchContextCommand(command string) bool {
 
 func IsBodyContextCommand(command string) bool {
 	return strings.HasPrefix(command, prefixBodyContext)
+}
+
+func IsFunc(command string) bool {
+	return strings.HasPrefix(command, prefixFunc)
 }
 
 func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string {
@@ -52,6 +57,8 @@ func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContex
 		return GetValueBodyContext(command, bodyContext)
 	} else if IsWrenchContextCommand(command) {
 		return GetValueWrenchContext(command, wrenchContext)
+	} else if IsFunc(command) {
+		return GetFuncValue(FuncType(command))
 	} else {
 		return ""
 	}
