@@ -114,3 +114,23 @@ func getBodyValue(jsonMap map[string]interface{}, propertyName string) string {
 	}
 	return value
 }
+
+func GetCalculatedMap(mapConfigured map[string]string, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+	if mapConfigured == nil {
+		return nil
+	}
+	mapResult := make(map[string]interface{})
+
+	for key, value := range mapConfigured {
+		var finalValue string
+		if IsCalculatedValue(value) {
+			finalValue = GetCalculatedValue(value, wrenchContext, bodyContext)
+		} else {
+			finalValue = value
+		}
+
+		mapResult[key] = finalValue
+	}
+
+	return mapResult
+}

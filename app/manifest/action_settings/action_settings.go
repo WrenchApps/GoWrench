@@ -21,6 +21,7 @@ type ActionSettings struct {
 	File                *file_settings.FileSettings      `yaml:"file"`
 	Nats                *nats_settings.NatsSettings      `yaml:"nats"`
 	Hash                *func_settings.FuncHashSettings  `yaml:"hash"`
+	Vars                map[string]string                `yaml:"vars"`
 }
 
 type ActionType string
@@ -32,6 +33,7 @@ const (
 	ActionTypeFileReader      ActionType = "fileReader"
 	ActionTypeNatsPublish     ActionType = "natsPublish"
 	ActionTypeFuncHash        ActionType = "funcHash"
+	ActionTypeFuncVarContext  ActionType = "funcVarContext"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -50,7 +52,8 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeSnsPublish ||
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
-			setting.Type == ActionTypeFuncHash) == false {
+			setting.Type == ActionTypeFuncHash ||
+			setting.Type == ActionTypeFuncVarContext) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)
 			result.AddError(msg)
@@ -83,6 +86,10 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 
 	if setting.Hash != nil {
 		result.AppendValidable(setting.Hash)
+	}
+
+	if setting.Type == ActionTypeFuncVarContext {
+		result.AddError("When type is funcVarContext the vars field is required")
 	}
 
 	return result

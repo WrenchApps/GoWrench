@@ -27,7 +27,8 @@ api:
   endpoints:
     - route: /api/hmac_test
       method: post
-      flowActionId: 
+      flowActionId:
+        - var_context
         - func_hash
         - call_client
 
@@ -38,6 +39,23 @@ actions:
     hash:
       alg: SHA-256  #SHA-1, MD5 ...
       key: 'N93nmFmoY0NzSMC5'
+
+  - id: var_context
+    type: funcVarContext
+    preserveCurrentBody: true
+    vars:
+      "Timestamp": "{{func.timestamp(milli)}}"
+
+  
+  # - id: func_concate
+  #   type: funcConcate
+  #   preserveCurrentBody: true
+  #   concate:
+  #     vars:
+  #       "Timestamp": "{{func.timestamp(milli)}}"
+  #     values:
+  #       - "{{bodyContext.currentBody}}"
+
 
   - id: call_client
     type: httpRequest

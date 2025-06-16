@@ -92,6 +92,11 @@ func (bodyContext *BodyContext) SetMapObject(jsonMap map[string]interface{}) {
 	bodyContext.BodyByteArray = jsonArray
 }
 
+func (bodyContext *BodyContext) SetMapObjectWithPreservedId(preservedId string, jsonMap map[string]interface{}) {
+	jsonArray, _ := json.Marshal(jsonMap)
+	bodyContext.BodyPreserved[preservedId] = jsonArray
+}
+
 func (bodyContext *BodyContext) SetArrayMapObject(arrayJsonMap []map[string]interface{}) {
 	jsonArray, _ := json.Marshal(arrayJsonMap)
 	bodyContext.BodyByteArray = jsonArray

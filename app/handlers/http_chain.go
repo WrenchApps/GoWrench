@@ -95,6 +95,13 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 		currentHandler = funcHashHandler
 	}
 
+	if action.Type == action_settings.ActionTypeFuncVarContext {
+		funcVarHandler := new(FuncVarContextHandler)
+		funcVarHandler.ActionSettings = action
+		currentHandler.SetNext(funcVarHandler)
+		currentHandler = funcVarHandler
+	}
+
 	if action.Trigger != nil && action.Trigger.After != nil {
 		httpContractMapHandler := new(HttpContractMapHandler)
 
