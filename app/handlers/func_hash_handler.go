@@ -22,22 +22,19 @@ type FuncHashHandler struct {
 
 func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
-		key := handler.ActionSettings.Hash.Key
+		key := handler.ActionSettings.Func.Hash.Key
 
-		hashType := handler.getHashFunc(handler.ActionSettings.Hash.Alg)
+		hashType := handler.getHashFunc(handler.ActionSettings.Func.Hash.Alg)
 
 		mac := hmac.New(hashType, []byte(key))
-		currentBody := bodyContext.BodyByteArray
+
+		currentBody := bodyContext.GetBody(handler.ActionSettings)
 		mac.Write(currentBody)
 
 		expectedMAC := mac.Sum(nil)
 		hashEncode := hex.EncodeToString(expectedMAC)
 
-		if handler.ActionSettings.PreserveCurrentBody {
-			bodyContext.SetBodyPreserved(handler.ActionSettings.Id, []byte(hashEncode))
-		} else {
-			bodyContext.BodyByteArray = []byte(hashEncode)
-		}
+		bodyContext.SetBodyAction(handler.ActionSettings, []byte(hashEncode))
 	}
 
 	if handler.Next != nil {
@@ -61,7 +58,7 @@ func (handler *FuncHashHandler) getHashFunc(alg func_settings.FuncHashAlg) func(
 	case func_settings.FuncHashAlgMD5:
 		return md5.New
 	default:
-		fmt.Println("Unsupported hash type, using SHA-256 as default.")
+		fmt.Println("Unsupported hash type")
 		return nil
 	}
 }

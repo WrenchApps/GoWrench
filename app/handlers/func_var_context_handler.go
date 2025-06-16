@@ -14,13 +14,13 @@ type FuncVarContextHandler struct {
 func (handler *FuncVarContextHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
 
-		varsConfigured := handler.ActionSettings.Vars
-		varsResult := contexts.GetCalculatedMap(varsConfigured, wrenchContext, bodyContext)
+		varsConfigured := handler.ActionSettings.Func.Vars
 
-		if handler.ActionSettings.PreserveCurrentBody {
-			bodyContext.SetMapObjectWithPreservedId(handler.ActionSettings.Id, varsResult)
-		} else {
-			bodyContext.SetMapObject(varsResult)
+		if len(varsConfigured) > 0 {
+			varsResult := contexts.GetCalculatedMap(varsConfigured, wrenchContext, bodyContext)
+			var result, _ = bodyContext.ConvertMapToByteArray(varsResult)
+
+			bodyContext.SetBodyAction(handler.ActionSettings, result)
 		}
 	}
 

@@ -29,32 +29,41 @@ api:
       method: post
       flowActionId:
         - var_context
+        - func_concate
         - func_hash
         - call_client
 
 actions:
   - id: func_hash
     type: funcHash
-    preserveCurrentBody: true
-    hash:
-      alg: SHA-256  #SHA-1, MD5 ...
-      key: 'N93nmFmoY0NzSMC5'
+    body:
+      preserveCurrentBody: true
+      useValue: "{{bodyContext.actions.func_concate}}"
+    func:
+      hash:
+        alg: SHA-256  #SHA-1, SHA-512, MD5 ...
+        key: 'N93nmFmoY0NzSMC5'
 
   - id: var_context
     type: funcVarContext
-    preserveCurrentBody: true
-    vars:
-      "Timestamp": "{{func.timestamp(milli)}}"
+    body:
+      preserveCurrentBody: true
+    func:
+      vars:
+        "Timestamp": "{{func.timestamp(milli)}}"
+        "ApiKey": "X0GW3QGOYFn4r7DHcVC8KuatUnNs6MGB"
+        "ClientRequestId": "BqPwwuCODCPWFwboS605HAM"
 
-  
-  # - id: func_concate
-  #   type: funcConcate
-  #   preserveCurrentBody: true
-  #   concate:
-  #     vars:
-  #       "Timestamp": "{{func.timestamp(milli)}}"
-  #     values:
-  #       - "{{bodyContext.currentBody}}"
+  - id: func_concate
+    type: funcStringConcate
+    body:
+      preserveCurrentBody: true
+    func:
+      concate:
+      - "{{bodyContext.actions.var_context.ApiKey}}"
+      - "{{bodyContext.actions.var_context.ClientRequestId}}"
+      - "{{bodyContext.actions.var_context.Timestamp}}"
+      - "{{bodyContext.currentBody}}"
 
 
   - id: call_client
@@ -63,9 +72,9 @@ actions:
       request:
         headers: 
           "Message-Signature": "{{bodyContext.actions.func_hash}}"
-          "Api-Key": "X0GW3QGOYFn4r7DHcVC8KuatUnNs6MGB"
-          "Client-Request-Id": "BqPwwuCODCPWFwboS605HAM"
-          "Timestamp": "{{func.timestamp(milli)}}"
+          "Timestamp": "{{bodyContext.actions.var_context.Timestamp}}"
+          "Api-Key": "{{bodyContext.actions.var_context.ApiKey}}"
+          "Client-Request-Id": "{{bodyContext.actions.var_context.ClientRequestId}}"
         method: post
         tokenCredentialId: custom_client
         url: 'https://cat.api.firstdata.com/bwa/wsm/prepayments/consultations/consultPrepayment'

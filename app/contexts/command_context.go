@@ -51,16 +51,19 @@ func ReplacePrefixBodyContext(command string) string {
 }
 
 func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContext *BodyContext) string {
-	command = ReplaceCalculatedValue(command)
-
-	if IsBodyContextCommand(command) {
-		return GetValueBodyContext(command, bodyContext)
-	} else if IsWrenchContextCommand(command) {
-		return GetValueWrenchContext(command, wrenchContext)
-	} else if IsFunc(command) {
-		return GetFuncValue(FuncType(command))
+	if IsCalculatedValue(command) {
+		command = ReplaceCalculatedValue(command)
+		if IsBodyContextCommand(command) {
+			return GetValueBodyContext(command, bodyContext)
+		} else if IsWrenchContextCommand(command) {
+			return GetValueWrenchContext(command, wrenchContext)
+		} else if IsFunc(command) {
+			return GetFuncValue(GeneralFuncType(command))
+		} else {
+			return command
+		}
 	} else {
-		return ""
+		return command
 	}
 }
 
@@ -86,7 +89,11 @@ func GetValueBodyContext(command string, bodyContext *BodyContext) string {
 	} else if strings.HasPrefix(command, prefixBodyContext) {
 		propertyName := strings.ReplaceAll(command, prefixBodyContext, "")
 		jsonMap := bodyContext.ParseBodyToMapObject()
-		return getBodyValue(jsonMap, propertyName)
+		value := getBodyValue(jsonMap, propertyName)
+		if len(value) == 0 && propertyName == "currentBody" {
+			value = bodyContext.GetBodyString()
+		}
+		return value
 	}
 
 	return ""
@@ -122,14 +129,7 @@ func GetCalculatedMap(mapConfigured map[string]string, wrenchContext *WrenchCont
 	mapResult := make(map[string]interface{})
 
 	for key, value := range mapConfigured {
-		var finalValue string
-		if IsCalculatedValue(value) {
-			finalValue = GetCalculatedValue(value, wrenchContext, bodyContext)
-		} else {
-			finalValue = value
-		}
-
-		mapResult[key] = finalValue
+		mapResult[key] = GetCalculatedValue(value, wrenchContext, bodyContext)
 	}
 
 	return mapResult

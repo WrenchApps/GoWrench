@@ -67,12 +67,12 @@ func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *context
 			msg := fmt.Sprintf("Couldn't publish message to topic %v. Here's why: %v", settings.TopicArn, err)
 			log.Print(msg)
 			bodyContext.HttpStatusCode = 500
-			bodyContext.BodyByteArray = []byte(msg)
+			bodyContext.SetBody([]byte(msg))
 			bodyContext.ContentType = "text/plain"
 			wrenchContext.SetHasError()
 		} else {
 			bodyContext.HttpStatusCode = 202
-			bodyContext.BodyByteArray = []byte("{ 'success': 'true' }")
+			bodyContext.SetBody([]byte("{ 'success': 'true' }"))
 		}
 	}
 

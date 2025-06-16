@@ -5,13 +5,13 @@ import (
 	"time"
 )
 
-type FuncType string
+type GeneralFuncType string
 
 const (
-	FuncTypeTimestampMilli FuncType = "func.timestamp(milli)"
+	FuncTypeTimestampMilli GeneralFuncType = "func.timestamp(milli)"
 )
 
-func GetFuncValue(funcType FuncType) string {
+func GetFuncValue(funcType GeneralFuncType) string {
 	switch funcType {
 	case FuncTypeTimestampMilli:
 		return getTimestamp()

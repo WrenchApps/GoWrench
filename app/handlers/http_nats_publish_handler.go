@@ -22,7 +22,7 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 
 		msg := &nats.Msg{
 			Subject: settings.Nats.SubjectName,
-			Data:    bodyContext.BodyByteArray,
+			Data:    bodyContext.GetBody(settings),
 			//Header:  nats.Header{},    // create mapper to add headers in message
 		}
 
@@ -35,16 +35,16 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 			err = natsConn.PublishMsg(msg)
 		}
 
-		if settings.PreserveCurrentBody {
+		if settings.ShouldPreserveBody() {
 			bodyContext.SetBodyPreserved(settings.Id, []byte(""))
 		} else {
 			if err != nil {
 				wrenchContext.SetHasError()
 				bodyContext.HttpStatusCode = 500
-				bodyContext.BodyByteArray = []byte(err.Error())
+				bodyContext.SetBody([]byte(err.Error()))
 			} else {
 				bodyContext.HttpStatusCode = 204
-				bodyContext.BodyByteArray = []byte("")
+				bodyContext.SetBody([]byte(""))
 			}
 		}
 	}

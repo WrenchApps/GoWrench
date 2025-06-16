@@ -24,11 +24,11 @@ func (handler *FileReaderHandler) Do(ctx context.Context, wrenchContext *context
 			msg := fmt.Sprintf("Couldn't read the file %v. Here's why: %v", handler.ActionSettings.File.Path, err)
 			log.Print(msg)
 			bodyContext.HttpStatusCode = 500
-			bodyContext.BodyByteArray = []byte(msg)
+			bodyContext.SetBody([]byte(msg))
 			bodyContext.ContentType = "text/plain"
 			wrenchContext.SetHasError()
 		} else {
-			bodyContext.BodyByteArray = []byte(data)
+			bodyContext.SetBody([]byte(data))
 			if handler.ActionSettings.File.Response != nil {
 				bodyContext.ContentType = handler.ActionSettings.File.Response.ContentType
 				bodyContext.HttpStatusCode = handler.ActionSettings.File.Response.StatusCode

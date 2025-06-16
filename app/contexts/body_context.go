@@ -3,14 +3,15 @@ package contexts
 import (
 	"encoding/json"
 	"strings"
+	"wrench/app/manifest/action_settings"
 )
 
 type BodyContext struct {
-	BodyByteArray  []byte
-	BodyPreserved  map[string][]byte
-	HttpStatusCode int
-	ContentType    string
-	Headers        map[string]string
+	CurrentBodyByteArray []byte
+	BodyPreserved        map[string][]byte
+	HttpStatusCode       int
+	ContentType          string
+	Headers              map[string]string
 }
 
 func (bodyContext *BodyContext) SetBodyPreserved(id string, body []byte) {
@@ -19,6 +20,20 @@ func (bodyContext *BodyContext) SetBodyPreserved(id string, body []byte) {
 	}
 
 	bodyContext.BodyPreserved[id] = body
+}
+
+func (bodyContext *BodyContext) SetBody(body []byte) {
+	bodyContext.CurrentBodyByteArray = body
+}
+
+func (bodyContext *BodyContext) SetBodyAction(settings *action_settings.ActionSettings, body []byte) {
+	bodyContext.CurrentBodyByteArray = body
+
+	if settings.ShouldPreserveBody() {
+		bodyContext.SetBodyPreserved(settings.Id, body)
+	} else {
+		bodyContext.SetBody(body)
+	}
 }
 
 func (bodyContext *BodyContext) GetBodyPreserved(id string) []byte {
@@ -30,7 +45,7 @@ func (bodyContext *BodyContext) GetBodyPreserved(id string) []byte {
 }
 
 func (bodyContext *BodyContext) IsArray() bool {
-	bodyText := string(bodyContext.BodyByteArray)
+	bodyText := string(bodyContext.CurrentBodyByteArray)
 	return strings.HasPrefix(bodyText, "[") && strings.HasSuffix(bodyText, "]")
 }
 
@@ -58,7 +73,7 @@ func (bodyContext *BodyContext) SetHeader(key string, value string) {
 
 func (bodyContext *BodyContext) ParseBodyToMapObject() map[string]interface{} {
 	var jsonMap map[string]interface{}
-	jsonErr := json.Unmarshal(bodyContext.BodyByteArray, &jsonMap)
+	jsonErr := json.Unmarshal(bodyContext.CurrentBodyByteArray, &jsonMap)
 
 	if jsonErr != nil {
 		return nil
@@ -79,7 +94,7 @@ func (bodyContext *BodyContext) ParseBodyToMapObjectPreserved(actionId string) m
 
 func (bodyContext *BodyContext) ParseBodyToMapObjectArray() []map[string]interface{} {
 	var jsonMap []map[string]interface{}
-	jsonErr := json.Unmarshal(bodyContext.BodyByteArray, &jsonMap)
+	jsonErr := json.Unmarshal(bodyContext.CurrentBodyByteArray, &jsonMap)
 
 	if jsonErr != nil {
 		return nil
@@ -89,19 +104,37 @@ func (bodyContext *BodyContext) ParseBodyToMapObjectArray() []map[string]interfa
 
 func (bodyContext *BodyContext) SetMapObject(jsonMap map[string]interface{}) {
 	jsonArray, _ := json.Marshal(jsonMap)
-	bodyContext.BodyByteArray = jsonArray
+	bodyContext.CurrentBodyByteArray = jsonArray
 }
 
-func (bodyContext *BodyContext) SetMapObjectWithPreservedId(preservedId string, jsonMap map[string]interface{}) {
-	jsonArray, _ := json.Marshal(jsonMap)
-	bodyContext.BodyPreserved[preservedId] = jsonArray
+func (bodyContext *BodyContext) ConvertMapToByteArray(jsonMap map[string]interface{}) ([]byte, error) {
+	jsonArray, err := json.Marshal(jsonMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonArray, nil
 }
 
 func (bodyContext *BodyContext) SetArrayMapObject(arrayJsonMap []map[string]interface{}) {
 	jsonArray, _ := json.Marshal(arrayJsonMap)
-	bodyContext.BodyByteArray = jsonArray
+	bodyContext.CurrentBodyByteArray = jsonArray
 }
 
 func (bodyContext *BodyContext) GetBodyString() string {
-	return string(bodyContext.BodyByteArray)
+	return string(bodyContext.CurrentBodyByteArray)
+}
+
+func (bodyContext *BodyContext) GetBody(settings *action_settings.ActionSettings) []byte {
+	shouldUse, bodyRef := settings.ShouldUseBodyRef()
+
+	if shouldUse {
+		return bodyContext.GetBodyPreserved(bodyRef)
+	} else {
+		return bodyContext.CurrentBodyByteArray
+	}
+}
+
+func (bodyContext *BodyContext) GetCurrentBody() []byte {
+	return bodyContext.CurrentBodyByteArray
 }

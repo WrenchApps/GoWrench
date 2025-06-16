@@ -12,28 +12,28 @@ import (
 )
 
 type ActionSettings struct {
-	Id                  string                           `yaml:"id"`
-	Type                ActionType                       `yaml:"type"`
-	PreserveCurrentBody bool                             `yaml:"preserveCurrentBody"`
-	Http                *http_settings.HttpSetting       `yaml:"http"`
-	SNS                 *sns_settings.SnsSettings        `yaml:"sns"`
-	Trigger             *trigger_settings.TriggerSetting `yaml:"trigger"`
-	File                *file_settings.FileSettings      `yaml:"file"`
-	Nats                *nats_settings.NatsSettings      `yaml:"nats"`
-	Hash                *func_settings.FuncHashSettings  `yaml:"hash"`
-	Vars                map[string]string                `yaml:"vars"`
+	Id      string                           `yaml:"id"`
+	Type    ActionType                       `yaml:"type"`
+	Http    *http_settings.HttpSetting       `yaml:"http"`
+	SNS     *sns_settings.SnsSettings        `yaml:"sns"`
+	Trigger *trigger_settings.TriggerSetting `yaml:"trigger"`
+	File    *file_settings.FileSettings      `yaml:"file"`
+	Nats    *nats_settings.NatsSettings      `yaml:"nats"`
+	Func    *func_settings.FuncSettings      `yaml:"func"`
+	Body    *BodyActionSettings              `yaml:"body"`
 }
 
 type ActionType string
 
 const (
-	ActionTypeHttpRequest     ActionType = "httpRequest"
-	ActionTypeHttpRequestMock ActionType = "httpRequestMock"
-	ActionTypeSnsPublish      ActionType = "snsPublish"
-	ActionTypeFileReader      ActionType = "fileReader"
-	ActionTypeNatsPublish     ActionType = "natsPublish"
-	ActionTypeFuncHash        ActionType = "funcHash"
-	ActionTypeFuncVarContext  ActionType = "funcVarContext"
+	ActionTypeHttpRequest       ActionType = "httpRequest"
+	ActionTypeHttpRequestMock   ActionType = "httpRequestMock"
+	ActionTypeSnsPublish        ActionType = "snsPublish"
+	ActionTypeFileReader        ActionType = "fileReader"
+	ActionTypeNatsPublish       ActionType = "natsPublish"
+	ActionTypeFuncHash          ActionType = "funcHash"
+	ActionTypeFuncVarContext    ActionType = "funcVarContext"
+	ActionTypeFuncStringConcate ActionType = "funcStringConcate"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -53,7 +53,7 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
 			setting.Type == ActionTypeFuncHash ||
-			setting.Type == ActionTypeFuncVarContext) == false {
+			setting.Type == ActionTypeFuncStringConcate) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)
 			result.AddError(msg)
@@ -84,13 +84,22 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 		result.AppendValidable(setting.Nats)
 	}
 
-	if setting.Hash != nil {
-		result.AppendValidable(setting.Hash)
-	}
-
-	if setting.Type == ActionTypeFuncVarContext {
-		result.AddError("When type is funcVarContext the vars field is required")
+	if setting.Func != nil {
+		result.AppendValidable(setting.Func)
 	}
 
 	return result
+}
+
+func (setting ActionSettings) ShouldPreserveBody() bool {
+	return setting.Body != nil && setting.Body.PreserveCurrentBody
+}
+
+func (setting ActionSettings) ShouldUseBodyRef() (shouldUse bool, valueRef string) {
+	bodyConfig := setting.Body
+	if bodyConfig == nil {
+		return false, ""
+	} else {
+		return len(bodyConfig.UseValue) > 0, bodyConfig.UseValue
+	}
 }
