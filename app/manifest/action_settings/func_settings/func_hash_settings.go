@@ -25,9 +25,10 @@ func (setting FuncHashSettings) Valid() validation.ValidateResult {
 		result.AddError("actions.hash.alg is required")
 	} else {
 		if (setting.Alg == FuncHashAlgSHA512 ||
+			setting.Alg == FuncHashAlgSHA256 ||
 			setting.Alg == FuncHashAlgSHA1 ||
 			setting.Alg == FuncHashAlgMD5) == false {
-			result.AddError("actions.hash.alg should contain valid values SHA-512, SHA-1 or MD5")
+			result.AddError("actions.hash.alg should contain valid values SHA-512, SHA-256, SHA-1 or MD5")
 		}
 	}
 
