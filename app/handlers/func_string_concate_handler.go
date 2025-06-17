@@ -16,12 +16,12 @@ func (handler *FuncStringConcateHandler) Do(ctx context.Context, wrenchContext *
 
 		if len(handler.ActionSettings.Func.Concate) > 0 {
 
-			var strincConcateResult = ""
+			var stringConcateResult = ""
 			for _, item := range handler.ActionSettings.Func.Concate {
-				strincConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings)
+				stringConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings)
 			}
 
-			bodyContext.SetBodyAction(handler.ActionSettings, []byte(strincConcateResult))
+			bodyContext.SetBodyAction(handler.ActionSettings, []byte(stringConcateResult))
 		}
 	}
 
