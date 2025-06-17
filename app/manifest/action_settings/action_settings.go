@@ -26,15 +26,15 @@ type ActionSettings struct {
 type ActionType string
 
 const (
-	ActionTypeHttpRequest       ActionType = "httpRequest"
-	ActionTypeHttpRequestMock   ActionType = "httpRequestMock"
-	ActionTypeSnsPublish        ActionType = "snsPublish"
-	ActionTypeFileReader        ActionType = "fileReader"
-	ActionTypeNatsPublish       ActionType = "natsPublish"
-	ActionTypeFuncHash          ActionType = "funcHash"
-	ActionTypeFuncVarContext    ActionType = "funcVarContext"
-	ActionTypeFuncStringConcate ActionType = "funcStringConcate"
-	ActionTypeFuncGeneral       ActionType = "funcGeneral"
+	ActionTypeHttpRequest           ActionType = "httpRequest"
+	ActionTypeHttpRequestMock       ActionType = "httpRequestMock"
+	ActionTypeSnsPublish            ActionType = "snsPublish"
+	ActionTypeFileReader            ActionType = "fileReader"
+	ActionTypeNatsPublish           ActionType = "natsPublish"
+	ActionTypeFuncHash              ActionType = "funcHash"
+	ActionTypeFuncVarContext        ActionType = "funcVarContext"
+	ActionTypeFuncStringConcatenate ActionType = "funcStringConcatenate"
+	ActionTypeFuncGeneral           ActionType = "funcGeneral"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -54,7 +54,7 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
 			setting.Type == ActionTypeFuncHash ||
-			setting.Type == ActionTypeFuncStringConcate ||
+			setting.Type == ActionTypeFuncStringConcatenate ||
 			setting.Type == ActionTypeFuncGeneral) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)

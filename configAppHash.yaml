@@ -46,7 +46,7 @@ actions:
         "ClientRequestId": "{{CLIENT_REQUEST_ID}}"
 
   - id: func_concate
-    type: funcStringConcate
+    type: funcStringConcatenate
     body:
       preserveCurrentBody: true
     func:

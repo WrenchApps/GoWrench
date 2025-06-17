@@ -6,12 +6,12 @@ import (
 	settings "wrench/app/manifest/action_settings"
 )
 
-type FuncStringConcateHandler struct {
+type FuncStringConcatenateHandler struct {
 	ActionSettings *settings.ActionSettings
 	Next           Handler
 }
 
-func (handler *FuncStringConcateHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+func (handler *FuncStringConcatenateHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
 
 		if len(handler.ActionSettings.Func.Concate) > 0 {
@@ -30,6 +30,6 @@ func (handler *FuncStringConcateHandler) Do(ctx context.Context, wrenchContext *
 	}
 }
 
-func (handler *FuncStringConcateHandler) SetNext(next Handler) {
+func (handler *FuncStringConcatenateHandler) SetNext(next Handler) {
 	handler.Next = next
 }

@@ -102,8 +102,8 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 		currentHandler = funcVarHandler
 	}
 
-	if action.Type == action_settings.ActionTypeFuncStringConcate {
-		funcStringConcateHandler := new(FuncStringConcateHandler)
+	if action.Type == action_settings.ActionTypeFuncStringConcatenate {
+		funcStringConcateHandler := new(FuncStringConcatenateHandler)
 		funcStringConcateHandler.ActionSettings = action
 		currentHandler.SetNext(funcStringConcateHandler)
 		currentHandler = funcStringConcateHandler
