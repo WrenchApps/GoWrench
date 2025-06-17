@@ -3,6 +3,7 @@ package contexts
 import (
 	"strings"
 	settings "wrench/app/manifest/action_settings"
+	"wrench/app/manifest/action_settings/func_settings"
 )
 
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
@@ -63,7 +64,7 @@ func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContex
 		} else if IsWrenchContextCommand(command) {
 			return GetValueWrenchContext(command, wrenchContext)
 		} else if IsFunc(command) {
-			return GetFuncValue(FuncGeneralType(command), wrenchContext, bodyContext, action)
+			return GetFuncValue(func_settings.FuncGeneralType(command), wrenchContext, bodyContext, action)
 		} else {
 			return command
 		}

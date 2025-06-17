@@ -14,10 +14,10 @@ type FuncStringConcatenateHandler struct {
 func (handler *FuncStringConcatenateHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
 
-		if len(handler.ActionSettings.Func.Concate) > 0 {
+		if len(handler.ActionSettings.Func.Concatenate) > 0 {
 
 			var stringConcateResult = ""
-			for _, item := range handler.ActionSettings.Func.Concate {
+			for _, item := range handler.ActionSettings.Func.Concatenate {
 				stringConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings)
 			}
 

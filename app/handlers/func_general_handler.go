@@ -13,7 +13,7 @@ type FuncGeneralHandler struct {
 
 func (handler *FuncGeneralHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
-		result := contexts.GetCalculatedValue(handler.ActionSettings.Func.Command, wrenchContext, bodyContext, handler.ActionSettings)
+		result := contexts.GetCalculatedValue(string(handler.ActionSettings.Func.Command), wrenchContext, bodyContext, handler.ActionSettings)
 		bodyContext.SetBodyAction(handler.ActionSettings, []byte(result))
 	}
 

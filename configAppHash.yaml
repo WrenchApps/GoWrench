@@ -50,7 +50,7 @@ actions:
     body:
       preserveCurrentBody: true
     func:
-      concate:
+      concatenate:
       - "{{bodyContext.actions.var_context.ApiKey}}"
       - "{{bodyContext.actions.var_context.ClientRequestId}}"
       - "{{bodyContext.actions.var_context.Timestamp}}"
