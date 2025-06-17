@@ -109,6 +109,13 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 		currentHandler = funcStringConcateHandler
 	}
 
+	if action.Type == action_settings.ActionTypeFuncGeneral {
+		funcGeneralHandler := new(FuncGeneralHandler)
+		funcGeneralHandler.ActionSettings = action
+		currentHandler.SetNext(funcGeneralHandler)
+		currentHandler = funcGeneralHandler
+	}
+
 	if action.Trigger != nil && action.Trigger.After != nil {
 		httpContractMapHandler := new(HttpContractMapHandler)
 

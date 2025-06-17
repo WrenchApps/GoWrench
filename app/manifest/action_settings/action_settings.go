@@ -34,6 +34,7 @@ const (
 	ActionTypeFuncHash          ActionType = "funcHash"
 	ActionTypeFuncVarContext    ActionType = "funcVarContext"
 	ActionTypeFuncStringConcate ActionType = "funcStringConcate"
+	ActionTypeFuncGeneral       ActionType = "funcGeneral"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -53,7 +54,8 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
 			setting.Type == ActionTypeFuncHash ||
-			setting.Type == ActionTypeFuncStringConcate) == false {
+			setting.Type == ActionTypeFuncStringConcate ||
+			setting.Type == ActionTypeFuncGeneral) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)
 			result.AddError(msg)
@@ -100,6 +102,6 @@ func (setting ActionSettings) ShouldUseBodyRef() (shouldUse bool, valueRef strin
 	if bodyConfig == nil {
 		return false, ""
 	} else {
-		return len(bodyConfig.UseValue) > 0, bodyConfig.UseValue
+		return len(bodyConfig.Use) > 0, bodyConfig.Use
 	}
 }

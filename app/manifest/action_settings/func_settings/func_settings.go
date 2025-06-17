@@ -1,11 +1,14 @@
 package func_settings
 
-import "wrench/app/manifest/validation"
+import (
+	"wrench/app/manifest/validation"
+)
 
 type FuncSettings struct {
 	Hash    *FuncHashSettings `yaml:"hash"`
 	Vars    map[string]string `yaml:"vars"`
 	Concate []string          `yaml:"concate"`
+	Command string            `yaml:"command"`
 }
 
 func (setting FuncSettings) Valid() validation.ValidateResult {

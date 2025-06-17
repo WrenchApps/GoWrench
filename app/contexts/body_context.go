@@ -27,8 +27,6 @@ func (bodyContext *BodyContext) SetBody(body []byte) {
 }
 
 func (bodyContext *BodyContext) SetBodyAction(settings *action_settings.ActionSettings, body []byte) {
-	bodyContext.CurrentBodyByteArray = body
-
 	if settings.ShouldPreserveBody() {
 		bodyContext.SetBodyPreserved(settings.Id, body)
 	} else {
@@ -129,6 +127,8 @@ func (bodyContext *BodyContext) GetBody(settings *action_settings.ActionSettings
 	shouldUse, bodyRef := settings.ShouldUseBodyRef()
 
 	if shouldUse {
+		bodyRef = ReplaceCalculatedValue(bodyRef)
+		bodyRef = ReplacePrefixBodyContextPreserved(bodyRef)
 		return bodyContext.GetBodyPreserved(bodyRef)
 	} else {
 		return bodyContext.CurrentBodyByteArray

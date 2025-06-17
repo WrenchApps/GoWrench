@@ -18,7 +18,7 @@ func (handler *FuncStringConcateHandler) Do(ctx context.Context, wrenchContext *
 
 			var strincConcateResult = ""
 			for _, item := range handler.ActionSettings.Func.Concate {
-				strincConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext)
+				strincConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings)
 			}
 
 			bodyContext.SetBodyAction(handler.ActionSettings, []byte(strincConcateResult))

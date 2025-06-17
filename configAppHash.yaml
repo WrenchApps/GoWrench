@@ -7,7 +7,7 @@ service:
 tokenCredentials:
   - id: custom_client
     type: custom_authentication
-    authEndpoint: https://cat.api.firstdata.com/sba/token/
+    authEndpoint: '{{CLIENT_CUSTOM_AUTH_ENDPOINT}}'
     forceReload: 10m
     custom:
       method: post
@@ -16,8 +16,8 @@ tokenCredentials:
       requestBody:
         grant_type: "password"
         client_id: "bwa"
-        username: "int_afinz_apis"
-        password: "vK8FIxggtB28UHW4U9VG95d@"
+        username: "{{CLIENT_CUSTOM_AUTH_USERNAME}}"
+        password: "{{CLIENT_CUSTOM_AUTH_PASSWORD}}"
       configs:
         accessTokenPropertyName: "access_token"
         tokenType: ""
@@ -31,19 +31,10 @@ api:
         - var_context
         - func_concate
         - func_hash
+        - func_base64
         - call_client
 
 actions:
-  - id: func_hash
-    type: funcHash
-    body:
-      preserveCurrentBody: true
-      useValue: "{{bodyContext.actions.func_concate}}"
-    func:
-      hash:
-        alg: SHA-256  #SHA-1, SHA-512, MD5 ...
-        key: 'N93nmFmoY0NzSMC5'
-
   - id: var_context
     type: funcVarContext
     body:
@@ -51,8 +42,8 @@ actions:
     func:
       vars:
         "Timestamp": "{{func.timestamp(milli)}}"
-        "ApiKey": "X0GW3QGOYFn4r7DHcVC8KuatUnNs6MGB"
-        "ClientRequestId": "BqPwwuCODCPWFwboS605HAM"
+        "ApiKey": "{{API_KEY}}"
+        "ClientRequestId": "{{CLIENT_REQUEST_ID}}"
 
   - id: func_concate
     type: funcStringConcate
@@ -65,17 +56,34 @@ actions:
       - "{{bodyContext.actions.var_context.Timestamp}}"
       - "{{bodyContext.currentBody}}"
 
+  - id: func_hash
+    type: funcHash
+    body:
+      preserveCurrentBody: true
+      use: "{{bodyContext.actions.func_concate}}"
+    func:
+      hash:
+        alg: SHA-256  #SHA-1, SHA-512, MD5 ...
+        key: '{{HMAC_KEY}}'
+
+  - id: func_base64
+    type: funcGeneral
+    body:
+      preserveCurrentBody: true
+      use: "{{bodyContext.actions.func_hash}}"
+    func:
+      command: "{{func.base64(encode)}}"
 
   - id: call_client
     type: httpRequest
     http:
       request:
         headers: 
-          "Message-Signature": "{{bodyContext.actions.func_hash}}"
+          "Message-Signature": "{{bodyContext.actions.func_base64}}"
           "Timestamp": "{{bodyContext.actions.var_context.Timestamp}}"
           "Api-Key": "{{bodyContext.actions.var_context.ApiKey}}"
           "Client-Request-Id": "{{bodyContext.actions.var_context.ClientRequestId}}"
         method: post
         tokenCredentialId: custom_client
-        url: 'https://cat.api.firstdata.com/bwa/wsm/prepayments/consultations/consultPrepayment'
+        url: '{{CONSULT_PREPAYMENT_URL}}'
 

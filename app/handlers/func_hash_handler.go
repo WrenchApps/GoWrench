@@ -22,7 +22,7 @@ type FuncHashHandler struct {
 
 func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	if !wrenchContext.HasError {
-		key := handler.ActionSettings.Func.Hash.Key
+		key := contexts.GetCalculatedValue(handler.ActionSettings.Func.Hash.Key, wrenchContext, bodyContext, handler.ActionSettings)
 
 		hashType := handler.getHashFunc(handler.ActionSettings.Func.Hash.Alg)
 

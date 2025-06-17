@@ -17,7 +17,7 @@ func (handler *FuncVarContextHandler) Do(ctx context.Context, wrenchContext *con
 		varsConfigured := handler.ActionSettings.Func.Vars
 
 		if len(varsConfigured) > 0 {
-			varsResult := contexts.GetCalculatedMap(varsConfigured, wrenchContext, bodyContext)
+			varsResult := contexts.GetCalculatedMap(varsConfigured, wrenchContext, bodyContext, handler.ActionSettings)
 			var result, _ = bodyContext.ConvertMapToByteArray(varsResult)
 
 			bodyContext.SetBodyAction(handler.ActionSettings, result)

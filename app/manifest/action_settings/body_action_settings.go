@@ -4,7 +4,7 @@ import "wrench/app/manifest/validation"
 
 type BodyActionSettings struct {
 	PreserveCurrentBody bool   `yaml:"preserveCurrentBody"`
-	UseValue            string `yaml:"useValue"`
+	Use                 string `yaml:"use"`
 }
 
 func (setting BodyActionSettings) Valid() validation.ValidateResult {

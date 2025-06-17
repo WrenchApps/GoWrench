@@ -24,7 +24,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
-		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext))
+		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)

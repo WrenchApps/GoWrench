@@ -2,6 +2,7 @@ package contexts
 
 import (
 	"strings"
+	settings "wrench/app/manifest/action_settings"
 )
 
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
@@ -15,6 +16,10 @@ func IsCalculatedValue(value string) bool {
 
 func ReplaceCalculatedValue(command string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(command, "{{", ""), "}}", "")
+}
+
+func ReplacePrefixBodyContextPreserved(command string) string {
+	return strings.ReplaceAll(command, prefixBodyContextPreserved, "")
 }
 
 func IsWrenchContextCommand(command string) bool {
@@ -50,7 +55,7 @@ func ReplacePrefixBodyContext(command string) string {
 	return command
 }
 
-func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContext *BodyContext) string {
+func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContext *BodyContext, action *settings.ActionSettings) string {
 	if IsCalculatedValue(command) {
 		command = ReplaceCalculatedValue(command)
 		if IsBodyContextCommand(command) {
@@ -58,7 +63,7 @@ func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContex
 		} else if IsWrenchContextCommand(command) {
 			return GetValueWrenchContext(command, wrenchContext)
 		} else if IsFunc(command) {
-			return GetFuncValue(GeneralFuncType(command))
+			return GetFuncValue(FuncGeneralType(command), wrenchContext, bodyContext, action)
 		} else {
 			return command
 		}
@@ -122,14 +127,14 @@ func getBodyValue(jsonMap map[string]interface{}, propertyName string) string {
 	return value
 }
 
-func GetCalculatedMap(mapConfigured map[string]string, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+func GetCalculatedMap(mapConfigured map[string]string, wrenchContext *WrenchContext, bodyContext *BodyContext, action *settings.ActionSettings) map[string]interface{} {
 	if mapConfigured == nil {
 		return nil
 	}
 	mapResult := make(map[string]interface{})
 
 	for key, value := range mapConfigured {
-		mapResult[key] = GetCalculatedValue(value, wrenchContext, bodyContext)
+		mapResult[key] = GetCalculatedValue(value, wrenchContext, bodyContext, action)
 	}
 
 	return mapResult
