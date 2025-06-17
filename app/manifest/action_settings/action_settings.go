@@ -54,6 +54,7 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
 			setting.Type == ActionTypeFuncHash ||
+			setting.Type == ActionTypeFuncVarContext ||
 			setting.Type == ActionTypeFuncStringConcatenate ||
 			setting.Type == ActionTypeFuncGeneral) == false {
 
