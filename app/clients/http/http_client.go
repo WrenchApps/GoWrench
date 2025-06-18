@@ -47,14 +47,14 @@ type HttpClientResponseData struct {
 	HttpClientResponse *http.Response
 }
 
-func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[string]string) {
+func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[string]interface{}) {
 	if headers != nil {
 		if httpClientRequestData.Headers == nil {
 			httpClientRequestData.Headers = make(map[string]string)
 		}
 
 		for key, value := range headers {
-			httpClientRequestData.Headers[key] = value
+			httpClientRequestData.Headers[key] = fmt.Sprint(value)
 		}
 	}
 }

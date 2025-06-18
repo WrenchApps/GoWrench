@@ -20,18 +20,21 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	if !wrenchContext.HasError {
 
 		request := new(client.HttpClientRequestData)
-		request.Body = bodyContext.BodyByteArray
+		request.Body = bodyContext.GetBody(handler.ActionSettings)
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
-		request.SetHeaders(handler.ActionSettings.Http.Request.MapFixedHeaders)
-		request.SetHeaders(mapHttpRequestHeaders(handler.ActionSettings.Http.Request.MapRequestHeaders))
+		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
 			if tokenData != nil {
-				bearerToken := fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken)
-				request.SetHeader("Authorization", bearerToken)
+				bearerToken := strings.Trim(fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken), " ")
+				if len(tokenData.HeaderName) == 0 {
+					request.SetHeader("Authorization", bearerToken)
+				} else {
+					request.SetHeader(tokenData.HeaderName, bearerToken)
+				}
 			}
 		}
 
@@ -45,7 +48,8 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			wrenchContext.SetHasError()
 		}
 
-		bodyContext.BodyByteArray = response.Body
+		bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
+
 		bodyContext.HttpStatusCode = response.StatusCode
 		if handler.ActionSettings.Http.Response != nil {
 			bodyContext.SetHeaders(handler.ActionSettings.Http.Response.MapFixedHeaders)
@@ -82,15 +86,6 @@ func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchCo
 		routeWithoutPrefix := strings.ReplaceAll(routeTriggered, prefix, "")
 		return handler.ActionSettings.Http.Request.Url + routeWithoutPrefix
 	}
-}
-
-func mapHttpRequestHeaders(mapRequestHeader []string) map[string]string {
-	if mapRequestHeader == nil {
-		return nil
-	}
-	mapRequestHeaderResult := make(map[string]string)
-
-	return mapRequestHeaderResult
 }
 
 func mapHttpResponseHeaders(response *client.HttpClientResponseData, mapResponseHeader []string) map[string]string {

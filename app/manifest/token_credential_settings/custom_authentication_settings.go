@@ -8,6 +8,7 @@ import (
 type CustomAuthenticationConfigurations struct {
 	AccessTokenPropertyName string `yaml:"accessTokenPropertyName"`
 	TokenType               string `yaml:"tokenType"`
+	HeaderName              string `yaml:"headerName"`
 }
 
 type CustomAuthentication struct {

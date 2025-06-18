@@ -3,6 +3,7 @@ package action_settings
 import (
 	"fmt"
 	"wrench/app/manifest/action_settings/file_settings"
+	"wrench/app/manifest/action_settings/func_settings"
 	"wrench/app/manifest/action_settings/http_settings"
 	"wrench/app/manifest/action_settings/nats_settings"
 	"wrench/app/manifest/action_settings/sns_settings"
@@ -18,16 +19,22 @@ type ActionSettings struct {
 	Trigger *trigger_settings.TriggerSetting `yaml:"trigger"`
 	File    *file_settings.FileSettings      `yaml:"file"`
 	Nats    *nats_settings.NatsSettings      `yaml:"nats"`
+	Func    *func_settings.FuncSettings      `yaml:"func"`
+	Body    *BodyActionSettings              `yaml:"body"`
 }
 
 type ActionType string
 
 const (
-	ActionTypeHttpRequest     ActionType = "httpRequest"
-	ActionTypeHttpRequestMock ActionType = "httpRequestMock"
-	ActionTypeSnsPublish      ActionType = "snsPublish"
-	ActionTypeFileReader      ActionType = "fileReader"
-	ActionTypeNatsPublish     ActionType = "natsPublish"
+	ActionTypeHttpRequest           ActionType = "httpRequest"
+	ActionTypeHttpRequestMock       ActionType = "httpRequestMock"
+	ActionTypeSnsPublish            ActionType = "snsPublish"
+	ActionTypeFileReader            ActionType = "fileReader"
+	ActionTypeNatsPublish           ActionType = "natsPublish"
+	ActionTypeFuncHash              ActionType = "funcHash"
+	ActionTypeFuncVarContext        ActionType = "funcVarContext"
+	ActionTypeFuncStringConcatenate ActionType = "funcStringConcatenate"
+	ActionTypeFuncGeneral           ActionType = "funcGeneral"
 )
 
 func (setting ActionSettings) Valid() validation.ValidateResult {
@@ -45,7 +52,11 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeHttpRequestMock ||
 			setting.Type == ActionTypeSnsPublish ||
 			setting.Type == ActionTypeFileReader ||
-			setting.Type == ActionTypeNatsPublish) == false {
+			setting.Type == ActionTypeNatsPublish ||
+			setting.Type == ActionTypeFuncHash ||
+			setting.Type == ActionTypeFuncVarContext ||
+			setting.Type == ActionTypeFuncStringConcatenate ||
+			setting.Type == ActionTypeFuncGeneral) == false {
 
 			var msg = fmt.Sprintf("actions[%s].type should contain valid value", setting.Id)
 			result.AddError(msg)
@@ -76,5 +87,22 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 		result.AppendValidable(setting.Nats)
 	}
 
+	if setting.Func != nil {
+		result.AppendValidable(setting.Func)
+	}
+
 	return result
+}
+
+func (setting ActionSettings) ShouldPreserveBody() bool {
+	return setting.Body != nil && setting.Body.PreserveCurrentBody
+}
+
+func (setting ActionSettings) ShouldUseBodyRef() (shouldUse bool, valueRef string) {
+	bodyConfig := setting.Body
+	if bodyConfig == nil {
+		return false, ""
+	} else {
+		return len(bodyConfig.Use) > 0, bodyConfig.Use
+	}
 }

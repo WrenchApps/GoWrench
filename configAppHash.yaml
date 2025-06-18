@@ -1,0 +1,89 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+tokenCredentials:
+  - id: custom_client
+    type: custom_authentication
+    authEndpoint: '{{CLIENT_CUSTOM_AUTH_ENDPOINT}}'
+    forceReload: 10m
+    custom:
+      method: post
+      requestHeaders:
+        Content-Type: application/x-www-form-urlencoded
+      requestBody:
+        grant_type: "password"
+        client_id: "bwa"
+        username: "{{CLIENT_CUSTOM_AUTH_USERNAME}}"
+        password: "{{CLIENT_CUSTOM_AUTH_PASSWORD}}"
+      configs:
+        accessTokenPropertyName: "access_token"
+        tokenType: ""
+        headerName: "auth"
+
+api:
+  endpoints:
+    - route: /api/hmac_test
+      method: post
+      flowActionId:
+        - var_context
+        - func_concate
+        - func_hash
+        - func_base64
+        - call_client
+
+actions:
+  - id: var_context
+    type: funcVarContext
+    body:
+      preserveCurrentBody: true
+    func:
+      vars:
+        "Timestamp": "{{func.timestamp(milli)}}"
+        "ApiKey": "{{API_KEY}}"
+        "ClientRequestId": "{{CLIENT_REQUEST_ID}}"
+
+  - id: func_concate
+    type: funcStringConcatenate
+    body:
+      preserveCurrentBody: true
+    func:
+      concatenate:
+      - "{{bodyContext.actions.var_context.ApiKey}}"
+      - "{{bodyContext.actions.var_context.ClientRequestId}}"
+      - "{{bodyContext.actions.var_context.Timestamp}}"
+      - "{{bodyContext.currentBody}}"
+
+  - id: func_hash
+    type: funcHash
+    body:
+      preserveCurrentBody: true
+      use: "{{bodyContext.actions.func_concate}}"
+    func:
+      hash:
+        alg: SHA-256  #SHA-1, SHA-512, MD5 ...
+        key: '{{HMAC_KEY}}'
+
+  - id: func_base64
+    type: funcGeneral
+    body:
+      preserveCurrentBody: true
+      use: "{{bodyContext.actions.func_hash}}"
+    func:
+      command: "{{func.base64(encode)}}"
+
+  - id: call_client
+    type: httpRequest
+    http:
+      request:
+        headers: 
+          "Message-Signature": "{{bodyContext.actions.func_base64}}"
+          "Timestamp": "{{bodyContext.actions.var_context.Timestamp}}"
+          "Api-Key": "{{bodyContext.actions.var_context.ApiKey}}"
+          "Client-Request-Id": "{{bodyContext.actions.var_context.ClientRequestId}}"
+        method: post
+        tokenCredentialId: custom_client
+        url: '{{CONSULT_PREPAYMENT_URL}}'
+

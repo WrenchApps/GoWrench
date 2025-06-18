@@ -15,7 +15,7 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 	ctx := context.Background()
 
 	var chain = ChainStatic.GetStatic()
-	var handler = chain.GetByActionId(request.Endpoint.ActionID)
+	var handler = chain.GetHandler(request.Endpoint.Route)
 
 	bodyContext := new(contexts.BodyContext)
 	wrenchContext := new(contexts.WrenchContext)
