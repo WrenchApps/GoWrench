@@ -17,6 +17,10 @@ type TokenCredentialSetting struct {
 	Custom           *CustomAuthentication    `yaml:"custom"`
 }
 
+func (setting *TokenCredentialSetting) GetId() string {
+	return setting.Id
+}
+
 type TokenCredentialType string
 
 const (

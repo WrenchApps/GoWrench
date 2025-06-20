@@ -27,7 +27,7 @@ func GetJetStreamByConnectionId(natsConnectionId string) nats.JetStreamContext {
 	return jetStreams[natsConnectionId]
 }
 
-func loadConnectionNats(connNatsSetting []*connection_settings.ConnectionNatsSettings) error {
+func loadConnectionNats(connNatsSetting []*connection_settings.NatsConnectionSettings) error {
 	if len(connNatsSetting) > 0 {
 		if connections == nil {
 			connections = make(map[string]*nats.Conn)

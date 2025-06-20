@@ -3,7 +3,7 @@ package connection_settings
 import "wrench/app/manifest/validation"
 
 type ConnectionSettings struct {
-	Nats []*ConnectionNatsSettings `yaml:"nats"`
+	Nats []*NatsConnectionSettings `yaml:"nats"`
 }
 
 func (settings ConnectionSettings) Valid() validation.ValidateResult {

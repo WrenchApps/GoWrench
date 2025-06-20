@@ -23,6 +23,10 @@ type ActionSettings struct {
 	Body    *BodyActionSettings              `yaml:"body"`
 }
 
+func (setting *ActionSettings) GetId() string {
+	return setting.Id
+}
+
 type ActionType string
 
 const (
