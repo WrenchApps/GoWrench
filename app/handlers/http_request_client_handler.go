@@ -42,18 +42,18 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 
 		if err != nil {
 			wrenchContext.SetHasError()
-		}
+		} else {
+			if response.StatusCode > 399 {
+				wrenchContext.SetHasError()
+			}
 
-		if response.StatusCode > 399 {
-			wrenchContext.SetHasError()
-		}
+			bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
 
-		bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
-
-		bodyContext.HttpStatusCode = response.StatusCode
-		if handler.ActionSettings.Http.Response != nil {
-			bodyContext.SetHeaders(handler.ActionSettings.Http.Response.MapFixedHeaders)
-			bodyContext.SetHeaders(mapHttpResponseHeaders(response, handler.ActionSettings.Http.Response.MapResponseHeaders))
+			bodyContext.HttpStatusCode = response.StatusCode
+			if handler.ActionSettings.Http.Response != nil {
+				bodyContext.SetHeaders(handler.ActionSettings.Http.Response.MapFixedHeaders)
+				bodyContext.SetHeaders(mapHttpResponseHeaders(response, handler.ActionSettings.Http.Response.MapResponseHeaders))
+			}
 		}
 	}
 

@@ -16,11 +16,11 @@ func (setting HttpRequestMockSetting) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Body) == 0 && setting.MirrorBody == false {
-		result.AddError("actions.mock.body is required or setting.mirrorBody equals true")
+		result.AddError("actions.http.mock.body is required or setting.mirrorBody equals true")
 	}
 
 	if len(setting.ContentType) == 0 {
-		result.AddError("actions.mock.contentType is required")
+		result.AddError("actions.http.mock.contentType is required")
 	}
 
 	return result

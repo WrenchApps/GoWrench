@@ -63,6 +63,10 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 		}
 	}
 
+	if setting.Http != nil {
+		result.AppendValidable(setting.Http)
+	}
+
 	if setting.Type == ActionTypeHttpRequest {
 		setting.Http.ValidTypeActionTypeHttpRequest(&result)
 	}
