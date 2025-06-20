@@ -3,6 +3,7 @@ package startup
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -75,7 +76,9 @@ func setEnvFileToSystemEnv(pathEnvFile string) {
 					os.Setenv(envKey, envValue)
 				}
 			}
-		} else {
+		}
+
+		if err == io.EOF {
 			break
 		}
 	}

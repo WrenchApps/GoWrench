@@ -1,7 +1,6 @@
 package http_settings
 
 import (
-	"fmt"
 	"wrench/app/manifest/validation"
 )
 
@@ -36,24 +35,20 @@ func (setting HttpSetting) Valid() validation.ValidateResult {
 func (setting HttpSetting) ValidTypeActionTypeHttpRequest(result *validation.ValidateResult) {
 
 	if setting.Request == nil {
-		var msg = fmt.Sprintf("actions.http.request should be nil")
-		result.AddError(msg)
+		result.AddError("actions.http.request is required when type is httpRequest")
 	}
 
 	if setting.Mock != nil {
-		var msg = fmt.Sprintf("actions.http.mock should be nil")
-		result.AddError(msg)
+		result.AddError("actions.http.mock can't be configured when type is httpRequest")
 	}
 }
 
 func (setting HttpSetting) ValidTypeActionTypeHttpRequestMock(result *validation.ValidateResult) {
-	if setting.Request != nil {
-		var msg = fmt.Sprintf("actions.http.request should be nil")
-		result.AddError(msg)
+	if setting.Mock == nil {
+		result.AddError("actions.http.mock is required when type is httpRequestMock")
 	}
 
-	if setting.Mock == nil {
-		var msg = fmt.Sprintf("actions.http.mock is required")
-		result.AddError(msg)
+	if setting.Request != nil {
+		result.AddError("actions.http.mock can't be configured when type is httpRequestMock")
 	}
 }

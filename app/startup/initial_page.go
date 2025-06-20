@@ -3,6 +3,7 @@ package startup
 import (
 	"encoding/json"
 	"net/http"
+	"wrench/app/cross_validation"
 	"wrench/app/manifest/application_settings"
 )
 
@@ -23,6 +24,8 @@ func (page *InitialPage) WriteInitialPage(w http.ResponseWriter, r *http.Request
 func (page *InitialPage) HealthCheckEndpoint(w http.ResponseWriter, r *http.Request) {
 	app := application_settings.ApplicationSettingsStatic
 	result := app.Valid()
+	result.Append(cross_validation.Valid())
+
 	w.Header().Set("Content-Type", "application/json")
 
 	if result.IsSuccess() {
