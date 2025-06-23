@@ -12,6 +12,7 @@ func Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	result.Append(httpRequestCrossValid(appSetting))
+	result.Append(kafkaProducerCronsValidation(appSetting))
 
 	if len(appSetting.Actions) > 0 {
 		hasIds := toHasIdSlice(appSetting.Actions)
@@ -47,6 +48,7 @@ func Valid() validation.ValidateResult {
 		for _, id := range duplicateIds {
 			result.AddError(fmt.Sprintf("connections.kafka.id %v duplicated", id))
 		}
+
 	}
 
 	return result
