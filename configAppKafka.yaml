@@ -7,7 +7,7 @@ service:
 connections:
   kafka:
   - id: kafka_default
-    connectionType: Plaintext #Plaintext, TLS
+    connectionType: plaintext #Plaintext, TLS
     bootstrapServers: localhost:29092
 
 api:

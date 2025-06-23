@@ -5,6 +5,7 @@ import (
 	"wrench/app/manifest/action_settings/file_settings"
 	"wrench/app/manifest/action_settings/func_settings"
 	"wrench/app/manifest/action_settings/http_settings"
+	"wrench/app/manifest/action_settings/kafka_settings"
 	"wrench/app/manifest/action_settings/nats_settings"
 	"wrench/app/manifest/action_settings/sns_settings"
 	"wrench/app/manifest/action_settings/trigger_settings"
@@ -19,6 +20,7 @@ type ActionSettings struct {
 	Trigger *trigger_settings.TriggerSetting `yaml:"trigger"`
 	File    *file_settings.FileSettings      `yaml:"file"`
 	Nats    *nats_settings.NatsSettings      `yaml:"nats"`
+	Kafka   *kafka_settings.KafkaSettings    `yaml:"kafka"`
 	Func    *func_settings.FuncSettings      `yaml:"func"`
 	Body    *BodyActionSettings              `yaml:"body"`
 }
@@ -35,6 +37,7 @@ const (
 	ActionTypeSnsPublish            ActionType = "snsPublish"
 	ActionTypeFileReader            ActionType = "fileReader"
 	ActionTypeNatsPublish           ActionType = "natsPublish"
+	ActionTypeKafkaProducer         ActionType = "kafkaProducer"
 	ActionTypeFuncHash              ActionType = "funcHash"
 	ActionTypeFuncVarContext        ActionType = "funcVarContext"
 	ActionTypeFuncStringConcatenate ActionType = "funcStringConcatenate"
@@ -57,6 +60,7 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 			setting.Type == ActionTypeSnsPublish ||
 			setting.Type == ActionTypeFileReader ||
 			setting.Type == ActionTypeNatsPublish ||
+			setting.Type == ActionTypeKafkaProducer ||
 			setting.Type == ActionTypeFuncHash ||
 			setting.Type == ActionTypeFuncVarContext ||
 			setting.Type == ActionTypeFuncStringConcatenate ||
@@ -99,6 +103,8 @@ func (setting ActionSettings) Valid() validation.ValidateResult {
 		result.AppendValidable(setting.Func)
 	}
 
+	result.Append(setting.ActionTypeKafkaProducerValid())
+
 	return result
 }
 
@@ -113,4 +119,19 @@ func (setting ActionSettings) ShouldUseBodyRef() (shouldUse bool, valueRef strin
 	} else {
 		return len(bodyConfig.Use) > 0, bodyConfig.Use
 	}
+}
+
+func (setting ActionSettings) ActionTypeKafkaProducerValid() validation.ValidateResult {
+	var result validation.ValidateResult
+
+	if setting.Type == ActionTypeKafkaProducer {
+		if setting.Kafka == nil {
+			result.AddError("action.kafka is required when action type is kafkaProducer")
+		} else {
+			result.AppendValidable(setting.Kafka)
+		}
+
+	}
+
+	return result
 }
