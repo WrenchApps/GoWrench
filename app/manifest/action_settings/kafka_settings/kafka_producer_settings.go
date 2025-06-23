@@ -5,6 +5,7 @@ import "wrench/app/manifest/validation"
 type KafkaSettings struct {
 	ConnectionId string            `yaml:"connectionId"`
 	TopicName    string            `yaml:"topicName"`
+	MessageKey   string            `yaml:"messageKey"`
 	Headers      map[string]string `yaml:"headers"`
 }
 

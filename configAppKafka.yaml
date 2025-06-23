@@ -21,4 +21,8 @@ actions:
     type: kafkaProducer
     kafka:
       connectionId: kafka_default
-      topicName: 'events.test.publish'
+      topicName: 'events.test.producer'
+      messageKey: '{{bodyContext.currentBody.id}}'
+      headers:
+        "id": "{{bodyContext.currentBody.id}}"
+        "test1": "{{wrenchContext.request.headers.test1}}"
