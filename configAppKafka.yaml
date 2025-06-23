@@ -8,7 +8,7 @@ connections:
   kafka:
   - id: kafka_default
     connectionType: Plaintext #Plaintext, TLS
-    bootstrapServers: "{{KAFKA_SERVER_ADDRESS}}"
+    bootstrapServers: localhost:29092
 
 api:
   endpoints:

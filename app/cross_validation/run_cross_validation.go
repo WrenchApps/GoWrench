@@ -40,5 +40,14 @@ func Valid() validation.ValidateResult {
 		}
 	}
 
+	if appSetting.Connections != nil && len(appSetting.Connections.Kafka) > 0 {
+		hasIds := toHasIdSlice(appSetting.Connections.Kafka)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("connections.kafka.id %v duplicated", id))
+		}
+	}
+
 	return result
 }
