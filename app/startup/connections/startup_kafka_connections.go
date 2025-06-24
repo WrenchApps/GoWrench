@@ -51,7 +51,7 @@ func loadConnectionsKafka(kafkaSettings []*connection_settings.KafkaConnectionSe
 }
 
 func GetKafkaConnection(kafkaConnectionId string) (*KafkaConnection, error) {
-	if len(kafkaConnections) == 0 ||
+	if len(kafkaConnectionId) == 0 ||
 		len(kafkaConnections) == 0 ||
 		kafkaConnections[kafkaConnectionId] == nil {
 		return nil, errors.New("Without connection")
