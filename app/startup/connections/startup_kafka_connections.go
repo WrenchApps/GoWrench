@@ -31,7 +31,7 @@ func loadConnectionsKafka(kafkaSettings []*connection_settings.KafkaConnectionSe
 			dialer = &kafka.Dialer{
 				Timeout:   10 * time.Second,
 				DualStack: true,
-				TLS:       &tls.Config{InsecureSkipVerify: true},
+				TLS:       &tls.Config{},
 			}
 		} else {
 			dialer = &kafka.Dialer{
