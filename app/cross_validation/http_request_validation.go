@@ -8,9 +8,8 @@ import (
 	"wrench/app/manifest_cross_funcs"
 )
 
-func httpRequestCrossValid() validation.ValidateResult {
+func httpRequestCrossValid(appSetting *application_settings.ApplicationSettings) validation.ValidateResult {
 	var result validation.ValidateResult
-	appSetting := application_settings.ApplicationSettingsStatic
 
 	actionHttpRequest := getActionsByType(appSetting.Actions, action_settings.ActionTypeHttpRequest)
 

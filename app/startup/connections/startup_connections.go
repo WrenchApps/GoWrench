@@ -15,5 +15,9 @@ func LoadConnections() error {
 		err = loadJetStreams(app.Actions)
 	}
 
+	if err == nil {
+		err = loadConnectionsKafka(app.Connections.Kafka)
+	}
+
 	return err
 }

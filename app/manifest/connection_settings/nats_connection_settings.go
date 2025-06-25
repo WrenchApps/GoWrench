@@ -4,12 +4,16 @@ import (
 	"wrench/app/manifest/validation"
 )
 
-type ConnectionNatsSettings struct {
+type NatsConnectionSettings struct {
 	Id            string `yaml:"id"`
 	ServerAddress string `yaml:"serverAddress"`
 }
 
-func (settings ConnectionNatsSettings) Valid() validation.ValidateResult {
+func (setting *NatsConnectionSettings) GetId() string {
+	return setting.Id
+}
+
+func (settings NatsConnectionSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(settings.Id) == 0 {

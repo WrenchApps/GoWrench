@@ -22,18 +22,18 @@ func (setting FuncHashSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Alg) == 0 {
-		result.AddError("actions.hash.alg is required")
+		result.AddError("actions.func.hash.alg is required")
 	} else {
 		if (setting.Alg == FuncHashAlgSHA512 ||
 			setting.Alg == FuncHashAlgSHA256 ||
 			setting.Alg == FuncHashAlgSHA1 ||
 			setting.Alg == FuncHashAlgMD5) == false {
-			result.AddError("actions.hash.alg should contain valid values SHA-512, SHA-256, SHA-1 or MD5")
+			result.AddError("actions.func.hash.alg should contain valid values SHA-512, SHA-256, SHA-1 or MD5")
 		}
 	}
 
 	if len(setting.Key) == 0 {
-		result.AddError("actions.hash.key is required")
+		result.AddError("actions.func.hash.key is required")
 	}
 
 	return result

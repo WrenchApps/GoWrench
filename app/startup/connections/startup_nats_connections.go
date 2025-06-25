@@ -8,29 +8,29 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-var connections map[string]*nats.Conn
+var natsConnections map[string]*nats.Conn
 var jetStreams map[string]nats.JetStreamContext
 
 func GetNatsConnectionById(natsConnectionId string) *nats.Conn {
-	if len(natsConnectionId) == 0 || connections == nil {
+	if len(natsConnectionId) == 0 || natsConnections == nil {
 		return nil
 	}
 
-	return connections[natsConnectionId]
+	return natsConnections[natsConnectionId]
 }
 
 func GetJetStreamByConnectionId(natsConnectionId string) nats.JetStreamContext {
-	if len(natsConnectionId) == 0 || connections == nil {
+	if len(natsConnectionId) == 0 || natsConnections == nil {
 		return nil
 	}
 
 	return jetStreams[natsConnectionId]
 }
 
-func loadConnectionNats(connNatsSetting []*connection_settings.ConnectionNatsSettings) error {
+func loadConnectionNats(connNatsSetting []*connection_settings.NatsConnectionSettings) error {
 	if len(connNatsSetting) > 0 {
-		if connections == nil {
-			connections = make(map[string]*nats.Conn)
+		if natsConnections == nil {
+			natsConnections = make(map[string]*nats.Conn)
 		}
 
 		for _, conn := range connNatsSetting {
@@ -41,7 +41,7 @@ func loadConnectionNats(connNatsSetting []*connection_settings.ConnectionNatsSet
 				return err
 			}
 
-			connections[conn.Id] = nc
+			natsConnections[conn.Id] = nc
 		}
 	}
 

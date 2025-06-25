@@ -116,6 +116,13 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 		currentHandler = funcGeneralHandler
 	}
 
+	if action.Type == action_settings.ActionTypeKafkaProducer {
+		kafkaProducerHandler := new(KafkaProducerHandler)
+		kafkaProducerHandler.ActionSettings = action
+		currentHandler.SetNext(kafkaProducerHandler)
+		currentHandler = kafkaProducerHandler
+	}
+
 	if action.Trigger != nil && action.Trigger.After != nil {
 		httpContractMapHandler := new(HttpContractMapHandler)
 

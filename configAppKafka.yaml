@@ -1,0 +1,28 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+connections:
+  kafka:
+  - id: kafka_default
+    connectionType: plaintext #Plaintext, TLS
+    bootstrapServers: localhost:29092
+
+api:
+  endpoints:
+    - route: '/api/producer_message'
+      method: post
+      actionId: action_producer_kafka
+
+actions:
+  - id: action_producer_kafka
+    type: kafkaProducer
+    kafka:
+      connectionId: kafka_default
+      topicName: 'events.test.producer'
+      messageKey: '{{bodyContext.currentBody.id}}'
+      headers:
+        "id": "{{bodyContext.currentBody.id}}"
+        "test1": "{{wrenchContext.request.headers.test1}}"
