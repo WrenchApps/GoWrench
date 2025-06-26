@@ -164,18 +164,18 @@ func RemoveProperty(jsonMap map[string]interface{}, propertyName string) map[str
 	total := len(propertyNameSplitted)
 
 	for i, property := range propertyNameSplitted {
-		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
-
-		if ok && i+1 == total {
+		if i == total-1 {
 			delete(jsonMapCurrent, property)
 			break
-		} else {
-			jsonMapCurrent = valueTemp
 		}
 
-		if i+1 == total {
-			delete(jsonMapCurrent, property)
+		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
+
+		if !ok {
+			break
 		}
+
+		jsonMapCurrent = valueTemp
 	}
 
 	return jsonMap
