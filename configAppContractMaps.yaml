@@ -1,0 +1,45 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+    - route: /api/map
+      method: post
+      actionId: contract_map
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+
+  - id: contract_map
+    type: httpRequest
+    trigger:
+      before:
+        contractMapId: map_before
+      # after:
+      #   contractMapId: map_after
+    http:
+      request:
+        method: post
+        url: 'http://localhost:{{PORT}}/api/mock'
+
+contract:
+  maps:
+  - id: map_before
+    sequence:
+    - parse
+    parse:
+      toArray:
+      - "phone:phones"
+      - "address"
+      - "customer.phone:customer.phones"

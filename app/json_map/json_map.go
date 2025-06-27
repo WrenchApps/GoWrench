@@ -85,7 +85,7 @@ func SetValue(jsonMap map[string]interface{}, propertyName string, newValue stri
 	return jsonMap
 }
 
-func CreateProperty(jsonMap map[string]interface{}, propertyName string, value string) map[string]interface{} {
+func CreateProperty(jsonMap map[string]interface{}, propertyName string, value interface{}) map[string]interface{} {
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
@@ -246,6 +246,23 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 					jsonValueCurrent = SetValue(jsonValueCurrent, propertyName, parseToValue)
 				}
 			}
+		}
+	} else if len(parse.ToArray) > 0 {
+		for _, toArray := range parse.ToArray {
+			toArraySplitted := strings.Split(toArray, ":")
+
+			originPropertyName := toArraySplitted[0]
+			var destinyPropertyName string
+			if len(toArraySplitted) == 1 {
+				destinyPropertyName = originPropertyName
+			} else {
+				destinyPropertyName = toArraySplitted[1]
+			}
+
+			value, jsonMapResult := GetValue(jsonValueCurrent, originPropertyName, true)
+
+			var arrayValue = [1]interface{}{value}
+			jsonValueCurrent = CreateProperty(jsonMapResult, destinyPropertyName, arrayValue)
 		}
 	}
 
