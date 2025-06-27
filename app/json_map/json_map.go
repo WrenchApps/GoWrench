@@ -11,17 +11,25 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (string, map[string]interface{}) {
-	value := ""
+func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (interface{}, map[string]interface{}) {
+	var value interface{}
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
+	totalProperty := len(propertyNameSplitted)
 
-	for _, property := range propertyNameSplitted {
+	for index, property := range propertyNameSplitted {
 		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
 		if ok {
 			jsonMapCurrent = valueTemp
+			if index == totalProperty-1 {
+				value = valueTemp
+				if deleteProperty {
+					delete(jsonMap, property)
+				}
+				break
+			}
 			continue
 		}
 
@@ -41,24 +49,21 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 						propertyNameToArray = propertyNameToArray[1:]
 						return GetValue(item, propertyNameToArray, false)
 					} else {
-						valueTempString, _ := jsonMapCurrent[property].(string)
-						value = valueTempString
+						value = jsonMapCurrent[property]
 					}
 				}
 				break
 			}
 		} else {
 
-			valueTempString, ok := jsonMapCurrent[property].(string)
-			if ok {
-				value = valueTempString
+			value = jsonMapCurrent[property]
 
-				if deleteProperty {
-					delete(jsonMapCurrent, property)
-				}
-
-				break
+			if deleteProperty {
+				delete(jsonMapCurrent, property)
 			}
+
+			break
+
 		}
 	}
 	return value, jsonMap

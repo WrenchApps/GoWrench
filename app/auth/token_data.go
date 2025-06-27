@@ -63,7 +63,7 @@ func (token *TokenData) LoadCustomToken(forceReloadSeconds int64, accessTokenPro
 	var now = time.Now().UTC().Add(time.Second * time.Duration(token.ForceReloadSeconds))
 	token.ExpiresIn = float64(now.Unix())
 	accessToken, _ := json_map.GetValue(token.CustomToken, accessTokenPropertyName, false)
-	token.AccessToken = accessToken
+	token.AccessToken = fmt.Sprint(accessToken)
 	token.TokenType = tokenType
 	token.HeaderName = headerName
 }

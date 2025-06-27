@@ -43,3 +43,5 @@ contract:
       - "phone:phones"
       - "address"
       - "customer.phone:customer.phones"
+      - "customer:customers"
+
