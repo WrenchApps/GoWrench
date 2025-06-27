@@ -247,7 +247,9 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 				}
 			}
 		}
-	} else if len(parse.ToArray) > 0 {
+	}
+
+	if len(parse.ToArray) > 0 {
 		for _, toArray := range parse.ToArray {
 			toArraySplitted := strings.Split(toArray, ":")
 
