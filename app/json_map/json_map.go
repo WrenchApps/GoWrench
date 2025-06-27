@@ -22,14 +22,14 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 	for index, property := range propertyNameSplitted {
 		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
 		if ok {
-			jsonMapCurrent = valueTemp
 			if index == totalProperty-1 {
 				value = valueTemp
 				if deleteProperty {
-					delete(jsonMap, property)
+					delete(jsonMapCurrent, property)
 				}
 				break
 			}
+			jsonMapCurrent = valueTemp
 			continue
 		}
 
