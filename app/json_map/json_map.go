@@ -40,11 +40,15 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 				propertyNameToArray := strings.ReplaceAll(propertyName, property, "")
 				item, ok2 := valueTempString[indexValue].(map[string]interface{})
 				if ok2 {
-					if string(propertyNameToArray[0]) == "." {
-						propertyNameToArray = propertyNameToArray[1:]
-						return GetValue(item, propertyNameToArray, false)
+					if len(propertyNameToArray) == 0 {
+						value = item
 					} else {
-						value = jsonMapCurrent[property]
+						if string(propertyNameToArray[0]) == "." {
+							propertyNameToArray = propertyNameToArray[1:]
+							return GetValue(item, propertyNameToArray, false)
+						} else {
+							value = jsonMapCurrent[property]
+						}
 					}
 				}
 				break

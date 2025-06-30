@@ -33,7 +33,7 @@ actions:
     type: httpRequestMock
     http:
       mock:
-        body: '{ "customers": [{ "name": "test", "age": "20" }] }'
+        body: '{ "customers": [{ "name": "test1", "age": "21" },{ "name": "test2", "age": "22" }] }'
         contentType: "application/json"
 
   - id: contract_map
@@ -41,8 +41,6 @@ actions:
     trigger:
       before:
         contractMapId: map_before
-      # after:
-      #   contractMapId: map_after
     http:
       request:
         method: post
@@ -74,5 +72,9 @@ contract:
   - id: map_after
     sequence:
     - new
+    - remove
     new:
-    - "customer:{{bodyContext.customers[0]}}"
+    - "customer:{{bodyContext.customers[1]}}"
+    - "customerName:{{bodyContext.customers[0].name}}"
+    remove:
+    - "customers"

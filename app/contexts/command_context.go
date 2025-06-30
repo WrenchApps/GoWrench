@@ -137,11 +137,13 @@ func CreatePropertiesInterpolationValue(jsonMap map[string]interface{}, properti
 	return jsonValueCurrent
 }
 
-func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyName string, value string, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyName string, value interface{}, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
 	valueResult := value
+	valueString := fmt.Sprint(valueResult)
 
-	if IsCalculatedValue(value) {
-		rawValue := ReplaceCalculatedValue(value)
+	if IsCalculatedValue(valueString) {
+
+		rawValue := ReplaceCalculatedValue(valueString)
 
 		if rawValue == "uuid" {
 			valueResult = uuid.New().String()
@@ -156,8 +158,9 @@ func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyNa
 			}
 		} else if strings.HasPrefix(rawValue, "wrenchContext") {
 			valueResult = GetValueWrenchContext(rawValue, wrenchContext)
+		} else if strings.HasPrefix(rawValue, "bodyContext") {
+			valueResult = GetValueBodyContext(rawValue, bodyContext)
 		}
-
 	}
 
 	return json_map.CreateProperty(jsonMap, propertyName, valueResult)
