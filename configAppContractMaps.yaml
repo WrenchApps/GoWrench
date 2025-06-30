@@ -1,0 +1,80 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+    - route: /api/mock
+      method: get
+      actionId: mocked
+
+    - route: /api/map
+      method: post
+      actionId: contract_map
+
+    - route: /api/map
+      method: get
+      actionId: contract_map2
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+
+  - id: mocked
+    type: httpRequestMock
+    http:
+      mock:
+        body: '{ "customers": [{ "name": "test1", "age": "21" },{ "name": "test2", "age": "22" }] }'
+        contentType: "application/json"
+
+  - id: contract_map
+    type: httpRequest
+    trigger:
+      before:
+        contractMapId: map_before
+    http:
+      request:
+        method: post
+        url: 'http://localhost:{{PORT}}/api/mock'
+
+  
+  - id: contract_map2
+    type: httpRequest
+    trigger:
+      after:
+        contractMapId: map_after
+    http:
+      request:
+        method: get
+        url: 'http://localhost:{{PORT}}/api/mock'
+
+contract:
+  maps:
+  - id: map_before
+    sequence:
+    - parse
+    parse:
+      toArray:
+      - "phone:phones"
+      - "address"
+      - "customer.phone:customer.phones"
+      - "customer:customers"
+
+  - id: map_after
+    sequence:
+    - new
+    - remove
+    new:
+    - "customer:{{bodyContext.customers[1]}}"
+    - "customerName:{{bodyContext.customers[0].name}}"
+    remove:
+    - "customers"

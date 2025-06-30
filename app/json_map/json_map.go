@@ -4,23 +4,26 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-	"wrench/app/contexts"
-	"wrench/app/manifest/contract_settings/maps"
-
-	"github.com/google/uuid"
 )
 
-func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (string, map[string]interface{}) {
-	value := ""
+func GetValue(jsonMap map[string]interface{}, propertyName string, deleteProperty bool) (interface{}, map[string]interface{}) {
+	var value interface{}
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
+	totalProperty := len(propertyNameSplitted)
 
-	for _, property := range propertyNameSplitted {
+	for index, property := range propertyNameSplitted {
 		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
 		if ok {
+			if index == totalProperty-1 {
+				value = valueTemp
+				if deleteProperty {
+					delete(jsonMapCurrent, property)
+				}
+				break
+			}
 			jsonMapCurrent = valueTemp
 			continue
 		}
@@ -37,28 +40,29 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 				propertyNameToArray := strings.ReplaceAll(propertyName, property, "")
 				item, ok2 := valueTempString[indexValue].(map[string]interface{})
 				if ok2 {
-					if string(propertyNameToArray[0]) == "." {
-						propertyNameToArray = propertyNameToArray[1:]
-						return GetValue(item, propertyNameToArray, false)
+					if len(propertyNameToArray) == 0 {
+						value = item
 					} else {
-						valueTempString, _ := jsonMapCurrent[property].(string)
-						value = valueTempString
+						if string(propertyNameToArray[0]) == "." {
+							propertyNameToArray = propertyNameToArray[1:]
+							return GetValue(item, propertyNameToArray, false)
+						} else {
+							value = jsonMapCurrent[property]
+						}
 					}
 				}
 				break
 			}
 		} else {
 
-			valueTempString, ok := jsonMapCurrent[property].(string)
-			if ok {
-				value = valueTempString
+			value = jsonMapCurrent[property]
 
-				if deleteProperty {
-					delete(jsonMapCurrent, property)
-				}
-
-				break
+			if deleteProperty {
+				delete(jsonMapCurrent, property)
 			}
+
+			break
+
 		}
 	}
 	return value, jsonMap
@@ -85,7 +89,7 @@ func SetValue(jsonMap map[string]interface{}, propertyName string, newValue stri
 	return jsonMap
 }
 
-func CreateProperty(jsonMap map[string]interface{}, propertyName string, value string) map[string]interface{} {
+func CreateProperty(jsonMap map[string]interface{}, propertyName string, value interface{}) map[string]interface{} {
 
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
@@ -179,75 +183,4 @@ func RemoveProperty(jsonMap map[string]interface{}, propertyName string) map[str
 	}
 
 	return jsonMap
-}
-
-func CreatePropertiesInterpolationValue(jsonMap map[string]interface{}, propertiesValues []string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) map[string]interface{} {
-	jsonValueCurrent := jsonMap
-	for _, propertyValue := range propertiesValues {
-		propertyValueSplitted := strings.Split(propertyValue, ":")
-		propertyName := propertyValueSplitted[0]
-		valueArray := propertyValueSplitted[1:]
-		value := strings.Join(valueArray, ":")
-		jsonValueCurrent = CreatePropertyInterpolationValue(jsonValueCurrent, propertyName, value, wrenchContext, bodyContext)
-	}
-	return jsonValueCurrent
-}
-
-func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyName string, value string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) map[string]interface{} {
-	valueResult := value
-
-	if contexts.IsCalculatedValue(value) {
-		rawValue := contexts.ReplaceCalculatedValue(value)
-
-		if rawValue == "uuid" {
-			valueResult = uuid.New().String()
-		} else if strings.HasPrefix(rawValue, "time") {
-			timeFormat := strings.ReplaceAll(rawValue, "time ", "")
-			timeNow := time.Now()
-
-			if len(timeFormat) > 0 {
-				valueResult = timeNow.Format(timeFormat)
-			} else {
-				valueResult = timeNow.String()
-			}
-		} else if strings.HasPrefix(rawValue, "wrenchContext") {
-			valueResult = contexts.GetValueWrenchContext(rawValue, wrenchContext)
-		}
-
-	}
-
-	return CreateProperty(jsonMap, propertyName, valueResult)
-}
-
-func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[string]interface{} {
-	jsonValueCurrent := jsonMap
-	if parse.WhenEquals != nil {
-		for _, whenEqual := range parse.WhenEquals {
-			if contexts.IsCalculatedValue(whenEqual) {
-				whenEqual = contexts.ReplacePrefixBodyContext(whenEqual)
-				rawWhenEqual := contexts.ReplaceCalculatedValue(whenEqual)
-
-				whenEqualSplitted := strings.Split(rawWhenEqual, ":")
-				propertyNameWithEqualValue := whenEqualSplitted[0]
-				propertyNameWithEqualValueSplitted := strings.Split(propertyNameWithEqualValue, ".")
-
-				lenWithEqual := len(propertyNameWithEqualValueSplitted)
-
-				valueArray := propertyNameWithEqualValueSplitted[:lenWithEqual-1]
-
-				propertyName := strings.Join(valueArray, ".")
-				equalValue := propertyNameWithEqualValueSplitted[lenWithEqual-1] // value to compare
-
-				parseToValue := whenEqualSplitted[1] // value if equals should be used
-
-				valueCurrent, _ := GetValue(jsonMap, propertyName, false)
-
-				if valueCurrent == equalValue {
-					jsonValueCurrent = SetValue(jsonValueCurrent, propertyName, parseToValue)
-				}
-			}
-		}
-	}
-
-	return jsonValueCurrent
 }
