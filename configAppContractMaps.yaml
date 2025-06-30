@@ -1,8 +1,11 @@
 version: 1
 
 service:
-  name: "{{SERVICE_NAME}}"
+  name: "my-app-otel-test"
   version: 1.0.0
+  otel:
+    enable: true
+    collectorUrl: "internal-tech55-ecs-alb-prd-773791139.us-east-1.elb.amazonaws.com"
 
 api:
   endpoints:

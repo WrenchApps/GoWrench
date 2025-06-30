@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 )
 
 func main() {
+
 	loadBashFiles()
 
 	startup.LoadEnvsFiles()
@@ -32,6 +34,11 @@ func main() {
 	}
 
 	application_settings.ApplicationSettingsStatic = applicationSetting
+
+	shutdown := startup.InitTracer()
+	if shutdown != nil {
+		defer shutdown(context.Background())
+	}
 
 	connErr := connections.LoadConnections()
 	if connErr != nil {

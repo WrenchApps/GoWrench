@@ -8,6 +8,8 @@ import (
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/startup/token_credentials"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type HttpRequestClientHandler struct {
@@ -17,9 +19,18 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
+	traceSpanDisplay := fmt.Sprintf("actions[%v].[%v]", handler.ActionSettings.Id, handler.ActionSettings.Type)
+	ctx, span := wrenchContext.Tracer.Start(ctx, traceSpanDisplay)
+
 	if !wrenchContext.HasError {
 
 		request := new(client.HttpClientRequestData)
+
+		spanContext := trace.SpanContextFromContext(ctx)
+		traceId := spanContext.TraceID().String()
+		traceparent := fmt.Sprintf("00-%s-%s-%s", traceId, spanContext.SpanID(), "01")
+		request.SetHeader("tracestate", traceparent)
+
 		request.Body = bodyContext.GetBody(handler.ActionSettings)
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
@@ -52,7 +63,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			bodyContext.HttpStatusCode = response.StatusCode
 			if handler.ActionSettings.Http.Response != nil {
 				bodyContext.SetHeaders(handler.ActionSettings.Http.Response.MapFixedHeaders)
-				bodyContext.SetHeaders(mapHttpResponseHeaders(response, handler.ActionSettings.Http.Response.MapResponseHeaders))
+				bodyContext.SetHeaders(mapHttpResponseHeaders(ctx, response, handler.ActionSettings.Http.Response.MapResponseHeaders))
 			}
 		}
 	}
@@ -60,6 +71,8 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	if handler.Next != nil {
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
+
+	defer span.End()
 }
 
 func (handler *HttpRequestClientHandler) SetNext(next Handler) {
@@ -88,7 +101,7 @@ func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchCo
 	}
 }
 
-func mapHttpResponseHeaders(response *client.HttpClientResponseData, mapResponseHeader []string) map[string]string {
+func mapHttpResponseHeaders(ctx context.Context, response *client.HttpClientResponseData, mapResponseHeader []string) map[string]string {
 
 	if mapResponseHeader == nil {
 		return nil
