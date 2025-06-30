@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 )
@@ -18,7 +19,7 @@ func (handler *FuncStringConcatenateHandler) Do(ctx context.Context, wrenchConte
 
 			var stringConcateResult = ""
 			for _, item := range handler.ActionSettings.Func.Concatenate {
-				stringConcateResult += contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings)
+				stringConcateResult += fmt.Sprint(contexts.GetCalculatedValue(item, wrenchContext, bodyContext, handler.ActionSettings))
 			}
 
 			bodyContext.SetBodyAction(handler.ActionSettings, []byte(stringConcateResult))

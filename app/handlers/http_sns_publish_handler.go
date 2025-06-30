@@ -124,7 +124,7 @@ func getCalculatedValue(getCalculatedValue string, wrenchContext *contexts.Wrenc
 						}
 					}
 				} else {
-					value = contexts.GetValueBodyContext(command, bodyContext)
+					value = fmt.Sprint(contexts.GetValueBodyContext(command, bodyContext))
 				}
 			}
 		} else {

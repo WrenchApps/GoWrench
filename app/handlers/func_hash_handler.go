@@ -26,7 +26,7 @@ func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.
 
 		hashType := handler.getHashFunc(handler.ActionSettings.Func.Hash.Alg)
 
-		mac := hmac.New(hashType, []byte(key))
+		mac := hmac.New(hashType, []byte(fmt.Sprint(key)))
 
 		currentBody := bodyContext.GetBody(handler.ActionSettings)
 		mac.Write(currentBody)

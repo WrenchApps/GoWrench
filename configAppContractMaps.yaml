@@ -10,9 +10,17 @@ api:
       method: post
       actionId: mock_mirror
 
+    - route: /api/mock
+      method: get
+      actionId: mocked
+
     - route: /api/map
       method: post
       actionId: contract_map
+
+    - route: /api/map
+      method: get
+      actionId: contract_map2
 
 actions:
   - id: mock_mirror
@@ -20,6 +28,13 @@ actions:
     http:
       mock:
         mirrorBody: true
+
+  - id: mocked
+    type: httpRequestMock
+    http:
+      mock:
+        body: '{ "customers": [{ "name": "test", "age": "20" }] }'
+        contentType: "application/json"
 
   - id: contract_map
     type: httpRequest
@@ -31,6 +46,17 @@ actions:
     http:
       request:
         method: post
+        url: 'http://localhost:{{PORT}}/api/mock'
+
+  
+  - id: contract_map2
+    type: httpRequest
+    trigger:
+      after:
+        contractMapId: map_after
+    http:
+      request:
+        method: get
         url: 'http://localhost:{{PORT}}/api/mock'
 
 contract:
@@ -45,3 +71,8 @@ contract:
       - "customer.phone:customer.phones"
       - "customer:customers"
 
+  - id: map_after
+    sequence:
+    - new
+    new:
+    - "customer:{{bodyContext.customers[0]}}"

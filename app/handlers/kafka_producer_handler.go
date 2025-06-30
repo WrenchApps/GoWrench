@@ -30,7 +30,7 @@ func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *cont
 
 			var key []byte
 			if len(settings.Kafka.MessageKey) > 0 {
-				keyValue := contexts.GetCalculatedValue(settings.Kafka.MessageKey, wrenchContext, bodyContext, settings)
+				keyValue := fmt.Sprint(contexts.GetCalculatedValue(settings.Kafka.MessageKey, wrenchContext, bodyContext, settings))
 				key = []byte(keyValue)
 			}
 

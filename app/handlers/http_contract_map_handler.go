@@ -57,7 +57,7 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 	}
 
 	if handler.ContractMap.New != nil {
-		currentBodyContext = json_map.CreatePropertiesInterpolationValue(
+		currentBodyContext = contexts.CreatePropertiesInterpolationValue(
 			currentBodyContext,
 			handler.ContractMap.New,
 			wrenchContext,
@@ -73,7 +73,7 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 	}
 
 	if handler.ContractMap.Parse != nil {
-		currentBodyContext = json_map.ParseValues(currentBodyContext, handler.ContractMap.Parse)
+		currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
 	}
 
 	return currentBodyContext
@@ -84,7 +84,7 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 		if action == "rename" {
 			currentBodyContext = json_map.RenameProperties(currentBodyContext, handler.ContractMap.Rename)
 		} else if action == "new" {
-			currentBodyContext = json_map.CreatePropertiesInterpolationValue(
+			currentBodyContext = contexts.CreatePropertiesInterpolationValue(
 				currentBodyContext,
 				handler.ContractMap.New,
 				wrenchContext,
@@ -94,7 +94,7 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 		} else if action == "duplicate" {
 			currentBodyContext = json_map.DuplicatePropertiesValue(currentBodyContext, handler.ContractMap.Duplicate)
 		} else if action == "parse" {
-			currentBodyContext = json_map.ParseValues(currentBodyContext, handler.ContractMap.Parse)
+			currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
 		}
 	}
 
