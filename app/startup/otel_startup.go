@@ -72,8 +72,8 @@ func InitTracer() func(context.Context) error {
 	return nil
 }
 
-func InitMeter(ctx context.Context) func(context.Context) error {
-
+func InitMeter() func(context.Context) error {
+	ctx := context.Background()
 	app := application_settings.ApplicationSettingsStatic
 	otelSetting := app.Service.Otel
 

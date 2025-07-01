@@ -25,10 +25,9 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 
 	if !wrenchContext.HasError {
 
+		start := time.Now()
 		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
 		defer span.End()
-
-		start := time.Now()
 
 		request := new(client.HttpClientRequestData)
 		request.Body = bodyContext.GetBody(handler.ActionSettings)
@@ -83,9 +82,9 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 func (handler *HttpRequestClientHandler) setMetric(ctx context.Context, duration float64, statusCode int, url string, method string) {
 	app.HttpClientDurantion.Record(ctx, duration,
 		metric.WithAttributes(
-			attribute.Int("http_status_code", statusCode),
-			attribute.String("http_method", method),
-			attribute.String("http_authority", handler.getAuhorityFromUrl(url)),
+			attribute.Int("http_client_status_code", statusCode),
+			attribute.String("http_client_method", method),
+			attribute.String("http_client_authority", handler.getAuhorityFromUrl(url)),
 		),
 	)
 }

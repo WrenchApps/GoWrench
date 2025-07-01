@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	//ctx := context.Background()
+	ctx := context.Background()
 	loadBashFiles()
 
 	startup.LoadEnvsFiles()
@@ -37,8 +37,14 @@ func main() {
 
 	traceShutdown := startup.InitTracer()
 	if traceShutdown != nil {
-		defer traceShutdown()
+		defer traceShutdown(ctx)
 	}
+
+	metricShutdown := startup.InitMeter()
+	if metricShutdown != nil {
+		defer metricShutdown(ctx)
+	}
+	app.InitMetrics()
 
 	connErr := connections.LoadConnections()
 	if connErr != nil {
@@ -50,20 +56,6 @@ func main() {
 	port := getPort()
 	log.Printf("Server listen in port %s", port)
 	http.ListenAndServe(port, hanlder)
-}
-
-func loadOtel(ctx context.Context) {
-
-	traceShutdown := startup.InitTracer(ctx)
-	if traceShutdown != nil {
-		defer traceShutdown(ctx)
-	}
-
-	// metricShutdown := startup.InitMeter()
-	// if metricShutdown != nil {
-	// 	defer metricShutdown(ctx)
-	// }
-	app.InitMetrics()
 }
 
 func loadBashFiles() {
