@@ -27,6 +27,10 @@ func (wrenchContext *WrenchContext) SetHasError(span trace.Span, err error) {
 	wrenchContext.HasError = true
 }
 
+func (wrenchContext *WrenchContext) SetHasError2() {
+	wrenchContext.HasError = true
+}
+
 func (wrenchContext *WrenchContext) GetSpan(ctx context.Context, action settings.ActionSettings) (context.Context, trace.Span) {
 	traceSpanDisplay := fmt.Sprintf("actions[%v].[%v]", action.Id, action.Type)
 	return wrenchContext.Tracer.Start(ctx, traceSpanDisplay)

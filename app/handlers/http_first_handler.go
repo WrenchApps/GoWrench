@@ -12,7 +12,13 @@ type HttpFirstHandler struct {
 
 func (httpFirst *HttpFirstHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	body, _ := io.ReadAll(wrenchContext.Request.Body)
+	body, err := io.ReadAll(wrenchContext.Request.Body)
+	if err != nil {
+		bodyContext.ContentType = "text/plain"
+		bodyContext.HttpStatusCode = 500
+		bodyContext.SetBody([]byte("Failed to read request body"))
+		wrenchContext.SetHasError2()
+	}
 
 	bodyContext.SetBody(body)
 	bodyContext.ContentType = "application/json"
