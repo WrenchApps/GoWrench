@@ -75,7 +75,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 func (handler *HttpRequestClientHandler) setSpanAttributes(span trace.Span, statusCode int, url string, method string, insecure bool) {
 	span.SetAttributes(
 		attribute.Int("http.status_code", statusCode),
-		attribute.String("http.Url", url),
+		attribute.String("http.url", url),
 		attribute.String("http.method", method),
 		attribute.Bool("http.insecure", insecure),
 	)
