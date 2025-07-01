@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-
+	ctx := context.Background()
 	loadBashFiles()
 
 	startup.LoadEnvsFiles()
@@ -35,10 +35,16 @@ func main() {
 
 	application_settings.ApplicationSettingsStatic = applicationSetting
 
-	shutdown := startup.InitTracer()
-	if shutdown != nil {
-		defer shutdown(context.Background())
+	traceShutdown := startup.InitTracer()
+	if traceShutdown != nil {
+		defer traceShutdown(ctx)
 	}
+
+	metricShutdown := startup.InitMeter()
+	if metricShutdown != nil {
+		defer metricShutdown(ctx)
+	}
+	app.InitMetrics()
 
 	connErr := connections.LoadConnections()
 	if connErr != nil {

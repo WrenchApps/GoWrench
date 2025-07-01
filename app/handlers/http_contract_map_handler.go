@@ -15,11 +15,12 @@ type HttpContractMapHandler struct {
 
 func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	spanDisplay := fmt.Sprintf("contract.maps.%v", handler.ContractMap.Id)
-	ctx, span := wrenchContext.GetSpan2(ctx, spanDisplay)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		spanDisplay := fmt.Sprintf("contract.maps.%v", handler.ContractMap.Id)
+		ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)
+		ctx = ctxSpan
+		defer span.End()
+
 		isArray := bodyContext.IsArray()
 
 		if isArray {

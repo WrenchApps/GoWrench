@@ -14,10 +14,11 @@ type FuncGeneralHandler struct {
 
 func (handler *FuncGeneralHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		ctxSpan, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		ctx = ctxSpan
+		defer span.End()
+
 		result := contexts.GetCalculatedValue(string(handler.ActionSettings.Func.Command), wrenchContext, bodyContext, handler.ActionSettings)
 		bodyContext.SetBodyAction(handler.ActionSettings, []byte(fmt.Sprint(result)))
 	}

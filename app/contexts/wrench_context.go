@@ -9,6 +9,7 @@ import (
 	api_settings "wrench/app/manifest/api_settings"
 
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -18,6 +19,7 @@ type WrenchContext struct {
 	HasError       bool
 	Endpoint       *api_settings.EndpointSettings
 	Tracer         trace.Tracer
+	Meter          metric.Meter
 }
 
 func (wrenchContext *WrenchContext) SetHasError(span trace.Span, err error) {

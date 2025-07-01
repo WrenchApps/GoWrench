@@ -1,6 +1,9 @@
 package app
 
-import "go.opentelemetry.io/otel"
+import (
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+)
 
 const ENV_PORT = "PORT"
 const ENV_PATH_FILE_CONFIG string = "PATH_FILE_CONFIG"
@@ -9,3 +12,18 @@ const ENV_APP_ENV string = "APP_ENV"
 const ENV_RUN_BASH_FILES_BEFORE_STARTUP string = "RUN_BASH_FILES_BEFORE_STARTUP"
 
 var Tracer = otel.Tracer("trace")
+var Meter = otel.Meter("meter")
+
+var HttpServerDuration metric.Float64Histogram
+var HttpClientDurantion metric.Float64Histogram
+var KafkaProducerDurtation metric.Float64Histogram
+var NatsPublishDurtation metric.Float64Histogram
+var SnsPublishDurtation metric.Float64Histogram
+
+func InitMetrics() {
+	HttpServerDuration, _ = Meter.Float64Histogram("gowrench_http_server_duration_ms")
+	HttpClientDurantion, _ = Meter.Float64Histogram("gowrench_http_client_duration_ms")
+	KafkaProducerDurtation, _ = Meter.Float64Histogram("gowrench_kafka_producer_duration_ms")
+	NatsPublishDurtation, _ = Meter.Float64Histogram("gowrench_nats_publish_duration_ms")
+	SnsPublishDurtation, _ = Meter.Float64Histogram("gowrench_sns_publish_duration_ms")
+}

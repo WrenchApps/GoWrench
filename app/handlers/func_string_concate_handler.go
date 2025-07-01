@@ -14,10 +14,11 @@ type FuncStringConcatenateHandler struct {
 
 func (handler *FuncStringConcatenateHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+
+		ctxSpan, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		ctx = ctxSpan
+		defer span.End()
 
 		if len(handler.ActionSettings.Func.Concatenate) > 0 {
 

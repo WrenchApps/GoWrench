@@ -7,6 +7,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
+	"wrench/app"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/action_settings/sns_settings"
@@ -15,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type SnsPublishHandler struct {
@@ -39,10 +43,12 @@ func (snsActions *SnsActions) Load() {
 
 func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		start := time.Now()
+
+		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		defer span.End()
+
 		settings := handler.ActionSettings.SNS
 		message := bodyContext.GetBodyString()
 		actor := new(SnsActions)
@@ -78,6 +84,9 @@ func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *context
 			bodyContext.HttpStatusCode = 202
 			bodyContext.SetBody([]byte("{ 'success': 'true' }"))
 		}
+
+		duration := time.Since(start).Seconds() * 1000
+		handler.metricRecord(ctx, duration, settings.TopicArn)
 	}
 
 	if handler.Next != nil {
@@ -87,6 +96,14 @@ func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *context
 
 func (handler *SnsPublishHandler) SetNext(next Handler) {
 	handler.Next = next
+}
+
+func (handler *SnsPublishHandler) metricRecord(ctx context.Context, duration float64, topic_arn string) {
+	app.SnsPublishDurtation.Record(ctx, duration,
+		metric.WithAttributes(
+			attribute.String("sns_topic_arn", topic_arn),
+		),
+	)
 }
 
 func getCalculatedValue(getCalculatedValue string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) string {

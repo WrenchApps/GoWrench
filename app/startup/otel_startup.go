@@ -3,10 +3,15 @@ package startup
 import (
 	"context"
 	"log"
+	"os"
 	"wrench/app/manifest/application_settings"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -14,31 +19,105 @@ import (
 
 func InitTracer() func(context.Context) error {
 	ctx := context.Background()
-
 	app := application_settings.ApplicationSettingsStatic
 	otelSetting := app.Service.Otel
 
 	if otelSetting != nil && otelSetting.Enable {
 
+		res := resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(app.Service.Name),
+			semconv.ServiceVersion(app.Service.Version),
+		)
+
 		exporter, err := otlptracehttp.New(ctx,
 			otlptracehttp.WithEndpoint(otelSetting.CollectorUrl),
 			otlptracehttp.WithInsecure(),
 		)
-		if err != nil {
-			log.Fatalf("error to create otlp http exporter: %v", err)
+
+		var stdoutExporter *stdouttrace.Exporter
+		var stdoutErr error
+
+		if otelSetting.TraceConsoleExport {
+			stdoutExporter, stdoutErr = stdouttrace.New(
+				stdouttrace.WithPrettyPrint(),
+				stdouttrace.WithWriter(os.Stdout),
+			)
 		}
 
-		tp := trace.NewTracerProvider(
-			trace.WithBatcher(exporter),
-			trace.WithResource(resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceName(app.Service.Name),
-				semconv.ServiceVersion(app.Service.Version),
-			)),
-		)
+		if err != nil || stdoutErr != nil {
+			log.Fatalf("error to create otlp exporter: %v %v", err, stdoutErr)
+		} else {
+
+		}
+
+		var tp *trace.TracerProvider
+
+		if stdoutExporter != nil {
+			tp = trace.NewTracerProvider(
+				trace.WithBatcher(exporter),
+				trace.WithBatcher(stdoutExporter),
+				trace.WithResource(res),
+			)
+		} else {
+			tp = trace.NewTracerProvider(
+				trace.WithBatcher(exporter),
+				trace.WithResource(res),
+			)
+		}
 
 		otel.SetTracerProvider(tp)
 		return tp.Shutdown
+	}
+	return nil
+}
+
+func InitMeter() func(context.Context) error {
+	ctx := context.Background()
+	app := application_settings.ApplicationSettingsStatic
+	otelSetting := app.Service.Otel
+
+	if otelSetting != nil && otelSetting.Enable {
+		exporter, err := otlpmetrichttp.New(ctx,
+			otlpmetrichttp.WithEndpoint(otelSetting.CollectorUrl),
+			otlpmetrichttp.WithInsecure(),
+		)
+
+		var stdoutExporter metric.Exporter
+		var stdoutErr error
+
+		if otelSetting.MetricConsoleExport {
+			stdoutExporter, stdoutErr = stdoutmetric.New(stdoutmetric.WithWriter(os.Stdout))
+		}
+
+		if err != nil || stdoutErr != nil {
+			log.Fatalf("failed to create metric exporter: %v %v", err, stdoutErr)
+		} else {
+			res := resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceName(app.Service.Name),
+				semconv.ServiceVersion(app.Service.Version),
+			)
+
+			var provider *metric.MeterProvider
+
+			if stdoutExporter != nil {
+				provider = metric.NewMeterProvider(
+					metric.WithResource(res),
+					metric.WithReader(metric.NewPeriodicReader(exporter)),
+					metric.WithReader(metric.NewPeriodicReader(stdoutExporter)),
+				)
+			} else {
+				provider = metric.NewMeterProvider(
+					metric.WithResource(res),
+					metric.WithReader(metric.NewPeriodicReader(exporter)),
+				)
+			}
+
+			otel.SetMeterProvider(provider)
+			return provider.Shutdown
+		}
+		return nil
 	}
 	return nil
 }

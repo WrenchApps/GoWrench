@@ -16,10 +16,10 @@ type FileReaderHandler struct {
 
 func (handler *FileReaderHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		ctxSpan, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		ctx = ctxSpan
+		defer span.End()
 
 		data, err := os.ReadFile(handler.ActionSettings.File.Path)
 
