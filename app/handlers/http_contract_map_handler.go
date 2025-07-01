@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	contexts "wrench/app/contexts"
 	"wrench/app/json_map"
 	"wrench/app/manifest/contract_settings/maps"
@@ -13,6 +14,10 @@ type HttpContractMapHandler struct {
 }
 
 func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+
+	spanDisplay := fmt.Sprintf("contract.maps.%v", handler.ContractMap.Id)
+	ctx, span := wrenchContext.GetSpan2(ctx, spanDisplay)
+	defer span.End()
 
 	if !wrenchContext.HasError {
 		isArray := bodyContext.IsArray()

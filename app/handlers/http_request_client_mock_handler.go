@@ -13,6 +13,9 @@ type HttpRequestClientMockHandler struct {
 
 func (handler *HttpRequestClientMockHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 		if !handler.ActionSettings.Http.Mock.MirrorBody {
 			bodyContext.SetBody([]byte(handler.ActionSettings.Http.Mock.Body))

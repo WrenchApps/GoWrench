@@ -8,8 +8,6 @@ import (
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/startup/token_credentials"
-
-	"go.opentelemetry.io/otel/trace"
 )
 
 type HttpRequestClientHandler struct {
@@ -19,22 +17,17 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	traceSpanDisplay := fmt.Sprintf("actions[%v].[%v]", handler.ActionSettings.Id, handler.ActionSettings.Type)
-	ctx, span := wrenchContext.Tracer.Start(ctx, traceSpanDisplay)
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
 
 	if !wrenchContext.HasError {
 
 		request := new(client.HttpClientRequestData)
-
-		spanContext := trace.SpanContextFromContext(ctx)
-		traceId := spanContext.TraceID().String()
-		traceparent := fmt.Sprintf("00-%s-%s-%s", traceId, spanContext.SpanID(), "01")
-		request.SetHeader("tracestate", traceparent)
-
 		request.Body = bodyContext.GetBody(handler.ActionSettings)
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
+		request.SetHeaderTracestate(ctx)
 		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
@@ -71,8 +64,6 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	if handler.Next != nil {
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
-
-	defer span.End()
 }
 
 func (handler *HttpRequestClientHandler) SetNext(next Handler) {
