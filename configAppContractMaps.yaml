@@ -7,7 +7,7 @@ service:
     enable: true
     metricConsoleExport: true
     traceConsoleExport: true
-    collectorUrl: "internal-tech55-ecs-alb-prd-773791139.us-east-1.elb.amazonaws.com"
+    collectorUrl: "localhost:4318"
 
 api:
   endpoints:
