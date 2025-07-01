@@ -8,6 +8,7 @@ import (
 	settings "wrench/app/manifest/action_settings"
 	api_settings "wrench/app/manifest/api_settings"
 
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -19,7 +20,10 @@ type WrenchContext struct {
 	Tracer         trace.Tracer
 }
 
-func (wrenchContext *WrenchContext) SetHasError() {
+func (wrenchContext *WrenchContext) SetHasError(span trace.Span, err error) {
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+
 	wrenchContext.HasError = true
 }
 

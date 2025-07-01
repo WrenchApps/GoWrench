@@ -6,6 +6,9 @@ import (
 	"wrench/app"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/api_settings"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type RequestDelegate struct {
@@ -30,9 +33,19 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 
 	traceDisplay := fmt.Sprintf("Api http %v %v", request.Endpoint.Method, request.Endpoint.Route)
 	ctx, span := wrenchContext.GetSpan2(ctx, traceDisplay)
-	defer span.End()
 
 	handler.Do(ctx, wrenchContext, bodyContext)
+
+	request.setSpanAttributes(span, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
+	defer span.End()
+}
+
+func (handler *RequestDelegate) setSpanAttributes(span trace.Span, route string, method string, statusCode int) {
+	span.SetAttributes(
+		attribute.String("server.route", route),
+		attribute.String("server.method", method),
+		attribute.Int("server.status_code", statusCode),
+	)
 }
 
 func (request *RequestDelegate) SetEndpoint(endpoint *settings.EndpointSettings) {
