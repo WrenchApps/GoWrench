@@ -103,7 +103,7 @@ func GetValueBodyContext(command string, bodyContext *BodyContext) interface{} {
 		propertyName := strings.ReplaceAll(command, prefixBodyContext, "")
 		jsonMap := bodyContext.ParseBodyToMapObject()
 		value, _ := json_map.GetValue(jsonMap, propertyName, false)
-		if len(fmt.Sprint(value)) == 0 && propertyName == "currentBody" {
+		if (value == nil || len(fmt.Sprint(value)) == 0) && propertyName == "currentBody" {
 			value = bodyContext.GetBodyString()
 		}
 		return value
