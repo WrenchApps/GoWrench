@@ -71,7 +71,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		handler.setTraceSpanAttributes(span, response.StatusCode, request.Url, request.Method, request.Insecure)
 
 		duration := time.Since(start).Seconds() * 1000
-		handler.setMetric(ctx, duration, response.StatusCode, request.Url, request.Method)
+		handler.metricRecord(ctx, duration, response.StatusCode, request.Url, request.Method)
 	}
 
 	if handler.Next != nil {
@@ -79,7 +79,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	}
 }
 
-func (handler *HttpRequestClientHandler) setMetric(ctx context.Context, duration float64, statusCode int, url string, method string) {
+func (handler *HttpRequestClientHandler) metricRecord(ctx context.Context, duration float64, statusCode int, url string, method string) {
 	app.HttpClientDurantion.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.Int("http_client_status_code", statusCode),

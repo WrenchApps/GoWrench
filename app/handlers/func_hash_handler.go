@@ -22,10 +22,11 @@ type FuncHashHandler struct {
 
 func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		ctxSpan, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		ctx = ctxSpan
+		defer span.End()
+
 		key := contexts.GetCalculatedValue(handler.ActionSettings.Func.Hash.Key, wrenchContext, bodyContext, handler.ActionSettings)
 
 		hashType := handler.getHashFunc(handler.ActionSettings.Func.Hash.Alg)

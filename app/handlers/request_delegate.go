@@ -44,10 +44,10 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 
 	request.setSpanAttributes(span, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
 	duration := time.Since(start).Seconds() * 1000
-	request.setMetric(ctx, duration, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
+	request.metricRecord(ctx, duration, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
 }
 
-func (handler *RequestDelegate) setMetric(ctx context.Context, duration float64, route string, method string, statusCode int) {
+func (handler *RequestDelegate) metricRecord(ctx context.Context, duration float64, route string, method string, statusCode int) {
 	app.HttpServerDuration.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.String("http_server_method", route),

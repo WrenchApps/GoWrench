@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
+	"wrench/app"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/startup/connections"
 
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -21,10 +24,11 @@ type KafkaProducerHandler struct {
 
 func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+		start := time.Now()
+
+		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		defer span.End()
 		settings := handler.ActionSettings
 
 		writer, err := connections.GetKafkaWrite(settings.Kafka.ConnectionId, settings.Kafka.TopicName)
@@ -61,12 +65,24 @@ func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *cont
 			}
 
 			handler.setSpanAttributes(span, settings.Kafka.ConnectionId, settings.Kafka.TopicName, keyValue)
+
+			duration := time.Since(start).Seconds() * 1000
+			handler.metricRecord(ctx, duration, settings.Kafka.ConnectionId, settings.Kafka.TopicName)
 		}
 	}
 
 	if handler.Next != nil {
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
+}
+
+func (handler *KafkaProducerHandler) metricRecord(ctx context.Context, duration float64, connectionId string, topicName string) {
+	app.KafkaProducerDurtation.Record(ctx, duration,
+		metric.WithAttributes(
+			attribute.String("gowrench_connections_id", connectionId),
+			attribute.String("kafka_producer_topic_name", topicName),
+		),
+	)
 }
 
 func (handler *KafkaProducerHandler) setSpanAttributes(span trace.Span, connectionId string, topicName string, key string) {

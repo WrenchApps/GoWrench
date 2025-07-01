@@ -17,9 +17,13 @@ var Meter = otel.Meter("meter")
 var HttpServerDuration metric.Float64Histogram
 var HttpClientDurantion metric.Float64Histogram
 var KafkaProducerDurtation metric.Float64Histogram
+var NatsPublishDurtation metric.Float64Histogram
+var SnsPublishDurtation metric.Float64Histogram
 
 func InitMetrics() {
 	HttpServerDuration, _ = Meter.Float64Histogram("gowrench_http_server_duration_ms")
 	HttpClientDurantion, _ = Meter.Float64Histogram("gowrench_http_client_duration_ms")
 	KafkaProducerDurtation, _ = Meter.Float64Histogram("gowrench_kafka_producer_duration_ms")
+	NatsPublishDurtation, _ = Meter.Float64Histogram("gowrench_nats_publish_duration_ms")
+	SnsPublishDurtation, _ = Meter.Float64Histogram("gowrench_sns_publish_duration_ms")
 }
