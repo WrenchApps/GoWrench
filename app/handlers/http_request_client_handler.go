@@ -53,10 +53,10 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		response, err := client.HttpClientDo(ctx, request)
 
 		if err != nil {
-			wrenchContext.SetHasError(span, err)
+			wrenchContext.SetHasError(ctx, span, err)
 		} else {
 			if response.StatusCode > 399 {
-				wrenchContext.SetHasError(span, err)
+				wrenchContext.SetHasError(ctx, span, err)
 			}
 
 			bodyContext.SetBodyAction(handler.ActionSettings, response.Body)

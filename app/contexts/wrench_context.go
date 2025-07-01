@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"wrench/app"
 	settings "wrench/app/manifest/action_settings"
 	api_settings "wrench/app/manifest/api_settings"
 
@@ -22,9 +23,10 @@ type WrenchContext struct {
 	Meter          metric.Meter
 }
 
-func (wrenchContext *WrenchContext) SetHasError(span trace.Span, err error) {
+func (wrenchContext *WrenchContext) SetHasError(ctx context.Context, span trace.Span, err error) {
 	span.RecordError(err)
 	span.SetStatus(codes.Error, err.Error())
+	app.LogError(ctx, err)
 
 	wrenchContext.HasError = true
 }

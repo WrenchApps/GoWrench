@@ -34,7 +34,7 @@ func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *cont
 		writer, err := connections.GetKafkaWrite(settings.Kafka.ConnectionId, settings.Kafka.TopicName)
 
 		if err != nil {
-			setError("error to get kafka connection id", span, wrenchContext, bodyContext, settings)
+			setError("error to get kafka connection id", ctx, span, wrenchContext, bodyContext, settings)
 		} else {
 
 			value := bodyContext.GetBody(settings)
@@ -56,7 +56,7 @@ func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *cont
 
 			if err != nil {
 				msg := fmt.Sprintf("error when will produce message to the topic %v error %v", writer.Topic, err)
-				setError(msg, span, wrenchContext, bodyContext, settings)
+				setError(msg, ctx, span, wrenchContext, bodyContext, settings)
 			} else {
 
 				bodyContext.HttpStatusCode = 200
@@ -93,13 +93,13 @@ func (handler *KafkaProducerHandler) setSpanAttributes(span trace.Span, connecti
 	)
 }
 
-func setError(msg string, span trace.Span, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) {
+func setError(msg string, ctx context.Context, span trace.Span, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) {
 	log.Print(msg)
 	bodyContext.HttpStatusCode = 500
 	bodyContext.SetBodyAction(actionSettings, []byte(msg))
 	bodyContext.ContentType = "text/plain"
 	err := errors.New(msg)
-	wrenchContext.SetHasError(span, err)
+	wrenchContext.SetHasError(ctx, span, err)
 }
 
 func getKafkaMessageHeaders(headersMap map[string]string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) []kafka.Header {
