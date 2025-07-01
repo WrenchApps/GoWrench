@@ -27,6 +27,7 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 	var handler = chain.GetHandler(request.Endpoint.Route)
 
 	wrenchContext.Tracer = app.Tracer
+	wrenchContext.Meter = app.Meter
 	wrenchContext.Endpoint = request.Endpoint
 	wrenchContext.ResponseWriter = &w
 	wrenchContext.Request = r

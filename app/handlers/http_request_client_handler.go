@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
+	"wrench/app"
 	client "wrench/app/clients/http"
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/startup/token_credentials"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -20,10 +23,12 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
-
 	if !wrenchContext.HasError {
+
+		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		defer span.End()
+
+		start := time.Now()
 
 		request := new(client.HttpClientRequestData)
 		request.Body = bodyContext.GetBody(handler.ActionSettings)
@@ -64,7 +69,10 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			}
 		}
 
-		handler.setSpanAttributes(span, response.StatusCode, request.Url, request.Method, request.Insecure)
+		handler.setTraceSpanAttributes(span, response.StatusCode, request.Url, request.Method, request.Insecure)
+
+		duration := time.Since(start).Seconds() * 1000
+		handler.setMetric(ctx, duration, response.StatusCode, request.Url, request.Method)
 	}
 
 	if handler.Next != nil {
@@ -72,7 +80,24 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 	}
 }
 
-func (handler *HttpRequestClientHandler) setSpanAttributes(span trace.Span, statusCode int, url string, method string, insecure bool) {
+func (handler *HttpRequestClientHandler) setMetric(ctx context.Context, duration float64, statusCode int, url string, method string) {
+	app.HttpClientDurantion.Record(ctx, duration,
+		metric.WithAttributes(
+			attribute.Int("http_status_code", statusCode),
+			attribute.String("http_method", method),
+			attribute.String("http_authority", handler.getAuhorityFromUrl(url)),
+		),
+	)
+}
+
+func (handler *HttpRequestClientHandler) getAuhorityFromUrl(url string) string {
+	url = strings.ReplaceAll(url, "http://", "")
+	url = strings.ReplaceAll(url, "https://", "")
+	urlSplitted := strings.Split(url, "/")
+	return urlSplitted[0]
+}
+
+func (handler *HttpRequestClientHandler) setTraceSpanAttributes(span trace.Span, statusCode int, url string, method string, insecure bool) {
 	span.SetAttributes(
 		attribute.Int("http.status_code", statusCode),
 		attribute.String("http.url", url),

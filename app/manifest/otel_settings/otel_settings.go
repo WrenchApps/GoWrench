@@ -3,8 +3,10 @@ package otel_settings
 import "wrench/app/manifest/validation"
 
 type OtelSettings struct {
-	CollectorUrl string `yaml:"collectorUrl"`
-	Enable       bool   `yaml:"enable"`
+	CollectorUrl        string `yaml:"collectorUrl"`
+	Enable              bool   `yaml:"enable"`
+	TraceConsoleExport  bool   `yaml:"traceConsoleExport"`
+	MetricConsoleExport bool   `yaml:"metricConsoleExport"`
 }
 
 func (setting OtelSettings) Valid() validation.ValidateResult {
