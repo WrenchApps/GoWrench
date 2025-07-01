@@ -15,6 +15,10 @@ type NatsPublishHandler struct {
 }
 
 func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 		settings := handler.ActionSettings
 
@@ -39,7 +43,7 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 			bodyContext.SetBodyPreserved(settings.Id, []byte(""))
 		} else {
 			if err != nil {
-				wrenchContext.SetHasError()
+				wrenchContext.SetHasError(span, err)
 				bodyContext.HttpStatusCode = 500
 				bodyContext.SetBody([]byte(err.Error()))
 			} else {

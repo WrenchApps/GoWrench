@@ -13,6 +13,10 @@ type FuncStringConcatenateHandler struct {
 }
 
 func (handler *FuncStringConcatenateHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 
 		if len(handler.ActionSettings.Func.Concatenate) > 0 {

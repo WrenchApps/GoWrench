@@ -12,6 +12,10 @@ type FuncVarContextHandler struct {
 }
 
 func (handler *FuncVarContextHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 
 		varsConfigured := handler.ActionSettings.Func.Vars

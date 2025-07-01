@@ -8,6 +8,9 @@ import (
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/startup/token_credentials"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type HttpRequestClientHandler struct {
@@ -17,6 +20,9 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 
 		request := new(client.HttpClientRequestData)
@@ -24,10 +30,12 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		request.Method = handler.getMethod(wrenchContext)
 		request.Url = handler.getUrl(wrenchContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
+		request.SetHeaderTracestate(ctx)
 		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
 
 		if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 			tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
+			span.SetAttributes(attribute.String("gowrench.tokenCredentials.id", handler.ActionSettings.Http.Request.TokenCredentialId))
 			if tokenData != nil {
 				bearerToken := strings.Trim(fmt.Sprintf("%s %s", tokenData.TokenType, tokenData.AccessToken), " ")
 				if len(tokenData.HeaderName) == 0 {
@@ -41,10 +49,10 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		response, err := client.HttpClientDo(ctx, request)
 
 		if err != nil {
-			wrenchContext.SetHasError()
+			wrenchContext.SetHasError(span, err)
 		} else {
 			if response.StatusCode > 399 {
-				wrenchContext.SetHasError()
+				wrenchContext.SetHasError(span, err)
 			}
 
 			bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
@@ -55,11 +63,22 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 				bodyContext.SetHeaders(mapHttpResponseHeaders(response, handler.ActionSettings.Http.Response.MapResponseHeaders))
 			}
 		}
+
+		handler.setSpanAttributes(span, response.StatusCode, request.Url, request.Method, request.Insecure)
 	}
 
 	if handler.Next != nil {
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
+}
+
+func (handler *HttpRequestClientHandler) setSpanAttributes(span trace.Span, statusCode int, url string, method string, insecure bool) {
+	span.SetAttributes(
+		attribute.Int("http.status_code", statusCode),
+		attribute.String("http.url", url),
+		attribute.String("http.method", method),
+		attribute.Bool("http.insecure", insecure),
+	)
 }
 
 func (handler *HttpRequestClientHandler) SetNext(next Handler) {

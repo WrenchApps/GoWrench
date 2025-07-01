@@ -21,6 +21,10 @@ type FuncHashHandler struct {
 }
 
 func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+
+	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+	defer span.End()
+
 	if !wrenchContext.HasError {
 		key := contexts.GetCalculatedValue(handler.ActionSettings.Func.Hash.Key, wrenchContext, bodyContext, handler.ActionSettings)
 

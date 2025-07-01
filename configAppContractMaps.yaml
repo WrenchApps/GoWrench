@@ -1,8 +1,11 @@
 version: 1
 
 service:
-  name: "{{SERVICE_NAME}}"
+  name: "my-app-otel-test"
   version: 1.0.0
+  otel:
+    enable: true
+    collectorUrl: "localhost:4318"
 
 api:
   endpoints:

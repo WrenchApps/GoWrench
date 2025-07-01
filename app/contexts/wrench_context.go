@@ -1,8 +1,15 @@
 package contexts
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"strings"
+	settings "wrench/app/manifest/action_settings"
 	api_settings "wrench/app/manifest/api_settings"
+
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type WrenchContext struct {
@@ -10,8 +17,47 @@ type WrenchContext struct {
 	Request        *http.Request
 	HasError       bool
 	Endpoint       *api_settings.EndpointSettings
+	Tracer         trace.Tracer
 }
 
-func (wrenchContext *WrenchContext) SetHasError() {
+func (wrenchContext *WrenchContext) SetHasError(span trace.Span, err error) {
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+
 	wrenchContext.HasError = true
+}
+
+func (wrenchContext *WrenchContext) SetHasError2() {
+	wrenchContext.HasError = true
+}
+
+func (wrenchContext *WrenchContext) GetSpan(ctx context.Context, action settings.ActionSettings) (context.Context, trace.Span) {
+	traceSpanDisplay := fmt.Sprintf("actions[%v].[%v]", action.Id, action.Type)
+	return wrenchContext.Tracer.Start(ctx, traceSpanDisplay)
+}
+
+func (wrenchContext *WrenchContext) GetSpan2(ctx context.Context, spanDisplay string) (context.Context, trace.Span) {
+	return wrenchContext.Tracer.Start(ctx, spanDisplay)
+}
+
+func (wrenchContext *WrenchContext) GetContext(traceId string) context.Context {
+	if len(traceId) > 0 {
+
+		traceIdSpllited := strings.Split(traceId, "-")
+
+		traceID, _ := trace.TraceIDFromHex(traceIdSpllited[1])
+		spanID, _ := trace.SpanIDFromHex(traceIdSpllited[2])
+
+		parent := trace.NewSpanContext(trace.SpanContextConfig{
+			TraceID:    traceID,
+			SpanID:     spanID,
+			TraceFlags: trace.FlagsSampled,
+			Remote:     true,
+		})
+
+		return trace.ContextWithSpanContext(context.Background(), parent)
+
+	} else {
+		return context.Background()
+	}
 }

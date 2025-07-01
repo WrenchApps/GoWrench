@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 var httpClient *http.Client = new(http.Client)
@@ -45,6 +47,13 @@ type HttpClientResponseData struct {
 	Headers            map[string]string
 	StatusCode         int
 	HttpClientResponse *http.Response
+}
+
+func (httpClientRequestData *HttpClientRequestData) SetHeaderTracestate(ctx context.Context) {
+	spanContext := trace.SpanContextFromContext(ctx)
+	traceId := spanContext.TraceID().String()
+	traceparent := fmt.Sprintf("00-%s-%s-%s", traceId, spanContext.SpanID(), "01")
+	httpClientRequestData.SetHeader("tracestate", traceparent)
 }
 
 func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[string]interface{}) {
