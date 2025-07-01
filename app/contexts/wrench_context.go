@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	settings "wrench/app/manifest/action_settings"
 	api_settings "wrench/app/manifest/api_settings"
 
@@ -29,4 +30,26 @@ func (wrenchContext *WrenchContext) GetSpan(ctx context.Context, action settings
 
 func (wrenchContext *WrenchContext) GetSpan2(ctx context.Context, spanDisplay string) (context.Context, trace.Span) {
 	return wrenchContext.Tracer.Start(ctx, spanDisplay)
+}
+
+func (wrenchContext *WrenchContext) GetContext(traceId string) context.Context {
+	if len(traceId) > 0 {
+
+		traceIdSpllited := strings.Split(traceId, "-")
+
+		traceID, _ := trace.TraceIDFromHex(traceIdSpllited[1])
+		spanID, _ := trace.SpanIDFromHex(traceIdSpllited[2])
+
+		parent := trace.NewSpanContext(trace.SpanContextConfig{
+			TraceID:    traceID,
+			SpanID:     spanID,
+			TraceFlags: trace.FlagsSampled,
+			Remote:     true,
+		})
+
+		return trace.ContextWithSpanContext(context.Background(), parent)
+
+	} else {
+		return context.Background()
+	}
 }

@@ -56,7 +56,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			bodyContext.HttpStatusCode = response.StatusCode
 			if handler.ActionSettings.Http.Response != nil {
 				bodyContext.SetHeaders(handler.ActionSettings.Http.Response.MapFixedHeaders)
-				bodyContext.SetHeaders(mapHttpResponseHeaders(ctx, response, handler.ActionSettings.Http.Response.MapResponseHeaders))
+				bodyContext.SetHeaders(mapHttpResponseHeaders(response, handler.ActionSettings.Http.Response.MapResponseHeaders))
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchCo
 	}
 }
 
-func mapHttpResponseHeaders(ctx context.Context, response *client.HttpClientResponseData, mapResponseHeader []string) map[string]string {
+func mapHttpResponseHeaders(response *client.HttpClientResponseData, mapResponseHeader []string) map[string]string {
 
 	if mapResponseHeader == nil {
 		return nil
