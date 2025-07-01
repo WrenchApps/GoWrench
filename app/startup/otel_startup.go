@@ -7,10 +7,13 @@ import (
 	"wrench/app/manifest/application_settings"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -120,4 +123,47 @@ func InitMeter() func(context.Context) error {
 		return nil
 	}
 	return nil
+}
+
+func InitLogProvider() *sdklog.LoggerProvider {
+	ctx := context.Background()
+
+	app := application_settings.ApplicationSettingsStatic
+	otelSetting := app.Service.Otel
+
+	res := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceName(app.Service.Name),
+		semconv.ServiceVersion(app.Service.Version),
+	)
+
+	exp, err := otlploghttp.New(ctx,
+		otlploghttp.WithEndpoint(otelSetting.CollectorUrl),
+		otlploghttp.WithInsecure(),
+	)
+
+	var logExport *stdoutlog.Exporter
+	var logErr error
+
+	if otelSetting.LogConsoleExport {
+		logExport, logErr = stdoutlog.New(stdoutlog.WithPrettyPrint())
+	}
+
+	if err != nil || logErr != nil {
+		log.Fatalf("log exporter: %v %v", err, logErr)
+	}
+
+	if logExport != nil {
+		return sdklog.NewLoggerProvider(
+			sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
+			sdklog.WithProcessor(sdklog.NewBatchProcessor(logExport)),
+			sdklog.WithResource(res),
+		)
+
+	} else {
+		return sdklog.NewLoggerProvider(
+			sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
+			sdklog.WithResource(res),
+		)
+	}
 }

@@ -35,6 +35,9 @@ func main() {
 
 	application_settings.ApplicationSettingsStatic = applicationSetting
 
+	lp := startup.InitLogProvider()
+	app.InitLogger(lp)
+
 	traceShutdown := startup.InitTracer()
 	if traceShutdown != nil {
 		defer traceShutdown(ctx)
