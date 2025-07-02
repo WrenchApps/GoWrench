@@ -2,9 +2,10 @@ package auth
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"sort"
 	"strings"
+	"wrench/app"
 	"wrench/app/manifest/api_settings"
 
 	"github.com/MicahParks/keyfunc"
@@ -64,7 +65,7 @@ func rolesValidation(tokenPayloadMap map[string]interface{}, roles []string) boo
 		if strings.HasPrefix(rolesToken, rolesRequired) {
 			result = true
 		} else {
-			log.Printf("Roles %s is required", rolesRequired)
+			app.LogWarning(fmt.Sprintf("Roles %v is required", rolesRequired))
 		}
 	}
 	return result
@@ -78,7 +79,7 @@ func scopesVadalition(tokenPayloadMap map[string]interface{}, scopes []string) b
 
 			if !strings.Contains(scopeParsed, scope) {
 				result = false
-				log.Printf("scope %s is required", scope)
+				app.LogWarning(fmt.Sprintf("scope %s is required", scope))
 				break
 			}
 		}
@@ -100,7 +101,7 @@ func claimsValidation(tokenPayloadMap map[string]interface{}, claims []string) b
 
 		if !ok || claimTokenValue != claimValue {
 			result = false
-			log.Printf("claim %s with value %s is required", claimName, claimValue)
+			app.LogWarning(fmt.Sprintf("claim %s with value %s is required", claimName, claimValue))
 			break
 		}
 	}
@@ -108,37 +109,35 @@ func claimsValidation(tokenPayloadMap map[string]interface{}, claims []string) b
 	return result
 }
 
-func JwksValidationAuthentication(tokenString string, authorizationSettings *api_settings.AuthorizationSettings) bool {
-	LoadCertificates(authorizationSettings.JwksUrl)
+func JwksValidationAuthentication(ctx context.Context, tokenString string, authorizationSettings *api_settings.AuthorizationSettings) bool {
+	LoadCertificates(ctx, authorizationSettings.JwksUrl)
 
 	token, err := jwt.Parse(tokenString, jwksData.Keyfunc)
 	if err != nil {
-		log.Printf("Failed to parse the JWT.\nError: %s", err.Error())
+		app.LogError2(fmt.Sprintf("Failed to parse the JWT.\nError: %s", err.Error()), err)
 		return false
 	}
 
 	// Check if the token is valid.
 	if !token.Valid {
-		log.Println("The token is not valid.")
+		app.LogWarning("The token is not valid.")
 	}
 
 	return token.Valid
 }
 
-func LoadCertificates(jwksUrl string) {
+func LoadCertificates(ctx context.Context, jwksUrl string) {
 
 	if jwksData == nil {
-		ctx := context.Background()
-
 		options := keyfunc.Options{
 			Ctx: ctx,
 			RefreshErrorHandler: func(err error) {
-				log.Printf("There was an error with the jwt.Keyfunc\nError: %s", err.Error())
+				app.LogError2(fmt.Sprintf("There was an error with the jwt.Keyfunc\nError: %s", err.Error()), err)
 			},
 		}
 		jwks, err := keyfunc.Get(jwksUrl, options)
 		if err != nil {
-			log.Fatalf("Failed to create JWKS from resource at the given URL.\nError: %s", err.Error())
+			app.LogError2(fmt.Sprintf("Failed to create JWKS from resource at the given URL.\nError: %s", err.Error()), err)
 		}
 
 		jwksData = jwks

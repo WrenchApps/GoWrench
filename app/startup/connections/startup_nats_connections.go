@@ -1,7 +1,8 @@
 package connections
 
 import (
-	"log"
+	"fmt"
+	"wrench/app"
 	"wrench/app/manifest/action_settings"
 	"wrench/app/manifest/connection_settings"
 
@@ -37,7 +38,7 @@ func loadConnectionNats(connNatsSetting []*connection_settings.NatsConnectionSet
 			nc, err := nats.Connect(conn.ServerAddress)
 
 			if err != nil {
-				log.Printf("Error nats connection: %v", err)
+				app.LogError2(fmt.Sprintf("Error nats connection: %v", err), err)
 				return err
 			}
 
@@ -66,7 +67,7 @@ func loadJetStreams(settings []*action_settings.ActionSettings) error {
 					js, err := conn.JetStream()
 
 					if err != nil {
-						log.Printf("Error nats jetstream: %v", err)
+						app.LogError2(fmt.Sprintf("Error nats jetstream: %v", err), err)
 						return err
 					}
 

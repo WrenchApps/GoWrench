@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"go.opentelemetry.io/otel/log"
 
 	"go.opentelemetry.io/otel"
@@ -13,6 +15,8 @@ const ENV_PATH_FILE_CONFIG string = "PATH_FILE_CONFIG"
 const ENV_PATH_FOLDER_ENV_FILES string = "PATH_FOLDER_ENV_FILES"
 const ENV_APP_ENV string = "APP_ENV"
 const ENV_RUN_BASH_FILES_BEFORE_STARTUP string = "RUN_BASH_FILES_BEFORE_STARTUP"
+
+var contextInitiated context.Context
 
 var Tracer = otel.Tracer("trace")
 var Meter = otel.Meter("meter")
@@ -37,4 +41,12 @@ func InitMetrics() {
 func InitLogger(lp *sdklog.LoggerProvider) {
 	LoggerProvider = lp
 	Logger = LoggerProvider.Logger("logger")
+}
+
+func SetContext(ctx context.Context) {
+	contextInitiated = ctx
+}
+
+func GetContext() context.Context {
+	return contextInitiated
 }

@@ -48,10 +48,10 @@ func setEnvFileToSystemEnv(pathEnvFile string) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Printf("Env file %s not found ", pathEnvFile)
+			app.LogInfo(fmt.Sprintf("Env file %s not found ", pathEnvFile))
 			return
 		} else {
-			log.Fatal(err)
+			app.LogError2(err.Error(), err)
 		}
 	}
 
@@ -82,5 +82,5 @@ func setEnvFileToSystemEnv(pathEnvFile string) {
 			break
 		}
 	}
-	log.Printf("Done file %s", pathEnvFile)
+	app.LogInfo(fmt.Sprintf("Done file %s", pathEnvFile))
 }

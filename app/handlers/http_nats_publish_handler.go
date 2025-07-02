@@ -49,7 +49,7 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 			bodyContext.SetBodyPreserved(settings.Id, []byte(""))
 		} else {
 			if err != nil {
-				wrenchContext.SetHasError(ctx, span, "error nats publish message", err)
+				wrenchContext.SetHasError(span, "error nats publish message", err)
 				bodyContext.HttpStatusCode = 500
 				bodyContext.SetBody([]byte(err.Error()))
 			} else {

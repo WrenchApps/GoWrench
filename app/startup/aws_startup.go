@@ -3,8 +3,9 @@ package startup
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"os"
+	"wrench/app"
 	"wrench/app/manifest/application_settings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +25,7 @@ func LoadAwsSecrets(fileConfig []byte) {
 		setting.AwsSecretSettings != nil &&
 		len(setting.AwsSecretSettings.SecretsName) > 0 {
 		for _, secretName := range setting.AwsSecretSettings.SecretsName {
-			log.Print("Loading secret " + secretName)
+			app.LogInfo(fmt.Sprintf("Loading secret %v", secretName))
 			secretValue := getSecretValue(setting.Region, secretName)
 			if secretValue == "" {
 				continue
@@ -33,7 +34,7 @@ func LoadAwsSecrets(fileConfig []byte) {
 			if err == nil {
 				setMapToEnv(secretName, secretMap)
 			}
-			log.Print("Loaded secret " + secretName)
+			app.LogInfo(fmt.Sprintf("Loaded secret %v", secretName))
 		}
 	}
 }
@@ -41,7 +42,7 @@ func LoadAwsSecrets(fileConfig []byte) {
 func getSecretValue(region string, secretName string) string {
 	config, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
-		log.Print(err)
+		app.LogError2(err.Error(), err)
 	}
 
 	svc := secretsmanager.NewFromConfig(config)
@@ -52,7 +53,7 @@ func getSecretValue(region string, secretName string) string {
 
 	result, err := svc.GetSecretValue(context.TODO(), input)
 	if err != nil {
-		log.Print(err.Error())
+		app.LogError2(err.Error(), err)
 		return ""
 	}
 

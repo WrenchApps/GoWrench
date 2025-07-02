@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
@@ -25,11 +24,10 @@ func (handler *FileReaderHandler) Do(ctx context.Context, wrenchContext *context
 
 		if err != nil {
 			msg := fmt.Sprintf("Couldn't read the file %v. Here's why: %v", handler.ActionSettings.File.Path, err)
-			log.Print(msg)
 			bodyContext.HttpStatusCode = 500
 			bodyContext.SetBody([]byte(msg))
 			bodyContext.ContentType = "text/plain"
-			wrenchContext.SetHasError(ctx, span, msg, err)
+			wrenchContext.SetHasError(span, msg, err)
 		} else {
 			bodyContext.SetBody([]byte(data))
 			if handler.ActionSettings.File.Response != nil {

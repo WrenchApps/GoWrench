@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"time"
@@ -14,32 +13,45 @@ type WrenchErrorLog struct {
 	Error   error
 }
 
-func LogInfo(ctx context.Context, msg string) {
-	var record otelLog.Record
-	record.SetSeverity(otelLog.SeverityInfo)
-	record.SetBody(otelLog.StringValue(msg))
-	record.SetTimestamp(time.Now())
-
+func LogInfo(msg string) {
 	log.Print(msg)
-	Logger.Emit(ctx, record)
+
+	if Logger != nil {
+		var record otelLog.Record
+		record.SetSeverity(otelLog.SeverityInfo)
+		record.SetBody(otelLog.StringValue(msg))
+		record.SetTimestamp(time.Now())
+
+		Logger.Emit(GetContext(), record)
+	}
 }
 
-func LogWarning(ctx context.Context, msg string) {
-	var record otelLog.Record
-	record.SetSeverity(otelLog.SeverityWarn)
-	record.SetBody(otelLog.StringValue(msg))
-	record.SetTimestamp(time.Now())
-
+func LogWarning(msg string) {
 	log.Print(msg)
-	Logger.Emit(ctx, record)
+
+	if Logger != nil {
+		var record otelLog.Record
+		record.SetSeverity(otelLog.SeverityWarn)
+		record.SetBody(otelLog.StringValue(msg))
+		record.SetTimestamp(time.Now())
+
+		Logger.Emit(GetContext(), record)
+	}
 }
 
-func LogError(ctx context.Context, err WrenchErrorLog) {
-	var record otelLog.Record
-	record.SetSeverity(otelLog.SeverityError)
-	record.SetBody(otelLog.StringValue(fmt.Sprint(err)))
-	record.SetTimestamp(time.Now())
+func LogError(err WrenchErrorLog) {
+	log.Print(err)
 
-	log.Fatal(err)
-	Logger.Emit(ctx, record)
+	if Logger != nil {
+		var record otelLog.Record
+		record.SetSeverity(otelLog.SeverityError)
+		record.SetBody(otelLog.StringValue(fmt.Sprint(err)))
+		record.SetTimestamp(time.Now())
+
+		Logger.Emit(GetContext(), record)
+	}
+}
+
+func LogError2(msg string, err error) {
+	LogError(WrenchErrorLog{Message: msg, Error: err})
 }
