@@ -3,34 +3,43 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
-	"go.opentelemetry.io/otel/log"
+	otelLog "go.opentelemetry.io/otel/log"
 )
 
+type WrenchErrorLog struct {
+	Message string
+	Error   error
+}
+
 func LogInfo(ctx context.Context, msg string) {
-	var record log.Record
-	record.SetSeverity(log.SeverityInfo)
-	record.SetBody(log.StringValue(msg))
+	var record otelLog.Record
+	record.SetSeverity(otelLog.SeverityInfo)
+	record.SetBody(otelLog.StringValue(msg))
 	record.SetTimestamp(time.Now())
 
+	log.Print(msg)
 	Logger.Emit(ctx, record)
 }
 
 func LogWarning(ctx context.Context, msg string) {
-	var record log.Record
-	record.SetSeverity(log.SeverityWarn)
-	record.SetBody(log.StringValue(msg))
+	var record otelLog.Record
+	record.SetSeverity(otelLog.SeverityWarn)
+	record.SetBody(otelLog.StringValue(msg))
 	record.SetTimestamp(time.Now())
 
+	log.Print(msg)
 	Logger.Emit(ctx, record)
 }
 
-func LogError(ctx context.Context, err error) {
-	var record log.Record
-	record.SetSeverity(log.SeverityError)
-	record.SetBody(log.StringValue(fmt.Sprint(err)))
+func LogError(ctx context.Context, err WrenchErrorLog) {
+	var record otelLog.Record
+	record.SetSeverity(otelLog.SeverityError)
+	record.SetBody(otelLog.StringValue(fmt.Sprint(err)))
 	record.SetTimestamp(time.Now())
 
+	log.Fatal(err)
 	Logger.Emit(ctx, record)
 }

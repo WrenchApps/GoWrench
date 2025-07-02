@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
@@ -142,28 +141,12 @@ func InitLogProvider() *sdklog.LoggerProvider {
 		otlploghttp.WithInsecure(),
 	)
 
-	var logExport *stdoutlog.Exporter
-	var logErr error
-
-	if otelSetting.LogConsoleExport {
-		logExport, logErr = stdoutlog.New(stdoutlog.WithPrettyPrint())
+	if err != nil {
+		log.Fatalf("log exporter: %v", err)
 	}
 
-	if err != nil || logErr != nil {
-		log.Fatalf("log exporter: %v %v", err, logErr)
-	}
-
-	if logExport != nil {
-		return sdklog.NewLoggerProvider(
-			sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
-			sdklog.WithProcessor(sdklog.NewBatchProcessor(logExport)),
-			sdklog.WithResource(res),
-		)
-
-	} else {
-		return sdklog.NewLoggerProvider(
-			sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
-			sdklog.WithResource(res),
-		)
-	}
+	return sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
+		sdklog.WithResource(res),
+	)
 }

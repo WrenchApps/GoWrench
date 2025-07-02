@@ -7,7 +7,6 @@ type OtelSettings struct {
 	Enable              bool   `yaml:"enable"`
 	TraceConsoleExport  bool   `yaml:"traceConsoleExport"`
 	MetricConsoleExport bool   `yaml:"metricConsoleExport"`
-	LogConsoleExport    bool   `yaml:"logConsoleExport"`
 }
 
 func (setting OtelSettings) Valid() validation.ValidateResult {

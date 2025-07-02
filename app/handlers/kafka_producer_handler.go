@@ -99,7 +99,7 @@ func setError(msg string, ctx context.Context, span trace.Span, wrenchContext *c
 	bodyContext.SetBodyAction(actionSettings, []byte(msg))
 	bodyContext.ContentType = "text/plain"
 	err := errors.New(msg)
-	wrenchContext.SetHasError(ctx, span, err)
+	wrenchContext.SetHasError(ctx, span, msg, err)
 }
 
 func getKafkaMessageHeaders(headersMap map[string]string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) []kafka.Header {

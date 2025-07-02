@@ -23,11 +23,11 @@ type WrenchContext struct {
 	Meter          metric.Meter
 }
 
-func (wrenchContext *WrenchContext) SetHasError(ctx context.Context, span trace.Span, err error) {
+func (wrenchContext *WrenchContext) SetHasError(ctx context.Context, span trace.Span, msg string, err error) {
 	span.RecordError(err)
 	span.SetStatus(codes.Error, err.Error())
-	app.LogError(ctx, err)
 
+	app.LogError(ctx, app.WrenchErrorLog{Message: msg, Error: err})
 	wrenchContext.HasError = true
 }
 
