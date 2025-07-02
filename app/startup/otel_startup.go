@@ -130,23 +130,26 @@ func InitLogProvider() *sdklog.LoggerProvider {
 	app := application_settings.ApplicationSettingsStatic
 	otelSetting := app.Service.Otel
 
-	res := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceName(app.Service.Name),
-		semconv.ServiceVersion(app.Service.Version),
-	)
+	if otelSetting != nil && otelSetting.Enable {
+		res := resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(app.Service.Name),
+			semconv.ServiceVersion(app.Service.Version),
+		)
 
-	exp, err := otlploghttp.New(ctx,
-		otlploghttp.WithEndpoint(otelSetting.CollectorUrl),
-		otlploghttp.WithInsecure(),
-	)
+		exp, err := otlploghttp.New(ctx,
+			otlploghttp.WithEndpoint(otelSetting.CollectorUrl),
+			otlploghttp.WithInsecure(),
+		)
 
-	if err != nil {
-		log.Fatalf("log exporter: %v", err)
+		if err != nil {
+			log.Fatalf("log exporter: %v", err)
+		}
+
+		return sdklog.NewLoggerProvider(
+			sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
+			sdklog.WithResource(res),
+		)
 	}
-
-	return sdklog.NewLoggerProvider(
-		sdklog.WithProcessor(sdklog.NewBatchProcessor(exp)),
-		sdklog.WithResource(res),
-	)
+	return nil
 }

@@ -39,8 +39,10 @@ func InitMetrics() {
 }
 
 func InitLogger(lp *sdklog.LoggerProvider) {
-	LoggerProvider = lp
-	Logger = LoggerProvider.Logger("logger")
+	if lp != nil {
+		LoggerProvider = lp
+		Logger = LoggerProvider.Logger("logger")
+	}
 }
 
 func SetContext(ctx context.Context) {
