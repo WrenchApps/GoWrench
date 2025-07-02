@@ -1,6 +1,8 @@
 package connections
 
-import "wrench/app/manifest/application_settings"
+import (
+	"wrench/app/manifest/application_settings"
+)
 
 func LoadConnections() error {
 	app := application_settings.ApplicationSettingsStatic

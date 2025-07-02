@@ -5,8 +5,8 @@ service:
   version: 1.0.0
   otel:
     enable: true
-    metricConsoleExport: true
-    traceConsoleExport: true
+    metricConsoleExport: false
+    traceConsoleExport: false
     collectorUrl: "localhost:4318"
 
 api:

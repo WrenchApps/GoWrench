@@ -1,6 +1,7 @@
 package startup
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strings"
@@ -14,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func LoadApiEndpoint() http.Handler {
+func LoadApiEndpoint(ctx context.Context) http.Handler {
 	app := application_settings.ApplicationSettingsStatic
 
 	if app.Api == nil || app.Api.Endpoints == nil {
@@ -38,7 +39,7 @@ func LoadApiEndpoint() http.Handler {
 			route := endpoint.Route
 
 			if shouldConfigureAuthorization {
-				muxRoute.Handle(route, authMiddleware(app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler))).Methods(method)
+				muxRoute.Handle(route, authMiddleware(ctx, app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler))).Methods(method)
 			} else {
 				muxRoute.HandleFunc(route, delegate.HttpHandler).Methods(method)
 			}
@@ -50,7 +51,7 @@ func LoadApiEndpoint() http.Handler {
 			}
 
 			if shouldConfigureAuthorization {
-				muxRoute.Handle(endpoint.Route+"/{path:.*}", authMiddleware(app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler)))
+				muxRoute.Handle(endpoint.Route+"/{path:.*}", authMiddleware(ctx, app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler)))
 			} else {
 				muxRoute.HandleFunc(endpoint.Route+"/{path:.*}", delegate.HttpHandler)
 			}
@@ -94,7 +95,7 @@ func LoadApiEndpoint() http.Handler {
 	return muxRoute
 }
 
-func authMiddleware(authorizationSettings *api_settings.AuthorizationSettings, endpoint api_settings.EndpointSettings, next http.Handler) http.Handler {
+func authMiddleware(ctx context.Context, authorizationSettings *api_settings.AuthorizationSettings, endpoint api_settings.EndpointSettings, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		tokenString := r.Header.Get("Authorization")
@@ -106,7 +107,7 @@ func authMiddleware(authorizationSettings *api_settings.AuthorizationSettings, e
 		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 
 		if authorizationSettings.Type == api_settings.JWKSAuthorizationType {
-			tokenIsValid := auth.JwksValidationAuthentication(tokenString, authorizationSettings)
+			tokenIsValid := auth.JwksValidationAuthentication(ctx, tokenString, authorizationSettings)
 			if tokenIsValid {
 				tokenIsAuthorized := auth.JwksValidationAuthorization(tokenString, endpoint.Roles, endpoint.Scopes, endpoint.Claims)
 				if !tokenIsAuthorized {

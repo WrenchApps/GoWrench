@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 	"wrench/app"
 	contexts "wrench/app/contexts"
@@ -94,12 +93,11 @@ func (handler *KafkaProducerHandler) setSpanAttributes(span trace.Span, connecti
 }
 
 func setError(msg string, span trace.Span, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) {
-	log.Print(msg)
 	bodyContext.HttpStatusCode = 500
 	bodyContext.SetBodyAction(actionSettings, []byte(msg))
 	bodyContext.ContentType = "text/plain"
 	err := errors.New(msg)
-	wrenchContext.SetHasError(span, err)
+	wrenchContext.SetHasError(span, msg, err)
 }
 
 func getKafkaMessageHeaders(headersMap map[string]string, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, actionSettings *settings.ActionSettings) []kafka.Header {
