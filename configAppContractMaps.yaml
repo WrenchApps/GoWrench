@@ -73,6 +73,8 @@ contract:
       - "address"
       - "customer.phone:customer.phones"
       - "customer:customers"
+      formatDate:
+      - "createdAt:yyyyMMdd"
 
   - id: map_after
     sequence:
