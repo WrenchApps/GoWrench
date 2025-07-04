@@ -23,7 +23,8 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError {
+	if !wrenchContext.HasError &&
+		!wrenchContext.HasCache {
 
 		start := time.Now()
 		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)

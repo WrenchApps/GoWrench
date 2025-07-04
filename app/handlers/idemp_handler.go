@@ -9,7 +9,6 @@ import (
 	"wrench/app"
 	contexts "wrench/app/contexts"
 	"wrench/app/cross_funcs"
-	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/api_settings"
 	"wrench/app/manifest/idemp_settings"
 	"wrench/app/manifest_cross_funcs"
@@ -24,7 +23,6 @@ import (
 
 type IdempHandler struct {
 	Next             Handler
-	ActionSettings   *settings.ActionSettings
 	EndpointSettings *api_settings.EndpointSettings
 }
 
@@ -63,7 +61,7 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 				failed = true
 			}
 
-			keyValue := contexts.GetCalculatedValue(idemp.Key, wrenchContext, bodyContext, handler.ActionSettings)
+			keyValue := contexts.GetCalculatedValue(idemp.Key, wrenchContext, bodyContext, nil)
 			valueArray := []byte(fmt.Sprint(keyValue))
 			hashValue := cross_funcs.GetHash(handler.EndpointSettings.Route, sha256.New, valueArray)
 			redisKey = handler.getRedisKey(handler.EndpointSettings.Route, hashValue)

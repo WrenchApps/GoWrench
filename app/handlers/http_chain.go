@@ -27,6 +27,15 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		var currentHandler Handler
 		currentHandler = firstHandler
 
+		if len(endpoint.IdempId) > 0 {
+
+			idempHandler := new(IdempHandler)
+			idempHandler.EndpointSettings = &endpoint
+
+			currentHandler.SetNext(idempHandler)
+			currentHandler = idempHandler
+		}
+
 		if len(endpoint.ActionID) > 0 {
 			action, _ := settings.GetActionById(endpoint.ActionID)
 			currentHandler = buildChainToAction(currentHandler, settings, action)

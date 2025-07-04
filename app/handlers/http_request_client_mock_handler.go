@@ -13,10 +13,13 @@ type HttpRequestClientMockHandler struct {
 
 func (handler *HttpRequestClientMockHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
-	defer span.End()
+	if !wrenchContext.HasError &&
+		!wrenchContext.HasCache {
 
-	if !wrenchContext.HasError {
+		ctx2, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
+		defer span.End()
+		ctx = ctx2
+
 		if !handler.ActionSettings.Http.Mock.MirrorBody {
 			bodyContext.SetBody([]byte(handler.ActionSettings.Http.Mock.Body))
 		}

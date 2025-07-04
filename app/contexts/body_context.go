@@ -124,6 +124,11 @@ func (bodyContext *BodyContext) GetBodyString() string {
 }
 
 func (bodyContext *BodyContext) GetBody(settings *action_settings.ActionSettings) []byte {
+
+	if settings == nil {
+		return bodyContext.CurrentBodyByteArray
+	}
+
 	shouldUse, bodyRef := settings.ShouldUseBodyRef()
 
 	if shouldUse {
