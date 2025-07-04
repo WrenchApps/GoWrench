@@ -51,5 +51,15 @@ func Valid() validation.ValidateResult {
 
 	}
 
+	if appSetting.Connections != nil && len(appSetting.Connections.Redis) > 0 {
+		hasIds := toHasIdSlice(appSetting.Connections.Redis)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("connections.redis.id %v duplicated", id))
+		}
+
+	}
+
 	return result
 }
