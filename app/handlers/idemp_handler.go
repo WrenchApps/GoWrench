@@ -15,6 +15,7 @@ import (
 	"wrench/app/manifest_cross_funcs"
 	"wrench/app/startup/connections"
 
+	"github.com/go-redsync/redsync/v4"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -40,6 +41,7 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 	var redisClient *redis.Client
 	var idemp *idemp_settings.IdempSettings
 	var failed bool
+	var mutex *redsync.Mutex
 
 	spanDisplay := fmt.Sprintf("idemp.[%v]", handler.EndpointSettings.IdempId)
 	ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)
@@ -55,40 +57,54 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 			wrenchContext.SetHasError(span, err.Error(), err)
 			failed = true
 		} else {
-			keyValue := contexts.GetCalculatedValue(idemp.Key, wrenchContext, bodyContext, handler.ActionSettings)
 			redisClient, err = connections.GetRedisConnection(idemp.RedisConnectionId)
-
 			if err != nil {
 				wrenchContext.SetHasError(span, err.Error(), err)
 				failed = true
 			}
 
+			keyValue := contexts.GetCalculatedValue(idemp.Key, wrenchContext, bodyContext, handler.ActionSettings)
 			valueArray := []byte(fmt.Sprint(keyValue))
 			hashValue := cross_funcs.GetHash(handler.EndpointSettings.Route, sha256.New, valueArray)
 			redisKey = handler.getRedisKey(handler.EndpointSettings.Route, hashValue)
 
-			val, err := redisClient.Get(ctx, redisKey).Result()
+			rd := cross_funcs.GetRedsyncInstance(idemp.RedisConnectionId)
 
-			if err == redis.Nil {
-				// do nothing yet
-			} else if err != nil {
-				wrenchContext.SetHasError(span, err.Error(), err)
-				failed = true
+			mutex = rd.NewMutex(redisKey,
+				redsync.WithTries(5),
+				redsync.WithExpiry(10*time.Second),
+			)
+
+			if err := mutex.Lock(); err != nil {
+				msg := "the distributed lock block request"
+				wrenchContext.SetHasError(span, msg, err)
+				bodyContext.HttpStatusCode = 409
+				bodyContext.CurrentBodyByteArray = []byte(msg)
 			} else {
-				var idempBody idempBodyContext
-				jsonErr := json.Unmarshal([]byte(val), &idempBody)
 
-				if jsonErr != nil {
-					wrenchContext.SetHasError(span, jsonErr.Error(), jsonErr)
+				val, err := redisClient.Get(ctx, redisKey).Result()
+
+				if err == redis.Nil {
+					// do nothing yet
+				} else if err != nil {
+					wrenchContext.SetHasError(span, err.Error(), err)
 					failed = true
+				} else {
+					var idempBody idempBodyContext
+					jsonErr := json.Unmarshal([]byte(val), &idempBody)
+
+					if jsonErr != nil {
+						wrenchContext.SetHasError(span, jsonErr.Error(), jsonErr)
+						failed = true
+					}
+
+					bodyContext.CurrentBodyByteArray = idempBody.CurrentBodyByteArray
+					bodyContext.Headers = idempBody.Headers
+					bodyContext.ContentType = idempBody.ContentType
+					bodyContext.HttpStatusCode = idempBody.HttpStatusCode
+
+					wrenchContext.SetHasCache()
 				}
-
-				bodyContext.CurrentBodyByteArray = idempBody.CurrentBodyByteArray
-				bodyContext.Headers = idempBody.Headers
-				bodyContext.ContentType = idempBody.ContentType
-				bodyContext.HttpStatusCode = idempBody.HttpStatusCode
-
-				wrenchContext.SetHasCache()
 			}
 		}
 
@@ -111,6 +127,12 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 		err := redisClient.Set(ctx, redisKey, idempBody, ttl).Err()
 		if err != nil {
 			failed = true
+		}
+	}
+
+	if mutex != nil {
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			app.LogError2(fmt.Sprintf("could not release lock, redis key %v", redisKey), err)
 		}
 	}
 
