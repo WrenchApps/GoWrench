@@ -76,7 +76,7 @@ func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *cont
 }
 
 func (handler *KafkaProducerHandler) metricRecord(ctx context.Context, duration float64, connectionId string, topicName string) {
-	app.KafkaProducerDurtation.Record(ctx, duration,
+	app.KafkaProducerDuration.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.String("gowrench_connections_id", connectionId),
 			attribute.String("kafka_producer_topic_name", topicName),

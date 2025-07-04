@@ -13,6 +13,8 @@ func Valid() validation.ValidateResult {
 
 	result.Append(httpRequestCrossValid(appSetting))
 	result.Append(kafkaProducerCronsValidation(appSetting))
+	result.Append(idempCrossValidation(appSetting))
+	result.Append(endpointSettingsCrossValidation(appSetting))
 
 	if len(appSetting.Actions) > 0 {
 		hasIds := toHasIdSlice(appSetting.Actions)

@@ -6,7 +6,7 @@ type IdempSettings struct {
 	Id                string `yaml:"id"`
 	RedisConnectionId string `yaml:"redisConnectionId"`
 	Key               string `yaml:"key"`
-	Ttl               int    `yaml:"ttl"`
+	TtlInSeconds      int    `yaml:"ttlInSeconds"`
 }
 
 func (setting *IdempSettings) GetId() string {
@@ -28,8 +28,8 @@ func (setting *IdempSettings) Valid() validation.ValidateResult {
 		result.AddError("idemp.key is required")
 	}
 
-	if setting.Ttl < 60 {
-		result.AddError("idemp.ttl should be greater than 59")
+	if setting.TtlInSeconds < 60 {
+		result.AddError("idemp.ttlInSeconds should be greater than 59")
 	}
 
 	return result

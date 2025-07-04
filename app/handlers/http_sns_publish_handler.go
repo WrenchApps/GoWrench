@@ -99,7 +99,7 @@ func (handler *SnsPublishHandler) SetNext(next Handler) {
 }
 
 func (handler *SnsPublishHandler) metricRecord(ctx context.Context, duration float64, topic_arn string) {
-	app.SnsPublishDurtation.Record(ctx, duration,
+	app.SnsPublishDuration.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.String("sns_topic_arn", topic_arn),
 		),
