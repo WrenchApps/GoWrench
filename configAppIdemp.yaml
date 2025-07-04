@@ -16,9 +16,9 @@ connections:
     password: 123456
     db: 0
 
-idemp:
+idemps:
   - id: idemp_1
-    connectionRedisId: redis_default
+    redisConnectionId: redis_default
     key: "{{wrenchContext.request.headers.x-partner-key}}"
     ttl: 60s
 

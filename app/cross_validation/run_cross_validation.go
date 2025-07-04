@@ -61,5 +61,15 @@ func Valid() validation.ValidateResult {
 
 	}
 
+	if len(appSetting.Idemps) > 0 {
+		hasIds := toHasIdSlice(appSetting.Idemps)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("idemps.id %v duplicated", id))
+		}
+
+	}
+
 	return result
 }
