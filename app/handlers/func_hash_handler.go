@@ -2,15 +2,14 @@ package handlers
 
 import (
 	"context"
-	"crypto/hmac"
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/hex"
 	"fmt"
 	"hash"
 	contexts "wrench/app/contexts"
+	"wrench/app/cross_funcs"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/action_settings/func_settings"
 )
@@ -29,18 +28,11 @@ func (handler *FuncHashHandler) Do(ctx context.Context, wrenchContext *contexts.
 		defer span.End()
 
 		key := contexts.GetCalculatedValue(handler.ActionSettings.Func.Hash.Key, wrenchContext, bodyContext, handler.ActionSettings)
-
 		hashType := handler.getHashFunc(handler.ActionSettings.Func.Hash.Alg)
-
-		mac := hmac.New(hashType, []byte(fmt.Sprint(key)))
-
 		currentBody := bodyContext.GetBody(handler.ActionSettings)
-		mac.Write(currentBody)
 
-		expectedMAC := mac.Sum(nil)
-		hashEncode := hex.EncodeToString(expectedMAC)
-
-		bodyContext.SetBodyAction(handler.ActionSettings, []byte(hashEncode))
+		hashValue := cross_funcs.GetHash(fmt.Sprint(key), hashType, currentBody)
+		bodyContext.SetBodyAction(handler.ActionSettings, []byte(hashValue))
 	}
 
 	if handler.Next != nil {
