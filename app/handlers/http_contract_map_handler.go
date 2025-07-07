@@ -6,6 +6,8 @@ import (
 	contexts "wrench/app/contexts"
 	"wrench/app/json_map"
 	"wrench/app/manifest/contract_settings/maps"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type HttpContractMapHandler struct {
@@ -22,6 +24,9 @@ func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *co
 		ctx = ctxSpan
 		defer span.End()
 
+		var err error
+		var errMsg string
+
 		isArray := bodyContext.IsArray()
 
 		if isArray {
@@ -31,10 +36,15 @@ func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *co
 				resultCurrentBodyContext := make([]map[string]interface{}, lenArrayBody)
 				for i, currentBodyContext := range currentBodyContextArray {
 					if len(handler.ContractMap.Sequence) > 0 {
-						currentBodyContext = handler.doSequency(wrenchContext, bodyContext, currentBodyContext)
+						currentBodyContext, err, errMsg = handler.doSequency(wrenchContext, bodyContext, currentBodyContext)
 					} else {
-						currentBodyContext = handler.doDefault(wrenchContext, bodyContext, currentBodyContext)
+						currentBodyContext, err, errMsg = handler.doDefault(wrenchContext, bodyContext, currentBodyContext)
 					}
+
+					if err != nil {
+						break
+					}
+
 					resultCurrentBodyContext[i] = currentBodyContext
 				}
 				bodyContext.SetArrayMapObject(resultCurrentBodyContext)
@@ -44,11 +54,15 @@ func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *co
 			currentBodyContext := bodyContext.ParseBodyToMapObject()
 
 			if len(handler.ContractMap.Sequence) > 0 {
-				currentBodyContext = handler.doSequency(wrenchContext, bodyContext, currentBodyContext)
+				currentBodyContext, err, errMsg = handler.doSequency(wrenchContext, bodyContext, currentBodyContext)
 			} else {
-				currentBodyContext = handler.doDefault(wrenchContext, bodyContext, currentBodyContext)
+				currentBodyContext, err, errMsg = handler.doDefault(wrenchContext, bodyContext, currentBodyContext)
 			}
 			bodyContext.SetMapObject(currentBodyContext)
+		}
+
+		if err != nil {
+			handler.setHasError(span, errMsg, err, 500, wrenchContext, bodyContext)
 		}
 	}
 
@@ -57,7 +71,10 @@ func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *co
 	}
 }
 
-func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, currentBodyContext map[string]interface{}) map[string]interface{} {
+func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, currentBodyContext map[string]interface{}) (map[string]interface{}, error, string) {
+
+	var err error
+	var errMsg string
 
 	if handler.ContractMap.Rename != nil {
 		currentBodyContext = json_map.RenameProperties(currentBodyContext, handler.ContractMap.Rename)
@@ -83,10 +100,18 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 		currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
 	}
 
-	return currentBodyContext
+	if handler.ContractMap.Format != nil {
+		currentBodyContext, err = contexts.FormatValues(currentBodyContext, handler.ContractMap.Format)
+		errMsg = "Failed to format values."
+	}
+
+	return currentBodyContext, err, errMsg
 }
 
-func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, currentBodyContext map[string]interface{}) map[string]interface{} {
+func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext, currentBodyContext map[string]interface{}) (map[string]interface{}, error, string) {
+	var err error
+	var errMsg string
+
 	for _, action := range handler.ContractMap.Sequence {
 		if action == "rename" {
 			currentBodyContext = json_map.RenameProperties(currentBodyContext, handler.ContractMap.Rename)
@@ -102,12 +127,25 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 			currentBodyContext = json_map.DuplicatePropertiesValue(currentBodyContext, handler.ContractMap.Duplicate)
 		} else if action == "parse" {
 			currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
+		} else if action == "format" {
+			currentBodyContext, err = contexts.FormatValues(currentBodyContext, handler.ContractMap.Format)
+			errMsg = "Failed to format values."
+			if err != nil {
+				break
+			}
 		}
 	}
 
-	return currentBodyContext
+	return currentBodyContext, err, errMsg
 }
 
 func (handler *HttpContractMapHandler) SetNext(next Handler) {
 	handler.Next = next
+}
+
+func (handler *HttpContractMapHandler) setHasError(span trace.Span, msg string, err error, httpStatusCode int, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+	wrenchContext.SetHasError(span, msg, err)
+	bodyContext.ContentType = "text/plain"
+	bodyContext.HttpStatusCode = httpStatusCode
+	bodyContext.SetBody([]byte(msg))
 }

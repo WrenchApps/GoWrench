@@ -217,3 +217,54 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 
 	return jsonValueCurrent
 }
+
+func formatDate(dateValue string, targetFormat string) (string, error) {
+	t, err := time.Parse(time.RFC3339Nano, dateValue)
+	if err != nil {
+		return "", err
+	}
+
+	replacer := strings.NewReplacer(
+		"yyyy", "2006",
+		"yy", "06",
+		"MM", "01",
+		"dd", "02",
+		"HH", "15",
+		"hh", "03",
+		"mm", "04",
+		"ss", "05",
+		"tt", "PM",
+	)
+
+	layout := replacer.Replace(targetFormat)
+
+	return t.Format(layout), nil
+}
+
+func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (map[string]interface{}, error) {
+	jsonValueCurrent := jsonMap
+	if len(format.Date) > 0 {
+		for _, Date := range format.Date {
+			DateSplitted := strings.Split(Date, ":")
+
+			propertyName := DateSplitted[0]
+			targetFormat := DateSplitted[1]
+
+			dateValue, jsonMapResult := json_map.GetValue(jsonValueCurrent, propertyName, true)
+
+			strDate, ok := dateValue.(string)
+			if !ok {
+				continue
+			}
+
+			formatedDate, err := formatDate(strDate, targetFormat)
+			if err != nil {
+				return jsonValueCurrent, err
+			}
+
+			jsonValueCurrent = json_map.CreateProperty(jsonMapResult, propertyName, formatedDate)
+		}
+	}
+
+	return jsonValueCurrent, nil
+}
