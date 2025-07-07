@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	action_settings "wrench/app/manifest/action_settings"
 	settings "wrench/app/manifest/application_settings"
+	"wrench/app/manifest_cross_funcs"
 )
 
 var ChainStatic *Chain = new(Chain)
@@ -27,6 +29,17 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		var currentHandler Handler
 		currentHandler = firstHandler
 
+		if len(endpoint.IdempId) > 0 {
+
+			idempHandler := new(IdempHandler)
+			idempHandler.EndpointSettings = &endpoint
+			idempHandler.IdempSettings, _ = manifest_cross_funcs.GetIdempSettingById(endpoint.IdempId)
+			idempHandler.RedisSettings, _ = manifest_cross_funcs.GetConnectionRedisSettingById(idempHandler.IdempSettings.RedisConnectionId)
+
+			currentHandler.SetNext(idempHandler)
+			currentHandler = idempHandler
+		}
+
 		if len(endpoint.ActionID) > 0 {
 			action, _ := settings.GetActionById(endpoint.ActionID)
 			currentHandler = buildChainToAction(currentHandler, settings, action)
@@ -38,7 +51,8 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		}
 
 		currentHandler.SetNext(new(HttpLastHandler))
-		chain.MapHandle[endpoint.Route] = firstHandler
+		chainKey := chain.GetChainKey(string(endpoint.Method), endpoint.Route)
+		chain.MapHandle[chainKey] = firstHandler
 	}
 }
 
@@ -138,4 +152,8 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 
 func (chain *Chain) GetHandler(key string) Handler {
 	return chain.MapHandle[key]
+}
+
+func (chain *Chain) GetChainKey(method string, route string) string {
+	return fmt.Sprintf("%v_%v", method, route)
 }

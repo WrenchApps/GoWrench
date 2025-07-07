@@ -21,5 +21,9 @@ func LoadConnections() error {
 		err = loadConnectionsKafka(app.Connections.Kafka)
 	}
 
+	if err == nil {
+		err = loadConnectionsRedis(app.Connections.Redis)
+	}
+
 	return err
 }

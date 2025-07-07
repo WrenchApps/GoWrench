@@ -16,6 +16,7 @@ type EndpointSettings struct {
 	Scopes          []string         `yaml:"scopes"`
 	Claims          []string         `yaml:"claims"`
 	IsProxy         bool             `yaml:"isProxy"`
+	IdempId         string           `yaml:"idempId"`
 }
 
 func (setting EndpointSettings) ShouldConfigureAuthorization(apiHasAuthorization bool) bool {

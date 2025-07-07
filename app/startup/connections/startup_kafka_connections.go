@@ -24,26 +24,28 @@ func loadConnectionsKafka(kafkaSettings []*connection_settings.KafkaConnectionSe
 		kafkaConnections = make(map[string]*KafkaConnection)
 	}
 
-	for _, setting := range kafkaSettings {
-		var dialer *kafka.Dialer
+	if len(kafkaSettings) > 0 {
+		for _, setting := range kafkaSettings {
+			var dialer *kafka.Dialer
 
-		if setting.ConnectionType == connection_settings.KafkaConnectionSsl {
-			dialer = &kafka.Dialer{
-				Timeout:   10 * time.Second,
-				DualStack: true,
-				TLS:       &tls.Config{},
+			if setting.ConnectionType == connection_settings.KafkaConnectionSsl {
+				dialer = &kafka.Dialer{
+					Timeout:   10 * time.Second,
+					DualStack: true,
+					TLS:       &tls.Config{},
+				}
+			} else {
+				dialer = &kafka.Dialer{
+					Timeout:   10 * time.Second,
+					DualStack: true,
+				}
 			}
-		} else {
-			dialer = &kafka.Dialer{
-				Timeout:   10 * time.Second,
-				DualStack: true,
-			}
-		}
 
-		kafkaConnections[setting.Id] = &KafkaConnection{
-			Id:      setting.Id,
-			Brokers: []string{setting.BootstrapServers},
-			Dialer:  dialer,
+			kafkaConnections[setting.Id] = &KafkaConnection{
+				Id:      setting.Id,
+				Brokers: []string{setting.BootstrapServers},
+				Dialer:  dialer,
+			}
 		}
 	}
 
@@ -54,7 +56,7 @@ func GetKafkaConnection(kafkaConnectionId string) (*KafkaConnection, error) {
 	if len(kafkaConnectionId) == 0 ||
 		len(kafkaConnections) == 0 ||
 		kafkaConnections[kafkaConnectionId] == nil {
-		return nil, errors.New("without connection")
+		return nil, errors.New("kafka without connection")
 	}
 
 	return kafkaConnections[kafkaConnectionId], nil

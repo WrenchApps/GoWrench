@@ -4,6 +4,8 @@ import (
 	"errors"
 	"wrench/app/manifest/application_settings"
 	"wrench/app/manifest/connection_settings"
+	"wrench/app/manifest/idemp_settings"
+	"wrench/app/manifest/service_settings"
 	"wrench/app/manifest/token_credential_settings"
 )
 
@@ -18,7 +20,7 @@ func GetTokenCredentialSettingById(id string) (*token_credential_settings.TokenC
 		}
 	}
 
-	return nil, errors.New("not found")
+	return nil, errors.New("token credential not found")
 }
 
 func GetConnectionKafkaSettingById(kafkaId string) (*connection_settings.KafkaConnectionSettings, error) {
@@ -32,5 +34,38 @@ func GetConnectionKafkaSettingById(kafkaId string) (*connection_settings.KafkaCo
 		}
 	}
 
-	return nil, errors.New("not found")
+	return nil, errors.New("kafka not found")
+}
+
+func GetConnectionRedisSettingById(redisConnectionId string) (*connection_settings.RedisConnectionSettings, error) {
+	appSetting := application_settings.ApplicationSettingsStatic
+
+	if appSetting.Connections != nil && len(appSetting.Connections.Redis) > 0 {
+		for _, redis := range appSetting.Connections.Redis {
+			if redis.Id == redisConnectionId {
+				return redis, nil
+			}
+		}
+	}
+
+	return nil, errors.New("redis not found")
+}
+
+func GetIdempSettingById(idempId string) (*idemp_settings.IdempSettings, error) {
+	appSetting := application_settings.ApplicationSettingsStatic
+
+	if len(appSetting.Idemps) > 0 {
+		for _, idemp := range appSetting.Idemps {
+			if idemp.Id == idempId {
+				return idemp, nil
+			}
+		}
+	}
+
+	return nil, errors.New("idemp not found")
+}
+
+func GetService() *service_settings.ServiceSettings {
+	appSetting := application_settings.ApplicationSettingsStatic
+	return appSetting.Service
 }

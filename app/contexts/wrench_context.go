@@ -18,6 +18,7 @@ type WrenchContext struct {
 	ResponseWriter *http.ResponseWriter
 	Request        *http.Request
 	HasError       bool
+	HasCache       bool
 	Endpoint       *api_settings.EndpointSettings
 	Tracer         trace.Tracer
 	Meter          metric.Meter
@@ -29,6 +30,10 @@ func (wrenchContext *WrenchContext) SetHasError(span trace.Span, msg string, err
 
 	app.LogError(app.WrenchErrorLog{Message: msg, Error: err})
 	wrenchContext.HasError = true
+}
+
+func (wrenchContext *WrenchContext) SetHasCache() {
+	wrenchContext.HasCache = true
 }
 
 func (wrenchContext *WrenchContext) SetHasError2() {

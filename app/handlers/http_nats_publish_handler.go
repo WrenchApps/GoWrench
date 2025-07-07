@@ -20,7 +20,8 @@ type NatsPublishHandler struct {
 
 func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError {
+	if !wrenchContext.HasError &&
+		!wrenchContext.HasCache {
 		start := time.Now()
 
 		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
@@ -68,7 +69,7 @@ func (handler *NatsPublishHandler) Do(ctx context.Context, wrenchContext *contex
 }
 
 func (handler *NatsPublishHandler) metricRecord(ctx context.Context, duration float64, connectionId string, subjectName string) {
-	app.NatsPublishDurtation.Record(ctx, duration,
+	app.NatsPublishDuration.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.String("gowrench_connections_id", connectionId),
 			attribute.String("nats_publish_subject_name", subjectName),

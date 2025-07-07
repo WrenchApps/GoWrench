@@ -7,6 +7,7 @@ import (
 	aws "wrench/app/manifest/aws_settings"
 	"wrench/app/manifest/connection_settings"
 	"wrench/app/manifest/contract_settings"
+	"wrench/app/manifest/idemp_settings"
 	"wrench/app/manifest/service_settings"
 	credential "wrench/app/manifest/token_credential_settings"
 	"wrench/app/manifest/validation"
@@ -24,6 +25,7 @@ type ApplicationSettings struct {
 	TokenCredentials []*credential.TokenCredentialSetting    `yaml:"tokenCredentials"`
 	Contract         *contract_settings.ContractSetting      `yaml:"contract"`
 	Aws              *aws.AwsSettings                        `yaml:"aws"`
+	Idemps           []*idemp_settings.IdempSettings         `yaml:"idemps"`
 }
 
 func (settings ApplicationSettings) GetActionById(actionId string) (*action_settings.ActionSettings, error) {
@@ -77,6 +79,12 @@ func (settings ApplicationSettings) Valid() validation.ValidateResult {
 
 	if settings.Contract != nil {
 		result.AppendValidable(settings.Contract)
+	}
+
+	if settings.Idemps != nil {
+		for _, validable := range settings.Idemps {
+			result.AppendValidable(validable)
+		}
 	}
 
 	return result

@@ -43,7 +43,8 @@ func (snsActions *SnsActions) Load() {
 
 func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError {
+	if !wrenchContext.HasError &&
+		!wrenchContext.HasCache {
 		start := time.Now()
 
 		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
@@ -99,7 +100,7 @@ func (handler *SnsPublishHandler) SetNext(next Handler) {
 }
 
 func (handler *SnsPublishHandler) metricRecord(ctx context.Context, duration float64, topic_arn string) {
-	app.SnsPublishDurtation.Record(ctx, duration,
+	app.SnsPublishDuration.Record(ctx, duration,
 		metric.WithAttributes(
 			attribute.String("sns_topic_arn", topic_arn),
 		),

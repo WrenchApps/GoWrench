@@ -13,6 +13,8 @@ func Valid() validation.ValidateResult {
 
 	result.Append(httpRequestCrossValid(appSetting))
 	result.Append(kafkaProducerCronsValidation(appSetting))
+	result.Append(idempCrossValidation(appSetting))
+	result.Append(endpointSettingsCrossValidation(appSetting))
 
 	if len(appSetting.Actions) > 0 {
 		hasIds := toHasIdSlice(appSetting.Actions)
@@ -47,6 +49,26 @@ func Valid() validation.ValidateResult {
 
 		for _, id := range duplicateIds {
 			result.AddError(fmt.Sprintf("connections.kafka.id %v duplicated", id))
+		}
+
+	}
+
+	if appSetting.Connections != nil && len(appSetting.Connections.Redis) > 0 {
+		hasIds := toHasIdSlice(appSetting.Connections.Redis)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("connections.redis.id %v duplicated", id))
+		}
+
+	}
+
+	if len(appSetting.Idemps) > 0 {
+		hasIds := toHasIdSlice(appSetting.Idemps)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("idemps.id %v duplicated", id))
 		}
 
 	}
