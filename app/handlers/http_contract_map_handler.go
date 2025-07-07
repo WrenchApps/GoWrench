@@ -144,6 +144,7 @@ func (handler *HttpContractMapHandler) SetNext(next Handler) {
 
 func (handler *HttpContractMapHandler) setHasError(span trace.Span, msg string, err error, httpStatusCode int, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	wrenchContext.SetHasError(span, msg, err)
+	bodyContext.ContentType = "text/plain"
 	bodyContext.HttpStatusCode = httpStatusCode
 	bodyContext.SetBody([]byte(msg))
 }
