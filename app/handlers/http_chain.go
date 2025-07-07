@@ -3,6 +3,7 @@ package handlers
 import (
 	action_settings "wrench/app/manifest/action_settings"
 	settings "wrench/app/manifest/application_settings"
+	"wrench/app/manifest_cross_funcs"
 )
 
 var ChainStatic *Chain = new(Chain)
@@ -31,6 +32,8 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 
 			idempHandler := new(IdempHandler)
 			idempHandler.EndpointSettings = &endpoint
+			idempHandler.IdempSettings, _ = manifest_cross_funcs.GetIdempSettingById(endpoint.IdempId)
+			idempHandler.RedisSettings, _ = manifest_cross_funcs.GetConnectionRedisSettingById(idempHandler.IdempSettings.RedisConnectionId)
 
 			currentHandler.SetNext(idempHandler)
 			currentHandler = idempHandler

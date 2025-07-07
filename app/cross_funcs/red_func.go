@@ -4,12 +4,13 @@ import (
 	"wrench/app/startup/connections"
 
 	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis"
 	redisync "github.com/go-redsync/redsync/v4/redis/goredis/v9"
 )
 
 var redsyncs map[string]*redsync.Redsync
 
-func GetRedsyncInstance(redisConnectionId string) *redsync.Redsync {
+func GetRedsyncInstance(isCluster bool, redisConnectionId string) *redsync.Redsync {
 
 	if len(redsyncs) == 0 {
 		redsyncs = make(map[string]*redsync.Redsync)
@@ -18,8 +19,16 @@ func GetRedsyncInstance(redisConnectionId string) *redsync.Redsync {
 	rs := redsyncs[redisConnectionId]
 
 	if rs == nil {
-		redisClient, _ := connections.GetRedisConnection(redisConnectionId)
-		pool := redisync.NewPool(redisClient)
+		var pool redis.Pool
+
+		if isCluster {
+			redisClusterClient, _ := connections.GetRedisClusterConnection(redisConnectionId)
+			pool = redisync.NewPool(redisClusterClient)
+		} else {
+			redisClient, _ := connections.GetRedisConnection(redisConnectionId)
+			pool = redisync.NewPool(redisClient)
+		}
+
 		rs = redsync.New(pool)
 		redsyncs[redisConnectionId] = rs
 	}

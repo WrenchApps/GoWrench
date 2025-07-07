@@ -3,10 +3,12 @@ package connection_settings
 import "wrench/app/manifest/validation"
 
 type RedisConnectionSettings struct {
-	Id       string `yaml:"id"`
-	Address  string `yaml:"address"`
-	Password string `yaml:"password"`
-	Db       int    `yaml:"db"`
+	Id        string   `yaml:"id"`
+	Address   string   `yaml:"address"`
+	Addresses []string `yaml:"addresses"`
+	IsCluster bool     `yaml:"isCluster"`
+	Password  string   `yaml:"password"`
+	Db        int      `yaml:"db"`
 }
 
 func (setting *RedisConnectionSettings) GetId() string {
@@ -20,8 +22,14 @@ func (settings RedisConnectionSettings) Valid() validation.ValidateResult {
 		result.AddError("connections.redis.id is required")
 	}
 
-	if len(settings.Address) == 0 {
-		result.AddError("the connections.redis.address is required")
+	if settings.IsCluster {
+		if len(settings.Addresses) == 0 {
+			result.AddError("the connections.redis.addresses is required when is cluster")
+		}
+	} else {
+		if len(settings.Address) == 0 {
+			result.AddError("the connections.redis.address is required when is not cluster")
+		}
 	}
 
 	return result
