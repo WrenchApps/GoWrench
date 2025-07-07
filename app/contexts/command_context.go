@@ -218,10 +218,10 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 	return jsonValueCurrent
 }
 
-func formatDate(dateValue string, targetFormat string) string {
+func formatDate(dateValue string, targetFormat string) (string, error) {
 	t, err := time.Parse(time.RFC3339Nano, dateValue)
 	if err != nil {
-		panic(err)
+		return dateValue, err
 	}
 
 	replacer := strings.NewReplacer(
@@ -238,29 +238,33 @@ func formatDate(dateValue string, targetFormat string) string {
 
 	layout := replacer.Replace(targetFormat)
 
-	return t.Format(layout)
+	return t.Format(layout), nil
 }
 
-func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) map[string]interface{} {
+func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (map[string]interface{}, error) {
 	jsonValueCurrent := jsonMap
 	if len(format.Date) > 0 {
 		for _, Date := range format.Date {
-				DateSplitted := strings.Split(Date, ":")
+			DateSplitted := strings.Split(Date, ":")
 
-				propertyName := DateSplitted[0]
-				targetFormat := DateSplitted[1]
+			propertyName := DateSplitted[0]
+			targetFormat := DateSplitted[1]
 
-				dateValue, jsonMapResult := json_map.GetValue(jsonValueCurrent, propertyName, true)
+			dateValue, jsonMapResult := json_map.GetValue(jsonValueCurrent, propertyName, true)
 
-				strDate, ok := dateValue.(string)
-				if !ok {
-					continue
-				}
+			strDate, ok := dateValue.(string)
+			if !ok {
+				continue
+			}
 
-				var formatedDate = formatDate(strDate, targetFormat)
-				jsonValueCurrent = json_map.CreateProperty(jsonMapResult, propertyName, formatedDate)
+			formatedDate, err := formatDate(strDate, targetFormat)
+			if err != nil {
+				return jsonValueCurrent, err
+			}
+
+			jsonValueCurrent = json_map.CreateProperty(jsonMapResult, propertyName, formatedDate)
 		}
 	}
 
-	return jsonValueCurrent
+	return jsonValueCurrent, nil
 }
