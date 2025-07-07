@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	action_settings "wrench/app/manifest/action_settings"
 	settings "wrench/app/manifest/application_settings"
 	"wrench/app/manifest_cross_funcs"
@@ -50,7 +51,8 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		}
 
 		currentHandler.SetNext(new(HttpLastHandler))
-		chain.MapHandle[endpoint.Route] = firstHandler
+		chainKey := chain.GetChainKey(string(endpoint.Method), endpoint.Route)
+		chain.MapHandle[chainKey] = firstHandler
 	}
 }
 
@@ -150,4 +152,8 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 
 func (chain *Chain) GetHandler(key string) Handler {
 	return chain.MapHandle[key]
+}
+
+func (chain *Chain) GetChainKey(method string, route string) string {
+	return fmt.Sprintf("%v_%v", method, route)
 }

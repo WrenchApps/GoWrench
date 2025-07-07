@@ -28,7 +28,8 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 	ctx := wrenchContext.GetContext(traceId)
 
 	var chain = ChainStatic.GetStatic()
-	var handler = chain.GetHandler(request.Endpoint.Route)
+	chainKey := chain.GetChainKey(string(request.Endpoint.Method), request.Endpoint.Route)
+	var handler = chain.GetHandler(chainKey)
 
 	wrenchContext.Tracer = app.Tracer
 	wrenchContext.Meter = app.Meter

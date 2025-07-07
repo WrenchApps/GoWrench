@@ -4,7 +4,7 @@ service:
   name: "my-app-otel-test"
   version: 1.0.0
   otel:
-    enable: true
+    enable: false
     metricConsoleExport: false
     traceConsoleExport: false
     collectorUrl: "localhost:4318"
@@ -12,18 +12,16 @@ service:
 connections:
   redis:
   - id: redis_default
-    address: localhost:6379
-    # addresses: 
-    # - ""
-    #isCluster: true
+    addresses: 
+    - "localhost:6379"
     #password: 123456
     #db: 0
 
 idemps:
   - id: idemp_1
     redisConnectionId: redis_default
-    key: "{{wrenchContext.request.headers.x-partner-key}}"
-    ttlInSeconds: 60
+    key: "{{bodyContext.currentBody}}"
+    ttlInSeconds: 300
 
 api:
   endpoints:

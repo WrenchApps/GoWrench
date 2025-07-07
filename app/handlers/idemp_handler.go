@@ -38,9 +38,10 @@ type idempBodyContext struct {
 
 func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	var redisKey string
+	var redisKeyData string
 	var failed bool
 	var mutex *redsync.Mutex
+	uClient, _ := connections.GetRedisConnection(handler.IdempSettings.RedisConnectionId)
 
 	spanDisplay := fmt.Sprintf("idemp.[%v]", handler.EndpointSettings.IdempId)
 	ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)
@@ -53,13 +54,16 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 		keyValue := contexts.GetCalculatedValue(handler.IdempSettings.Key, wrenchContext, bodyContext, nil)
 		valueArray := []byte(fmt.Sprint(keyValue))
 		hashValue := cross_funcs.GetHash(handler.EndpointSettings.Route, sha256.New, valueArray)
-		redisKey = handler.getRedisKey(handler.EndpointSettings.Route, hashValue)
 
-		rd := cross_funcs.GetRedsyncInstance(handler.RedisSettings.IsCluster, handler.IdempSettings.RedisConnectionId)
+		redisKeyLock := handler.getRedisKeyLock(handler.EndpointSettings.Route, hashValue)
+		redisKeyData = handler.getRedisKeyData(handler.EndpointSettings.Route, hashValue)
 
-		mutex = rd.NewMutex(redisKey,
+		rd := cross_funcs.GetRedsyncInstance(handler.IdempSettings.RedisConnectionId)
+
+		mutex = rd.NewMutex(redisKeyLock,
 			redsync.WithTries(5),
-			redsync.WithExpiry(10*time.Second),
+			redsync.WithRetryDelay(500*time.Millisecond),
+			redsync.WithExpiry(20*time.Second),
 		)
 
 		if err := mutex.Lock(); err != nil {
@@ -69,28 +73,30 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 			bodyContext.CurrentBodyByteArray = []byte(msg)
 		} else {
 
-			val, err := handler.getRedisVal(ctx, redisKey).Result()
-
+			val, err := uClient.Get(ctx, redisKeyData).Result()
 			if err == redis.Nil {
 				// do nothing yet
 			} else if err != nil {
 				wrenchContext.SetHasError(span, err.Error(), err)
+				bodyContext.HttpStatusCode = 500
 				failed = true
 			} else {
 				var idempBody idempBodyContext
 				jsonErr := json.Unmarshal([]byte(val), &idempBody)
 
 				if jsonErr != nil {
-					wrenchContext.SetHasError(span, jsonErr.Error(), jsonErr)
+					wrenchContext.SetHasError(span, "idemp error to parse redis body", jsonErr)
+					bodyContext.HttpStatusCode = 500
 					failed = true
+				} else {
+
+					bodyContext.CurrentBodyByteArray = idempBody.CurrentBodyByteArray
+					bodyContext.Headers = idempBody.Headers
+					bodyContext.ContentType = idempBody.ContentType
+					bodyContext.HttpStatusCode = idempBody.HttpStatusCode
+
+					wrenchContext.SetHasCache()
 				}
-
-				bodyContext.CurrentBodyByteArray = idempBody.CurrentBodyByteArray
-				bodyContext.Headers = idempBody.Headers
-				bodyContext.ContentType = idempBody.ContentType
-				bodyContext.HttpStatusCode = idempBody.HttpStatusCode
-
-				wrenchContext.SetHasCache()
 			}
 		}
 	}
@@ -99,7 +105,8 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
 
-	if !wrenchContext.HasError {
+	if !wrenchContext.HasError &&
+		!wrenchContext.HasCache {
 
 		idempBody := idempBodyContext{
 			CurrentBodyByteArray: bodyContext.CurrentBodyByteArray,
@@ -109,7 +116,10 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 		}
 
 		ttl := time.Duration(handler.IdempSettings.TtlInSeconds) * time.Second
-		err := handler.setRedisVal(ctx, redisKey, idempBody, ttl).Err()
+
+		redisValue, _ := json.Marshal(idempBody)
+		err := uClient.Set(ctx, redisKeyData, string(redisValue), ttl).Err()
+
 		if err != nil {
 			failed = true
 		}
@@ -117,11 +127,11 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 
 	if mutex != nil {
 		if ok, err := mutex.Unlock(); !ok || err != nil {
-			app.LogError2(fmt.Sprintf("could not release lock, redis key %v", redisKey), err)
+			app.LogError2(fmt.Sprintf("could not release lock, redis key %v", redisKeyData), err)
 		}
 	}
 
-	handler.setTraceSpanAttributes(span, redisKey, handler.IdempSettings.Id, handler.IdempSettings.RedisConnectionId)
+	handler.setTraceSpanAttributes(span, redisKeyData, handler.IdempSettings.Id, handler.IdempSettings.RedisConnectionId)
 	duration := time.Since(start).Seconds() * 1000
 	handler.metricRecord(ctx, duration, failed)
 }
@@ -146,30 +156,12 @@ func (handler *IdempHandler) metricRecord(ctx context.Context, duration float64,
 	)
 }
 
-func (handler *IdempHandler) getRedisKey(route string, hashValue string) string {
+func (handler *IdempHandler) getRedisKeyLock(route string, hashValue string) string {
 	service := manifest_cross_funcs.GetService()
-	return fmt.Sprintf("%v:%v:%v", service.Name, route, hashValue)
+	return fmt.Sprintf("%v:%v:%v:lock", service.Name, route, hashValue)
 }
 
-func (handler *IdempHandler) getRedisVal(ctx context.Context, redisKey string) *redis.StringCmd {
-	if handler.RedisSettings.IsCluster {
-		redisClusterClient, _ := connections.GetRedisClusterConnection(handler.RedisSettings.Id)
-		return redisClusterClient.Get(ctx, redisKey)
-
-	} else {
-		redisClient, _ := connections.GetRedisConnection(handler.RedisSettings.Id)
-		return redisClient.Get(ctx, redisKey)
-	}
-}
-
-func (handler *IdempHandler) setRedisVal(ctx context.Context, redisKey string, redisValue interface{}, expiration time.Duration) *redis.StatusCmd {
-
-	if handler.RedisSettings.IsCluster {
-		redisClusterClient, _ := connections.GetRedisClusterConnection(handler.RedisSettings.Id)
-		return redisClusterClient.Set(ctx, redisKey, redisValue, expiration)
-
-	} else {
-		redisClient, _ := connections.GetRedisConnection(handler.RedisSettings.Id)
-		return redisClient.Set(ctx, redisKey, redisValue, expiration)
-	}
+func (handler *IdempHandler) getRedisKeyData(route string, hashValue string) string {
+	service := manifest_cross_funcs.GetService()
+	return fmt.Sprintf("%v:%v:%v:data", service.Name, route, hashValue)
 }
