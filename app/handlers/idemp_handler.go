@@ -68,25 +68,24 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 
 		if err := mutex.Lock(); err != nil {
 			msg := "the distributed lock block request"
-			wrenchContext.SetHasError(span, msg, err)
-			bodyContext.HttpStatusCode = 409
-			bodyContext.CurrentBodyByteArray = []byte(msg)
+			handler.setHasError(span, msg, err, 409, wrenchContext, bodyContext)
+			failed = true
 		} else {
 
 			val, err := uClient.Get(ctx, redisKeyData).Result()
 			if err == redis.Nil {
 				// do nothing yet
 			} else if err != nil {
-				wrenchContext.SetHasError(span, err.Error(), err)
-				bodyContext.HttpStatusCode = 500
+				msg := fmt.Sprintf("redis client generic error to get key %v", redisKeyData)
+				handler.setHasError(span, msg, err, 500, wrenchContext, bodyContext)
 				failed = true
 			} else {
 				var idempBody idempBodyContext
 				jsonErr := json.Unmarshal([]byte(val), &idempBody)
 
 				if jsonErr != nil {
-					wrenchContext.SetHasError(span, "idemp error to parse redis body", jsonErr)
-					bodyContext.HttpStatusCode = 500
+					msg := "idemp error to parse redis body"
+					handler.setHasError(span, msg, jsonErr, 500, wrenchContext, bodyContext)
 					failed = true
 				} else {
 
@@ -164,4 +163,10 @@ func (handler *IdempHandler) getRedisKeyLock(route string, hashValue string) str
 func (handler *IdempHandler) getRedisKeyData(route string, hashValue string) string {
 	service := manifest_cross_funcs.GetService()
 	return fmt.Sprintf("%v:%v:%v:data", service.Name, route, hashValue)
+}
+
+func (handler *IdempHandler) setHasError(span trace.Span, msg string, err error, httpStatusCode int, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+	wrenchContext.SetHasError(span, msg, err)
+	bodyContext.HttpStatusCode = httpStatusCode
+	bodyContext.SetBody([]byte(msg))
 }
