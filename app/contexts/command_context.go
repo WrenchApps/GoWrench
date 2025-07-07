@@ -166,29 +166,6 @@ func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyNa
 	return json_map.CreateProperty(jsonMap, propertyName, valueResult)
 }
 
-func FormatDate(dateValue string, targetFormat string) string {
-	t, err := time.Parse(time.RFC3339Nano, dateValue)
-	if err != nil {
-		panic(err)
-	}
-
-	replacer := strings.NewReplacer(
-		"yyyy", "2006",
-		"yy", "06",
-		"MM", "01",
-		"dd", "02",
-		"HH", "15",
-		"hh", "03",
-		"mm", "04",
-		"ss", "05",
-		"tt", "PM",
-	)
-
-	layout := replacer.Replace(targetFormat)
-
-	return t.Format(layout)
-}
-
 func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[string]interface{} {
 	jsonValueCurrent := jsonMap
 	if parse.WhenEquals != nil {
@@ -238,12 +215,40 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 		}
 	}
 
-	if len(parse.FormatDate) > 0 {
-		for _, formatDate := range parse.FormatDate {
-				formatDateSplitted := strings.Split(formatDate, ":")
+	return jsonValueCurrent
+}
 
-				propertyName := formatDateSplitted[0]
-				targetFormat := formatDateSplitted[1]
+func formatDate(dateValue string, targetFormat string) string {
+	t, err := time.Parse(time.RFC3339Nano, dateValue)
+	if err != nil {
+		panic(err)
+	}
+
+	replacer := strings.NewReplacer(
+		"yyyy", "2006",
+		"yy", "06",
+		"MM", "01",
+		"dd", "02",
+		"HH", "15",
+		"hh", "03",
+		"mm", "04",
+		"ss", "05",
+		"tt", "PM",
+	)
+
+	layout := replacer.Replace(targetFormat)
+
+	return t.Format(layout)
+}
+
+func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) map[string]interface{} {
+	jsonValueCurrent := jsonMap
+	if len(format.Date) > 0 {
+		for _, Date := range format.Date {
+				DateSplitted := strings.Split(Date, ":")
+
+				propertyName := DateSplitted[0]
+				targetFormat := DateSplitted[1]
 
 				dateValue, jsonMapResult := json_map.GetValue(jsonValueCurrent, propertyName, true)
 
@@ -252,7 +257,7 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 					continue
 				}
 
-				var formatedDate = FormatDate(strDate, targetFormat)
+				var formatedDate = formatDate(strDate, targetFormat)
 				jsonValueCurrent = json_map.CreateProperty(jsonMapResult, propertyName, formatedDate)
 		}
 	}

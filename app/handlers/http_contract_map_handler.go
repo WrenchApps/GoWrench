@@ -82,6 +82,10 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 		currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
 	}
 
+	if handler.ContractMap.Format != nil {
+		currentBodyContext = contexts.FormatValues(currentBodyContext, handler.ContractMap.Format)
+	}
+
 	return currentBodyContext
 }
 
@@ -101,6 +105,8 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 			currentBodyContext = json_map.DuplicatePropertiesValue(currentBodyContext, handler.ContractMap.Duplicate)
 		} else if action == "parse" {
 			currentBodyContext = contexts.ParseValues(currentBodyContext, handler.ContractMap.Parse)
+		} else if action == "format" {
+			currentBodyContext = contexts.FormatValues(currentBodyContext, handler.ContractMap.Format)
 		}
 	}
 

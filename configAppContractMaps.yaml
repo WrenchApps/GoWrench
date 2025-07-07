@@ -67,13 +67,15 @@ contract:
   - id: map_before
     sequence:
     - parse
+    - format
     parse:
       toArray:
       - "phone:phones"
       - "address"
       - "customer.phone:customer.phones"
       - "customer:customers"
-      formatDate:
+    format:
+      date:
       - "createdAt:yyyyMMdd"
 
   - id: map_after
