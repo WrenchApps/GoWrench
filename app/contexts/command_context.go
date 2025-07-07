@@ -221,7 +221,7 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 func formatDate(dateValue string, targetFormat string) (string, error) {
 	t, err := time.Parse(time.RFC3339Nano, dateValue)
 	if err != nil {
-		return dateValue, err
+		return "", err
 	}
 
 	replacer := strings.NewReplacer(
