@@ -20,14 +20,18 @@ func main() {
 
 	startup.LoadEnvsFiles()
 
-	byteArray, err := startup.LoadYamlFile(getFileConfigPath())
-	startup.LoadAwsSecrets(byteArray)
+	byteArray, err := startup.LoadYamlFile(startup.GetFileConfigPath())
+	if err != nil {
+		app.LogError2(fmt.Sprintf("Error loading YAML: %v", err), err)
+	}
+
+	err = startup.LoadAwsSecrets(byteArray)
 	if err != nil {
 		app.LogError2(fmt.Sprintf("Error loading YAML: %v", err), err)
 	}
 
 	byteArray = startup.EnvInterpolation(byteArray)
-	applicationSetting, err := application_settings.ParseToApplicationSetting(byteArray)
+	applicationSetting, err := application_settings.ParseMapToApplicationSetting(byteArray)
 
 	if err != nil {
 		app.LogError2(fmt.Sprintf("Error parse yaml: %v", err), err)
@@ -93,14 +97,6 @@ func bashRun(paths []string) {
 			app.LogInfo(string(output))
 		}
 	}
-}
-
-func getFileConfigPath() string {
-	configPath := os.Getenv(app.ENV_PATH_FILE_CONFIG)
-	if len(configPath) == 0 {
-		configPath = "../../configApp.yaml"
-	}
-	return configPath
 }
 
 func getPort() string {

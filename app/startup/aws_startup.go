@@ -13,14 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-func LoadAwsSecrets(fileConfig []byte) {
+func LoadAwsSecrets(fileConfig map[string][]byte) error {
 
-	applicationSetting, err := application_settings.ParseToApplicationSetting(fileConfig)
+	applicationSetting, err := application_settings.ParseMapToApplicationSetting(fileConfig)
 	if err != nil {
-		return
+		return err
 	}
 
-	setting := applicationSetting.Aws
+	setting := applicationSetting.Service.Aws
 	if setting != nil &&
 		setting.AwsSecretSettings != nil &&
 		len(setting.AwsSecretSettings.SecretsName) > 0 {
@@ -37,6 +37,8 @@ func LoadAwsSecrets(fileConfig []byte) {
 			app.LogInfo(fmt.Sprintf("Loaded secret %v", secretName))
 		}
 	}
+
+	return nil
 }
 
 func getSecretValue(region string, secretName string) string {
