@@ -26,7 +26,7 @@ func (setting *ContractSetting) GetContractById(contractMapId string) *maps.Cont
 	return contractMap
 }
 
-func (setting ContractSetting) Valid() validation.ValidateResult {
+func (setting *ContractSetting) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Maps) > 0 {
@@ -36,4 +36,16 @@ func (setting ContractSetting) Valid() validation.ValidateResult {
 	}
 
 	return result
+}
+
+func (settings *ContractSetting) Merge(toMerge *ContractSetting) error {
+	if len(toMerge.Maps) > 0 {
+		if len(settings.Maps) == 0 {
+			settings.Maps = toMerge.Maps
+		} else {
+			settings.Maps = append(settings.Maps, toMerge.Maps...)
+		}
+	}
+
+	return nil
 }

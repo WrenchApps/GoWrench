@@ -25,22 +25,28 @@ func LoadEnvsFiles() {
 	setEnvFileToSystemEnv(envPathEnvironment)
 }
 
-func EnvInterpolation(value []byte) []byte {
-	valueString := string(value)
+func EnvInterpolation(values map[string][]byte) map[string][]byte {
+	result := make(map[string][]byte)
 
-	var envs = os.Environ()
-	for _, env := range envs {
-		envArray := strings.Split(env, "=")
-		envKey := envArray[0]
-		envValue := envArray[1]
+	for i, value := range values {
+		valueString := string(value)
 
-		toReplace := fmt.Sprintf("{{%s}}", envKey)
-		if toReplace != "{{}}" {
-			valueString = strings.ReplaceAll(valueString, toReplace, envValue)
+		var envs = os.Environ()
+		for _, env := range envs {
+			envArray := strings.Split(env, "=")
+			envKey := envArray[0]
+			envValue := envArray[1]
+
+			toReplace := fmt.Sprintf("{{%s}}", envKey)
+			if toReplace != "{{}}" {
+				valueString = strings.ReplaceAll(valueString, toReplace, envValue)
+			}
+
+			result[i] = []byte(valueString)
 		}
 	}
 
-	return []byte(valueString)
+	return result
 }
 
 func setEnvFileToSystemEnv(pathEnvFile string) {
