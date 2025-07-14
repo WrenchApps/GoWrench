@@ -12,6 +12,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const prefixWrenchContextRequest = "wrenchContext.request."
+const prefixWrenchContextRequestUri = "wrenchContext.request.uri"
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
 const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
@@ -30,7 +32,7 @@ func ReplacePrefixBodyContextPreserved(command string) string {
 }
 
 func IsWrenchContextCommand(command string) bool {
-	return strings.HasPrefix(command, prefixWrenchContextRequestHeaders)
+	return strings.HasPrefix(command, prefixWrenchContextRequest)
 }
 
 func IsBodyContextCommand(command string) bool {
@@ -50,6 +52,10 @@ func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string 
 	if strings.HasPrefix(command, prefixWrenchContextRequestHeaders) {
 		headerName := strings.ReplaceAll(command, prefixWrenchContextRequestHeaders, "")
 		return wrenchContext.Request.Header.Get(headerName)
+	}
+
+	if strings.HasPrefix(command, prefixWrenchContextRequestUri) {
+		return wrenchContext.Request.RequestURI
 	}
 
 	return ""

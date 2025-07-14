@@ -26,7 +26,13 @@ type WrenchContext struct {
 
 func (wrenchContext *WrenchContext) SetHasError(span trace.Span, msg string, err error) {
 	span.RecordError(err)
-	span.SetStatus(codes.Error, err.Error())
+
+	errorDescription := msg
+	if err != nil {
+		errorDescription = err.Error()
+	}
+
+	span.SetStatus(codes.Error, errorDescription)
 
 	app.LogError(app.WrenchErrorLog{Message: msg, Error: err})
 	wrenchContext.HasError = true

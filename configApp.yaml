@@ -75,6 +75,10 @@ api:
       method: get
       actionId: get_hello
 
+    - route: /api/hello/{id}
+      method: get
+      actionId: get_hello2
+
     - route: /api/sns
       method: post
       actionId: post_sns
@@ -159,6 +163,14 @@ actions:
         # tokenCredentialId: auth_client
         url: 'http://localhost:5250/hello'
 
+
+  - id: get_hello2
+    type: httpRequest
+    http:
+      request:
+        method: get
+        # tokenCredentialId: auth_client
+        url: 'http://localhost:5250/{{wrenchContext.request.headers.uri}}'
 
   - id: post_sns
     type: snsPublish

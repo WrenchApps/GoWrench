@@ -33,7 +33,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 		request := new(client.HttpClientRequestData)
 		request.Body = bodyContext.GetBody(handler.ActionSettings)
 		request.Method = handler.getMethod(wrenchContext)
-		request.Url = handler.getUrl(wrenchContext)
+		request.Url = handler.getUrl(wrenchContext, bodyContext)
 		request.Insecure = handler.ActionSettings.Http.Request.Insecure
 		request.SetHeaderTracestate(ctx)
 		request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
@@ -119,10 +119,24 @@ func (handler *HttpRequestClientHandler) getMethod(wrenchContext *contexts.Wrenc
 	}
 }
 
-func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchContext) string {
+func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) string {
 
 	if !wrenchContext.Endpoint.IsProxy {
-		return handler.ActionSettings.Http.Request.Url
+
+		urlArray := strings.Split(handler.ActionSettings.Http.Request.Url, "/")
+
+		for i, urlValue := range urlArray {
+			if contexts.IsCalculatedValue(urlValue) {
+				calculatedValue := fmt.Sprint(contexts.GetCalculatedValue(urlValue, wrenchContext, bodyContext, handler.ActionSettings))
+				if len(calculatedValue) > 1 && calculatedValue[0] == '/' {
+					calculatedValue = calculatedValue[1:]
+				}
+
+				urlArray[i] = calculatedValue
+			}
+		}
+		return strings.Join(urlArray, "/")
+
 	} else {
 		prefix := wrenchContext.Endpoint.Route
 		routeTriggered := wrenchContext.Request.RequestURI
