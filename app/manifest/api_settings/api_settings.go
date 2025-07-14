@@ -31,8 +31,12 @@ func (settings *ApiSettings) Merge(toMerge *ApiSettings) error {
 		return nil
 	}
 
-	if settings.Authorization != nil {
+	if settings.Authorization != nil && toMerge.Authorization != nil {
 		return errors.New("should configure only once api.authorization")
+	} else {
+		if toMerge.Authorization != nil {
+			settings.Authorization = toMerge.Authorization
+		}
 	}
 
 	if len(toMerge.Endpoints) > 0 {
