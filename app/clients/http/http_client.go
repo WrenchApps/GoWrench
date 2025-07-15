@@ -53,7 +53,7 @@ func (httpClientRequestData *HttpClientRequestData) SetHeaderTracestate(ctx cont
 	spanContext := trace.SpanContextFromContext(ctx)
 	traceId := spanContext.TraceID().String()
 	traceparent := fmt.Sprintf("00-%s-%s-%s", traceId, spanContext.SpanID(), "01")
-	httpClientRequestData.SetHeader("tracestate", traceparent)
+	httpClientRequestData.SetHeader("traceparent", traceparent)
 }
 
 func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[string]interface{}) {
@@ -69,11 +69,7 @@ func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[strin
 }
 
 func (httpResponse *HttpClientResponseData) StatusCodeSuccess() bool {
-	if httpResponse.StatusCode <= 399 {
-		return true
-	}
-
-	return false
+	return httpResponse.StatusCode <= 399
 }
 
 func (httpClientRequestData *HttpClientRequestData) SetHeader(key string, value string) {
@@ -89,7 +85,7 @@ func (httpClientRequestData *HttpClientRequestData) SetHeader(key string, value 
 func HttpClientDo(ctx context.Context, request *HttpClientRequestData) (*HttpClientResponseData, error) {
 	var client *http.Client
 
-	if request.Insecure == false {
+	if !request.Insecure {
 		client = GetHttpClientStatic()
 	} else {
 		client = GetHttpClientInsecureStatic()
