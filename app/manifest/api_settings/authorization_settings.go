@@ -22,6 +22,10 @@ func (setting AuthorizationSettings) Valid() validation.ValidateResult {
 		if setting.JwksUrl == "" {
 			result.AddError("api.authorization.jwksUrl is required when type is jwks")
 		}
+
+		if setting.Algorithm == "" {
+			result.AddError("api.authorization.algorithm is required when type is jwks")
+		}
 	}
 
 	if setting.Type != JWKSAuthorizationType {
