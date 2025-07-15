@@ -1,8 +1,6 @@
 package http_settings
 
 import (
-	"fmt"
-	"net/url"
 	"wrench/app/manifest/types"
 	"wrench/app/manifest/validation"
 )
@@ -33,11 +31,6 @@ func (setting HttpRequestSetting) Valid() validation.ValidateResult {
 
 	if len(setting.Url) == 0 {
 		result.AddError("actions.http.request.url is required")
-	} else {
-		_, err := url.ParseRequestURI(setting.Url)
-		if err != nil {
-			result.AddError(fmt.Sprintf("actions.http.request.url %v is invalid", setting.Url))
-		}
 	}
 
 	return result

@@ -3,6 +3,7 @@ package startup
 import (
 	"encoding/json"
 	"net/http"
+	"wrench/app"
 	"wrench/app/cross_validation"
 	"wrench/app/manifest/application_settings"
 )
@@ -22,8 +23,8 @@ func (page *InitialPage) WriteInitialPage(w http.ResponseWriter, r *http.Request
 }
 
 func (page *InitialPage) HealthCheckEndpoint(w http.ResponseWriter, r *http.Request) {
-	app := application_settings.ApplicationSettingsStatic
-	result := app.Valid()
+	application := application_settings.ApplicationSettingsStatic
+	result := application.Valid()
 	result.Append(cross_validation.Valid())
 
 	w.Header().Set("Content-Type", "application/json")
@@ -34,6 +35,11 @@ func (page *InitialPage) HealthCheckEndpoint(w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(body)
 	} else {
+
+		for _, err := range result.GetErrors() {
+			app.LogError2(err, nil)
+		}
+
 		body := make(map[string]interface{})
 		body["status"] = "unhealthly"
 		body["erros"] = result.GetErrors()
