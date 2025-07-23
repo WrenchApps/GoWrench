@@ -15,6 +15,8 @@ func GetFuncValue(funcType func_settings.FuncGeneralType, wrenchContext *WrenchC
 	case func_settings.FuncTypeBase64Encode:
 		bodyArray := bodyContext.GetBody(action)
 		return base64.StdEncoding.EncodeToString(bodyArray)
+	case func_settings.FuncTypeCurrentDate:
+		return getCurrentDateUtc()
 	default:
 		return ""
 	}
@@ -22,4 +24,8 @@ func GetFuncValue(funcType func_settings.FuncGeneralType, wrenchContext *WrenchC
 
 func getTimestamp() string {
 	return strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)
+}
+
+func getCurrentDateUtc() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }
