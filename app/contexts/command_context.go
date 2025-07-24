@@ -14,6 +14,7 @@ import (
 
 const prefixWrenchContextRequest = "wrenchContext.request."
 const prefixWrenchContextRequestUri = "wrenchContext.request.uri"
+const prefixWrenchContextRequestUriParams = "wrenchContext.request.uri.params."
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
 const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
@@ -43,6 +44,19 @@ func IsFunc(command string) bool {
 	return strings.HasPrefix(command, prefixFunc)
 }
 
+func GetRequestUriParams(wrenchContext *WrenchContext, parameterName string) string {
+	uriSplited := strings.Split(wrenchContext.Request.RequestURI, "/")
+	routeSplited := strings.Split(wrenchContext.Endpoint.Route, "/")
+
+	for i, routeValue := range routeSplited {
+		if routeValue == fmt.Sprintf("{%s}", parameterName) {
+			return uriSplited[i]
+		}
+	}
+
+	return ""
+}
+
 func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string {
 
 	if IsCalculatedValue(command) {
@@ -52,6 +66,11 @@ func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string 
 	if strings.HasPrefix(command, prefixWrenchContextRequestHeaders) {
 		headerName := strings.ReplaceAll(command, prefixWrenchContextRequestHeaders, "")
 		return wrenchContext.Request.Header.Get(headerName)
+	}
+
+	if strings.HasPrefix(command, prefixWrenchContextRequestUriParams) {
+		parameterName := strings.ReplaceAll(command, prefixWrenchContextRequestUriParams, "")
+		return GetRequestUriParams(wrenchContext, parameterName)
 	}
 
 	if strings.HasPrefix(command, prefixWrenchContextRequestUri) {

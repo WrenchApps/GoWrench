@@ -1,0 +1,19 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: /api/transactions/{id}
+      method: get
+      actionId: transactions_get_id
+
+actions:
+  - id: transactions_get_id
+    type: httpRequest
+    http:
+      request:
+        method: get
+        url: 'https://webhook.site/cd44a117-31e6-4755-93dd-b2a6105c9541?/{{wrenchContext.request.uri.params.id}}'
