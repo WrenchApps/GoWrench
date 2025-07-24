@@ -16,4 +16,4 @@ actions:
     http:
       request:
         method: get
-        url: 'https://webhook.site/cd44a117-31e6-4755-93dd-b2a6105c9541?test={{wrenchContext.request.uri.params.id}}'
+        url: 'https://webhook.site/cd44a117-31e6-4755-93dd-b2a6105c9541?/{{wrenchContext.request.uri.params.id}}'
