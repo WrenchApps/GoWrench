@@ -2,6 +2,7 @@ package application_settings
 
 import (
 	"errors"
+	"log"
 	"wrench/app/manifest/action_settings"
 	"wrench/app/manifest/api_settings"
 
@@ -157,7 +158,7 @@ func ParseMapToApplicationSetting(datas map[string][]byte) (*ApplicationSettings
 
 	applicationSettings := new(ApplicationSettings)
 
-	for _, data := range datas {
+	for key, data := range datas {
 		toMerge, err := ParseToApplicationSetting(data)
 
 		if err != nil {
@@ -167,6 +168,7 @@ func ParseMapToApplicationSetting(datas map[string][]byte) (*ApplicationSettings
 		if err2 := applicationSettings.Merge(toMerge); err2 != nil {
 			return nil, err2
 		}
+		log.Printf("Done config file %s", key)
 	}
 
 	return applicationSettings, nil

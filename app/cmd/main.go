@@ -20,7 +20,12 @@ func main() {
 
 	startup.LoadEnvsFiles()
 
-	byteArray, err := startup.LoadYamlFile(startup.GetFileConfigPath())
+	pathFiles, err := startup.GetFileConfigPath()
+	if err != nil {
+		app.LogError2(fmt.Sprintf("Error to load files env config: %v", err), err)
+	}
+
+	byteArray, err := startup.LoadYamlFile(pathFiles)
 	if err != nil {
 		app.LogError2(fmt.Sprintf("Error loading YAML: %v", err), err)
 	}
