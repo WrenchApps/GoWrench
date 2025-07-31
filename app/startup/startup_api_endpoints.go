@@ -26,7 +26,7 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 	endpoints := app.Api.Endpoints
 	muxRoute := mux.NewRouter()
 	initialPage := new(InitialPage)
-	initialPage.Append("<h2>Service: " + app.Service.Name + "version: " + app.Service.Version + "</h2>")
+	initialPage.Append("<h2>Service: " + app.Service.Name + " version: " + app.Service.Version + "</h2>")
 	initialPage.Append("<h2>Endpoints</h2>")
 
 	for _, endpoint := range endpoints {
