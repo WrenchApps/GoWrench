@@ -1,6 +1,7 @@
 package contexts
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -237,6 +238,27 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 
 			var arrayValue = [1]interface{}{value}
 			jsonValueCurrent = json_map.CreateProperty(jsonMapResult, destinyPropertyName, arrayValue)
+		}
+	}
+
+	if len(parse.ToMap) > 0 {
+		for _, ToMap := range parse.ToMap {
+			ToMapSplitted := strings.Split(ToMap, ":")
+
+			originPropertyName := ToMapSplitted[0]
+			var destinyPropertyName string
+			if len(ToMapSplitted) == 1 {
+				destinyPropertyName = originPropertyName
+			} else {
+				destinyPropertyName = ToMapSplitted[1]
+			}
+
+			value, jsonMapResult := json_map.GetValue(jsonValueCurrent, originPropertyName, true)
+
+			var result map[string]interface{}
+			json.Unmarshal([]byte(fmt.Sprint(value)), &result)
+
+			jsonValueCurrent = json_map.CreateProperty(jsonMapResult, destinyPropertyName, result)
 		}
 	}
 

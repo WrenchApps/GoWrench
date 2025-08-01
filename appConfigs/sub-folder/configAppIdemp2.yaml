@@ -21,9 +21,32 @@ api:
       actionId: mock_mirror2
       idempId: idemp_2
 
+    - route: /api/mock3
+      method: post
+      actionId: mock_3
+
 actions:
   - id: mock_mirror2
     type: httpRequestMock
     http:
       mock:
         mirrorBody: true
+
+  - id: mock_3
+    type: httpRequest
+    trigger:
+      before:
+        contractMapId: map_before
+    http:
+      request:
+        method: post
+        url: 'https://webhook.site/deef1561-c6f1-4d69-913b-ca7a1018870c'
+
+contract:
+  maps:
+  - id: map_before
+    sequence:
+    - parse
+    parse:
+      toMap:
+      - "payload:data"
