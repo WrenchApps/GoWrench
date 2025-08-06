@@ -2,7 +2,7 @@ version: 1
 
 api:
   authorization:
-    algorithm: RS256
+    algorithm: SHA-256
     key: {{HMAC_KEY}}
     type: hmac
     signatureRef: {{bodyContext.signature}}

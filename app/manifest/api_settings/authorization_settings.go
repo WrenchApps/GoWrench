@@ -1,11 +1,14 @@
 package api_settings
 
-import "wrench/app/manifest/validation"
+import (
+	"wrench/app/manifest/types"
+	"wrench/app/manifest/validation"
+)
 
 type AuthorizationSettings struct {
 	Type              AuthorizationType `yaml:"type"`
 	JwksUrl           string            `yaml:"jwksUrl"`
-	Algorithm         string            `yaml:"algorithm"`
+	Algorithm         types.HashAlg     `yaml:"algorithm"`
 	Kid               string            `yaml:"kid"`
 	Key               string            `yaml:"key"`
 	SignatureRef      string            `yaml:"signatureRef"`

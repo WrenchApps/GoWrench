@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	contexts "wrench/app/contexts"
 	"wrench/app/cross_funcs"
@@ -17,7 +16,8 @@ func HMACValidate(ctx context.Context, authorizationSettings *api_settings.Autho
 		data += fmt.Sprint(contexts.GetCalculatedValue(item, wrenchContext, bodyContext, nil))
 	}
 
-	hash := cross_funcs.GetHash(authorizationSettings.Key, sha256.New, []byte(data))
+	hashFn := cross_funcs.GetHashFunc(authorizationSettings.Algorithm)
+	hash := cross_funcs.GetHash(authorizationSettings.Key, hashFn, []byte(data))
 
 	return hash == authorizationSettings.SignatureRef
 }
