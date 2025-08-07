@@ -124,10 +124,10 @@ func authMiddleware(ctx context.Context, authorizationSettings *api_settings.Aut
 		}
 
 		if authorizationSettings.Type == api_settings.HMACAuthorizationType {
-			isHMACValid := auth.HMACValidate(ctx, authorizationSettings)
+			isHMACValid := auth.HMACValidate(r, authorizationSettings)
 			if !isHMACValid {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte("Forbidden"))
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Unauthorized"))
 				return
 			}
 		}

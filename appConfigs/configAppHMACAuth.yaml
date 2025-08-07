@@ -5,9 +5,20 @@ api:
     algorithm: SHA-256
     key: {{HMAC_KEY}}
     type: hmac
-    signatureRef: {{bodyContext.signature}}
-    #useCurrentBody: true
+    signatureRef: "{{bodyContext.signature}}"
     concatenateFields:
-    - {{bodyContext.id}}
-    - {{bodyContext.createdAt}}
-    - {{bodyContext.payload}}
+    - "{{bodyContext.id}}"
+    - "{{bodyContext.createdAt}}"
+    - "{{bodyContext.payload}}"
+
+  endpoints:
+    - route: /api/mock4
+      method: post
+      actionId: mock_4
+
+actions:
+  - id: mock_4
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
