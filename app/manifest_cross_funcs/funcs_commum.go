@@ -2,7 +2,6 @@ package manifest_cross_funcs
 
 import (
 	"errors"
-	"wrench/app/manifest/api_settings"
 	"wrench/app/manifest/application_settings"
 	"wrench/app/manifest/connection_settings"
 	"wrench/app/manifest/idemp_settings"
@@ -69,14 +68,4 @@ func GetIdempSettingById(idempId string) (*idemp_settings.IdempSettings, error) 
 func GetService() *service_settings.ServiceSettings {
 	appSetting := application_settings.ApplicationSettingsStatic
 	return appSetting.Service
-}
-
-func GetAuthorizationSettings() *api_settings.AuthorizationSettings {
-	appSetting := application_settings.ApplicationSettingsStatic
-
-	if appSetting == nil || appSetting.Api == nil || appSetting.Api.Authorization == nil {
-		return nil
-	}
-
-	return appSetting.Api.Authorization
 }
