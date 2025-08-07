@@ -1,0 +1,13 @@
+version: 1
+
+api:
+  authorization:
+    algorithm: RS256
+    key: {{HMAC_KEY}}
+    type: hmac
+    signatureRef: {{bodyContext.signature}}
+    #useCurrentBody: true
+    concatenateFields:
+    - {{bodyContext.id}}
+    - {{bodyContext.createdAt}}
+    - {{bodyContext.payload}}

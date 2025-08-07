@@ -98,15 +98,15 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 func authMiddleware(ctx context.Context, authorizationSettings *api_settings.AuthorizationSettings, endpoint api_settings.EndpointSettings, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		tokenString := r.Header.Get("Authorization")
-		if len(tokenString) == 0 {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
-			return
-		}
-		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-
 		if authorizationSettings.Type == api_settings.JWKSAuthorizationType {
+			tokenString := r.Header.Get("Authorization")
+			if len(tokenString) == 0 {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Unauthorized"))
+				return
+			}
+			tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
 			tokenIsValid := auth.JwksValidationAuthentication(ctx, tokenString, authorizationSettings)
 			if tokenIsValid {
 				tokenIsAuthorized := auth.JwksValidationAuthorization(tokenString, endpoint.Roles, endpoint.Scopes, endpoint.Claims)
@@ -121,6 +121,15 @@ func authMiddleware(ctx context.Context, authorizationSettings *api_settings.Aut
 				return
 			}
 
+		}
+
+		if authorizationSettings.Type == api_settings.HMACAuthorizationType {
+			isHMACValid := auth.HMACValidate(ctx, authorizationSettings)
+			if !isHMACValid {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte("Forbidden"))
+				return
+			}
 		}
 
 		next.ServeHTTP(w, r)
