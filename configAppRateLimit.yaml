@@ -20,15 +20,11 @@ connections:
 rateLimits:
   - id: rate_limit_1
     redisConnectionId: redis_default
-    byRouteEnabled: false #valid name
-    bodyFields:
-    - "{{bodyContext.currentBody}}"
-    headers:
-    - "x-client-id"
-    claims:
-    - "sub"
-    requestsPerSecond: 5
-    burstLimit: 2
+    routeEnabled: true
+    keys:
+    - "{{wrenchContext.request.headers.partner-key}}"
+    requestsPerSecond: 1
+    burstLimit: 1
 
 api:
   endpoints:
