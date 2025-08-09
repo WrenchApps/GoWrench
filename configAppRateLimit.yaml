@@ -23,6 +23,7 @@ rateLimits:
     routeEnabled: true
     keys:
     - "{{wrenchContext.request.headers.partner-key}}"
+    - "{{wrenchContext.request.token.claims.test-claim}}"
     #requestsPerSecond: 1
     requestsPerMinute: 5
     burstLimit: 3
