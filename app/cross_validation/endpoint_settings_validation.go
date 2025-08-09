@@ -22,6 +22,15 @@ func endpointSettingsCrossValidation(appSetting *application_settings.Applicatio
 					result.AddError(fmt.Sprintf("api.endpoints[%v].idempId %v don't exist in idemps", endpoint.Route, endpoint.IdempId))
 				}
 			}
+
+			if len(endpoint.RateLimitId) > 0 {
+				_, err := manifest_cross_funcs.GetRateLimitSettingById(endpoint.RateLimitId)
+
+				if err != nil {
+					result.AddError(fmt.Sprintf("api.endpoints[%v].rateLimitId %v don't exist in rateLimits", endpoint.Route, endpoint.RateLimitId))
+				}
+			}
+
 			if appSetting.Api.Authorization != nil && appSetting.Api.Authorization.Type == api_settings.HMACAuthorizationType {
 				if len(endpoint.Roles) > 0 ||
 					len(endpoint.Scopes) > 0 ||

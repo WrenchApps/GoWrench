@@ -28,6 +28,7 @@ var KafkaProducerDuration metric.Float64Histogram
 var NatsPublishDuration metric.Float64Histogram
 var SnsPublishDuration metric.Float64Histogram
 var IdempDuration metric.Float64Histogram
+var RateLimitDuration metric.Float64Histogram
 
 var LoggerProvider *sdklog.LoggerProvider
 var Logger log.Logger
@@ -39,6 +40,7 @@ func InitMetrics() {
 	NatsPublishDuration, _ = Meter.Float64Histogram("gowrench_nats_publish_duration_ms")
 	SnsPublishDuration, _ = Meter.Float64Histogram("gowrench_sns_publish_duration_ms")
 	IdempDuration, _ = Meter.Float64Histogram("gowrench_idempotency_duration_ms")
+	RateLimitDuration, _ = Meter.Float64Histogram("gowrench_rate_limit_duration_ms")
 }
 
 func InitLogger(lp *sdklog.LoggerProvider) {

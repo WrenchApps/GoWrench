@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"wrench/app"
+	auth_jwt "wrench/app/auth/jwt"
 	"wrench/app/manifest/api_settings"
 
 	"github.com/MicahParks/keyfunc"
@@ -20,7 +21,7 @@ func JwksValidationAuthorization(tokenString string, roles []string, scopes []st
 	tokenSplitted := strings.Split(tokenString, ".")
 	tokenPayload := tokenSplitted[1]
 
-	tokenPayloadMap := ConvertJwtPayloadBase64ToJwtPaylodData(tokenPayload)
+	tokenPayloadMap := auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(tokenPayload)
 	if tokenPayloadMap == nil {
 		return false
 	}

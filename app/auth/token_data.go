@@ -1,11 +1,10 @@
 package auth
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+	auth_jwt "wrench/app/auth/jwt"
 	"wrench/app/json_map"
 )
 
@@ -28,7 +27,7 @@ func (token *TokenData) LoadJwtPayload() {
 	if len(token.AccessToken) > 0 && !token.IsNotJwt {
 		jwtArray := strings.Split(token.AccessToken, ".")
 		payloadBase64 := jwtArray[1]
-		token.jwtPaylodData = ConvertJwtPayloadBase64ToJwtPaylodData(payloadBase64)
+		token.jwtPaylodData = auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(payloadBase64)
 	}
 }
 
@@ -66,28 +65,4 @@ func (token *TokenData) LoadCustomToken(forceReloadSeconds int64, accessTokenPro
 	token.AccessToken = fmt.Sprint(accessToken)
 	token.TokenType = tokenType
 	token.HeaderName = headerName
-}
-
-func ConvertJwtPayloadBase64ToJwtPaylodData(jwtPayload string) map[string]interface{} {
-	jwtPayload = strings.ReplaceAll(jwtPayload, "-", "+")
-	jwtPayload = strings.ReplaceAll(jwtPayload, "_", "/")
-	switch len(jwtPayload) % 4 {
-	case 2:
-		jwtPayload += "=="
-	case 3:
-		jwtPayload += "="
-	}
-
-	decodedBytes, err := base64.StdEncoding.DecodeString(jwtPayload)
-	if err != nil {
-		fmt.Println("Error decoding Base64:", err)
-		return nil
-	}
-
-	var jwtPaylodData map[string]interface{}
-	jsonErr := json.Unmarshal(decodedBytes, &jwtPaylodData)
-	if jsonErr != nil {
-		return nil
-	}
-	return jwtPaylodData
 }

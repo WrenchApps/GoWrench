@@ -43,7 +43,7 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 	var mutex *redsync.Mutex
 	uClient, _ := connections.GetRedisConnection(handler.IdempSettings.RedisConnectionId)
 
-	spanDisplay := fmt.Sprintf("idemp.[%v]", handler.EndpointSettings.IdempId)
+	spanDisplay := fmt.Sprintf("idemp.%v", handler.EndpointSettings.IdempId)
 	ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)
 	ctx = ctxSpan
 	defer span.End()
