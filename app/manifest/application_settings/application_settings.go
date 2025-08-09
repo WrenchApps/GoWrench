@@ -5,6 +5,7 @@ import (
 	"log"
 	"wrench/app/manifest/action_settings"
 	"wrench/app/manifest/api_settings"
+	"wrench/app/manifest/rate_limit_settings"
 
 	"wrench/app/manifest/connection_settings"
 	"wrench/app/manifest/contract_settings"
@@ -26,6 +27,7 @@ type ApplicationSettings struct {
 	Actions          []*action_settings.ActionSettings       `yaml:"actions"`
 	TokenCredentials []*credential.TokenCredentialSetting    `yaml:"tokenCredentials"`
 	Idemps           []*idemp_settings.IdempSettings         `yaml:"idemps"`
+	RateLimits       []*rate_limit_settings.RateLimitSetting `yaml:"rateLimits"`
 }
 
 func (settings *ApplicationSettings) GetActionById(actionId string) (*action_settings.ActionSettings, error) {
@@ -83,6 +85,12 @@ func (settings *ApplicationSettings) Valid() validation.ValidateResult {
 
 	if settings.Idemps != nil {
 		for _, validable := range settings.Idemps {
+			result.AppendValidable(validable)
+		}
+	}
+
+	if settings.RateLimits != nil {
+		for _, validable := range settings.RateLimits {
 			result.AppendValidable(validable)
 		}
 	}
