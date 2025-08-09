@@ -23,8 +23,9 @@ rateLimits:
     routeEnabled: true
     keys:
     - "{{wrenchContext.request.headers.partner-key}}"
-    requestsPerSecond: 1
-    burstLimit: 1
+    #requestsPerSecond: 1
+    requestsPerMinute: 5
+    burstLimit: 3
 
 api:
   endpoints:
@@ -36,6 +37,7 @@ api:
 actions:
   - id: mock_mirror
     type: httpRequestMock
+    contentType: application/json
     http:
       mock:
         mirrorBody: true

@@ -159,6 +159,14 @@ func (settings *ApplicationSettings) Merge(toMerge *ApplicationSettings) error {
 		}
 	}
 
+	if len(toMerge.RateLimits) > 0 {
+		if len(settings.RateLimits) == 0 {
+			settings.RateLimits = toMerge.RateLimits
+		} else {
+			settings.RateLimits = append(settings.RateLimits, toMerge.RateLimits...)
+		}
+	}
+
 	return nil
 }
 

@@ -8,6 +8,7 @@ type RateLimitSettings struct {
 	RouteEnabled      bool     `yaml:"routeEnabled"`
 	Keys              []string `yaml:"keys"`
 	RequestsPerSecond int      `yaml:"requestsPerSecond"`
+	RequestsPerMinute int      `yaml:"requestsPerMinute"`
 	BurstLimit        int      `yaml:"burstLimit"`
 }
 
@@ -31,8 +32,8 @@ func (setting *RateLimitSettings) Valid() validation.ValidateResult {
 		result.AddError("should set redisConnectionId")
 	}
 
-	if setting.RequestsPerSecond >= 0 {
-		result.AddError("should set requestsPerSecond")
+	if setting.RequestsPerSecond >= 0 && setting.RequestsPerMinute >= 0 {
+		result.AddError("should set requestsPerSecond or requestsPerMinute, not both")
 	}
 
 	return result

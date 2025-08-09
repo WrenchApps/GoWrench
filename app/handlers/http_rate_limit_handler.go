@@ -19,6 +19,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var limiterStatic *redis_rate.Limiter
+
 type RateLimitHandler struct {
 	Next              Handler
 	EndpointSettings  *api_settings.EndpointSettings
@@ -36,14 +38,9 @@ func (handler *RateLimitHandler) Do(ctx context.Context, wrenchContext *contexts
 		ctx, span := wrenchContext.GetSpan2(ctx, spanDisplay)
 		defer span.End()
 
-		uClient, _ := connections.GetRedisConnection(rtSettings.RedisConnectionId)
-		limiter := redis_rate.NewLimiter(uClient) // check if limiter can be static
 		key := handler.getKey(wrenchContext, bodyContext)
-		limit := redis_rate.Limit{
-			Rate:   rtSettings.RequestsPerSecond,
-			Burst:  rtSettings.BurstLimit,
-			Period: time.Second,
-		}
+		limit := handler.getRedisLimit()
+		limiter := handler.getRedislimiter()
 		res, err := limiter.Allow(ctx, key, limit)
 
 		if err != nil {
@@ -62,6 +59,31 @@ func (handler *RateLimitHandler) Do(ctx context.Context, wrenchContext *contexts
 
 	if handler.Next != nil {
 		handler.Next.Do(ctx, wrenchContext, bodyContext)
+	}
+}
+
+func (handler *RateLimitHandler) getRedislimiter() *redis_rate.Limiter {
+	if limiterStatic == nil {
+		uClient, _ := connections.GetRedisConnection(handler.RateLimitSettings.RedisConnectionId)
+		limiterStatic = redis_rate.NewLimiter(uClient)
+	}
+
+	return limiterStatic
+}
+
+func (handler *RateLimitHandler) getRedisLimit() redis_rate.Limit {
+	if handler.RateLimitSettings.RequestsPerSecond > 0 {
+		return redis_rate.Limit{
+			Rate:   handler.RateLimitSettings.RequestsPerSecond,
+			Burst:  handler.RateLimitSettings.BurstLimit,
+			Period: time.Second,
+		}
+	}
+
+	return redis_rate.Limit{
+		Rate:   handler.RateLimitSettings.RequestsPerMinute,
+		Burst:  handler.RateLimitSettings.BurstLimit,
+		Period: time.Minute,
 	}
 }
 
@@ -99,6 +121,7 @@ func (handler *RateLimitHandler) setSpanAttributes(span trace.Span, redisConnect
 func (handler *RateLimitHandler) setError(err error, httpStatusCode int, span trace.Span, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 	bodyContext.HttpStatusCode = httpStatusCode
 	bodyContext.ContentType = "text/plain"
+	bodyContext.SetBody([]byte(err.Error()))
 	wrenchContext.SetHasError(span, err.Error(), err)
 }
 
