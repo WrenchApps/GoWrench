@@ -20,14 +20,14 @@ import (
 var ApplicationSettingsStatic *ApplicationSettings
 
 type ApplicationSettings struct {
-	Connections      *connection_settings.ConnectionSettings `yaml:"connections"`
-	Api              *api_settings.ApiSettings               `yaml:"api"`
-	Service          *service_settings.ServiceSettings       `yaml:"service"`
-	Contract         *contract_settings.ContractSetting      `yaml:"contract"`
-	Actions          []*action_settings.ActionSettings       `yaml:"actions"`
-	TokenCredentials []*credential.TokenCredentialSetting    `yaml:"tokenCredentials"`
-	Idemps           []*idemp_settings.IdempSettings         `yaml:"idemps"`
-	RateLimits       []*rate_limit_settings.RateLimitSetting `yaml:"rateLimits"`
+	Connections      *connection_settings.ConnectionSettings  `yaml:"connections"`
+	Api              *api_settings.ApiSettings                `yaml:"api"`
+	Service          *service_settings.ServiceSettings        `yaml:"service"`
+	Contract         *contract_settings.ContractSetting       `yaml:"contract"`
+	Actions          []*action_settings.ActionSettings        `yaml:"actions"`
+	TokenCredentials []*credential.TokenCredentialSetting     `yaml:"tokenCredentials"`
+	Idemps           []*idemp_settings.IdempSettings          `yaml:"idemps"`
+	RateLimits       []*rate_limit_settings.RateLimitSettings `yaml:"rateLimits"`
 }
 
 func (settings *ApplicationSettings) GetActionById(actionId string) (*action_settings.ActionSettings, error) {

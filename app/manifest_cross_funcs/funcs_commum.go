@@ -2,9 +2,11 @@ package manifest_cross_funcs
 
 import (
 	"errors"
+	"fmt"
 	"wrench/app/manifest/application_settings"
 	"wrench/app/manifest/connection_settings"
 	"wrench/app/manifest/idemp_settings"
+	"wrench/app/manifest/rate_limit_settings"
 	"wrench/app/manifest/service_settings"
 	"wrench/app/manifest/token_credential_settings"
 )
@@ -62,7 +64,21 @@ func GetIdempSettingById(idempId string) (*idemp_settings.IdempSettings, error) 
 		}
 	}
 
-	return nil, errors.New("idemp not found")
+	return nil, fmt.Errorf("idemp %s not found", idempId)
+}
+
+func GetRateLimitSettingById(rateLimitId string) (*rate_limit_settings.RateLimitSettings, error) {
+	appSetting := application_settings.ApplicationSettingsStatic
+
+	if len(appSetting.RateLimits) > 0 {
+		for _, rateLimit := range appSetting.RateLimits {
+			if rateLimit.Id == rateLimitId {
+				return rateLimit, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("rateLimitId %s not found", rateLimitId)
 }
 
 func GetService() *service_settings.ServiceSettings {

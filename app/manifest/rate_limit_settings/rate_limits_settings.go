@@ -2,7 +2,7 @@ package rate_limit_settings
 
 import "wrench/app/manifest/validation"
 
-type RateLimitSetting struct {
+type RateLimitSettings struct {
 	Id                string   `yaml:"id"`
 	RedisConnectionId string   `yaml:"redisConnectionId"`
 	RouteEnabled      bool     `yaml:"routeEnabled"`
@@ -13,11 +13,11 @@ type RateLimitSetting struct {
 	BurstLimit        int      `yaml:"burstLimit"`
 }
 
-func (setting *RateLimitSetting) GetId() string {
+func (setting *RateLimitSettings) GetId() string {
 	return setting.Id
 }
 
-func (setting *RateLimitSetting) Valid() validation.ValidateResult {
+func (setting *RateLimitSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Id) == 0 {
