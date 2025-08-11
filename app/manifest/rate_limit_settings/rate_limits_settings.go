@@ -20,7 +20,7 @@ func (setting *RateLimitSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Id) == 0 {
-		result.AddError("idemp.id is required")
+		result.AddError("rateLimits.id is required")
 	}
 
 	if len(setting.Keys) == 0 &&
