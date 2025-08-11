@@ -62,6 +62,11 @@ func GetRequestUriParams(wrenchContext *WrenchContext, parameterName string) str
 
 func GetTokenClaims(wrenchContext *WrenchContext, claimName string) string {
 	tokenString := wrenchContext.Request.Header.Get("Authorization")
+
+	if len(tokenString) == 0 {
+		return ""
+	}
+
 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 
 	tokenPayloadMap := auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(tokenString)
