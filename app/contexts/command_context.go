@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	auth_jwt "wrench/app/auth/jwt"
 	"wrench/app/json_map"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/action_settings/func_settings"
@@ -16,6 +17,7 @@ import (
 const prefixWrenchContextRequest = "wrenchContext.request."
 const prefixWrenchContextRequestUri = "wrenchContext.request.uri"
 const prefixWrenchContextRequestUriParams = "wrenchContext.request.uri.params."
+const prefixWrenchContextRequestTokenClaims = "wrenchContext.request.token.claims."
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
 const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
@@ -58,6 +60,21 @@ func GetRequestUriParams(wrenchContext *WrenchContext, parameterName string) str
 	return ""
 }
 
+func GetTokenClaims(wrenchContext *WrenchContext, claimName string) string {
+	tokenString := wrenchContext.Request.Header.Get("Authorization")
+
+	if len(tokenString) == 0 {
+		return ""
+	}
+
+	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
+
+	tokenPayloadMap := auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(tokenString)
+	claimTokenValue, _ := tokenPayloadMap[claimName].(string)
+
+	return claimTokenValue
+}
+
 func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string {
 
 	if IsCalculatedValue(command) {
@@ -72,6 +89,11 @@ func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string 
 	if strings.HasPrefix(command, prefixWrenchContextRequestUriParams) {
 		parameterName := strings.ReplaceAll(command, prefixWrenchContextRequestUriParams, "")
 		return GetRequestUriParams(wrenchContext, parameterName)
+	}
+
+	if strings.HasPrefix(command, prefixWrenchContextRequestTokenClaims) {
+		parameterName := strings.ReplaceAll(command, prefixWrenchContextRequestTokenClaims, "")
+		return GetTokenClaims(wrenchContext, parameterName)
 	}
 
 	if strings.HasPrefix(command, prefixWrenchContextRequestUri) {

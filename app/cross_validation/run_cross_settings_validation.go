@@ -14,6 +14,7 @@ func Valid() validation.ValidateResult {
 	result.Append(httpRequestCrossValid(appSetting))
 	result.Append(kafkaProducerCronsValidation(appSetting))
 	result.Append(idempCrossValidation(appSetting))
+	result.Append(rateLimitCrossValidation(appSetting))
 	result.Append(endpointSettingsCrossValidation(appSetting))
 
 	if len(appSetting.Actions) > 0 {
@@ -70,7 +71,15 @@ func Valid() validation.ValidateResult {
 		for _, id := range duplicateIds {
 			result.AddError(fmt.Sprintf("idemps.id %v duplicated", id))
 		}
+	}
 
+	if len(appSetting.RateLimits) > 0 {
+		hasIds := toHasIdSlice(appSetting.RateLimits)
+		duplicateIds := duplicateIdsValid(hasIds)
+
+		for _, id := range duplicateIds {
+			result.AddError(fmt.Sprintf("rateLimits.id %v duplicated", id))
+		}
 	}
 
 	return result

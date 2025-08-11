@@ -29,8 +29,16 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		var currentHandler Handler
 		currentHandler = firstHandler
 
-		if len(endpoint.IdempId) > 0 {
+		if len(endpoint.RateLimitId) > 0 {
+			rateLimitHandler := new(RateLimitHandler)
+			rateLimitHandler.EndpointSettings = &endpoint
+			rateLimitHandler.RateLimitSettings, _ = manifest_cross_funcs.GetRateLimitSettingById(endpoint.RateLimitId)
 
+			currentHandler.SetNext(rateLimitHandler)
+			currentHandler = rateLimitHandler
+		}
+
+		if len(endpoint.IdempId) > 0 {
 			idempHandler := new(IdempHandler)
 			idempHandler.EndpointSettings = &endpoint
 			idempHandler.IdempSettings, _ = manifest_cross_funcs.GetIdempSettingById(endpoint.IdempId)

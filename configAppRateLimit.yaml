@@ -1,0 +1,44 @@
+version: 1
+
+service:
+  name: "my-app-otel-test"
+  version: 1.0.0
+  otel:
+    enable: false
+    metricConsoleExport: false
+    traceConsoleExport: false
+    collectorUrl: "localhost:4318"
+
+connections:
+  redis:
+  - id: redis_default
+    addresses: 
+    - '{{REDIS_CONNECTION}}'
+    #password: 123456
+    #db: 0
+
+rateLimits:
+  - id: rate_limit_1
+    redisConnectionId: redis_default
+    routeEnabled: true
+    keys:
+    - "{{wrenchContext.request.headers.partner-key}}"
+    - "{{wrenchContext.request.token.claims.test-claim}}"
+    #requestsPerSecond: 1
+    requestsPerMinute: 5
+    burstLimit: 3
+
+api:
+  endpoints:
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+      rateLimitId: rate_limit_1
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    contentType: application/json
+    http:
+      mock:
+        mirrorBody: true
