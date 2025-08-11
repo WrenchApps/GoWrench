@@ -96,6 +96,8 @@ func (handler *RateLimitHandler) getKey(wrenchContext *contexts.WrenchContext, b
 		keyTemp = handler.EndpointSettings.Route
 	}
 
+	keyTemp += rtSettings.Id
+
 	if len(rtSettings.Keys) > 0 {
 		for _, keyRef := range rtSettings.Keys {
 			value := contexts.GetCalculatedValue(keyRef, wrenchContext, bodyContext, nil)
