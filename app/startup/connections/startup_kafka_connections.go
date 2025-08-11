@@ -3,6 +3,7 @@ package connections
 import (
 	"crypto/tls"
 	"errors"
+	"strings"
 	"time"
 	"wrench/app/manifest/connection_settings"
 
@@ -43,7 +44,7 @@ func loadConnectionsKafka(kafkaSettings []*connection_settings.KafkaConnectionSe
 
 			kafkaConnections[setting.Id] = &KafkaConnection{
 				Id:      setting.Id,
-				Brokers: []string{setting.BootstrapServers},
+				Brokers: strings.Split(setting.BootstrapServers, ","),
 				Dialer:  dialer,
 			}
 		}
