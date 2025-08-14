@@ -3,10 +3,10 @@ package auth
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"wrench/app"
 	auth_jwt "wrench/app/auth/jwt"
+	"wrench/app/cross_funcs"
 	"wrench/app/manifest/api_settings"
 
 	"github.com/MicahParks/keyfunc"
@@ -57,17 +57,14 @@ func rolesValidation(tokenPayloadMap map[string]interface{}, roles []string) boo
 			}
 		}
 
-		sort.Strings(rolesParsedString)
-		sort.Strings(roles)
-
-		rolesToken := strings.Join(rolesParsedString, " ")
-		rolesRequired := strings.Join(roles, " ")
-
-		if strings.HasPrefix(rolesToken, rolesRequired) {
-			result = true
-		} else {
-			app.LogWarning(fmt.Sprintf("Roles %v is required", rolesRequired))
+		for _, role := range roles {
+			if !cross_funcs.ArrayStringContains(rolesParsedString, role) {
+				app.LogWarning(fmt.Sprintf("Roles %v is required", role))
+				return false
+			}
 		}
+
+		result = true
 	}
 	return result
 }
