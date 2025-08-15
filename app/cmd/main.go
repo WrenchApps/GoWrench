@@ -9,6 +9,7 @@ import (
 	"strings"
 	"wrench/app"
 	"wrench/app/manifest/application_settings"
+	"wrench/app/middleware"
 	"wrench/app/startup"
 	"wrench/app/startup/connections"
 	"wrench/app/startup/token_credentials"
@@ -69,7 +70,7 @@ func main() {
 	hanlder := startup.LoadApplicationSettings(ctx, applicationSetting)
 	port := getPort()
 	app.LogInfo(fmt.Sprintf("Server listen in port %s", port))
-	http.ListenAndServe(port, hanlder)
+	http.ListenAndServe(port, middleware.CaseInsensitiveMux(hanlder))
 }
 
 func loadBashFiles() {
