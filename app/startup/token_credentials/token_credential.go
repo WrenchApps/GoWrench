@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 	"wrench/app/auth"
 	client "wrench/app/clients/http"
@@ -15,6 +16,7 @@ import (
 )
 
 var tokenCredentials map[string]*auth.TokenData
+var CredentialErrors []error
 
 func GetTokenCredentialById(tokenCredentialId string) *auth.TokenData {
 	if tokenCredentials == nil {
@@ -52,8 +54,8 @@ func LoadTokenCredentialAuthentication() {
 				}
 
 				if err != nil {
+					CredentialErrors = append(CredentialErrors, err)
 					continue
-					// TODO setting error to unhealthy api
 				}
 
 				if !setting.IsOpaque {
@@ -74,6 +76,10 @@ func authenticateClientCredentials(setting *credential.TokenCredentialSetting) (
 	data.Set("client_id", setting.ClientCredential.ClientId)
 	data.Set("client_secret", setting.ClientCredential.ClientSecret)
 	data.Set("grant_type", "client_credentials")
+
+	if len(strings.TrimSpace(setting.ClientCredential.Audiance)) > 0 {
+		data.Set("audience", setting.ClientCredential.Audiance)
+	}
 
 	request.Body = []byte(data.Encode())
 	request.Method = "POST"
@@ -99,7 +105,7 @@ func authenticateClientCredentials(setting *credential.TokenCredentialSetting) (
 			return tokenData, nil
 		}
 
-		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v", response.StatusCode)
+		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v settings id %v", response.StatusCode, setting.Id)
 	}
 }
 
@@ -137,7 +143,7 @@ func basicCredentials(setting *credential.TokenCredentialSetting) (*auth.TokenDa
 			return tokenData, nil
 		}
 
-		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v", response.StatusCode)
+		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v settings id %v", response.StatusCode, setting.Id)
 	}
 }
 
@@ -193,7 +199,7 @@ func customAuthentication(setting *credential.TokenCredentialSetting) (*auth.Tok
 			return tokenData, nil
 		}
 
-		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v", response.StatusCode)
+		return nil, fmt.Errorf("Can't get jwtToken response_status_code: %v settings id %v", response.StatusCode, setting.Id)
 	}
 }
 

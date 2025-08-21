@@ -5,6 +5,7 @@ import "wrench/app/manifest/validation"
 type ClientCredentialSetting struct {
 	ClientId     string `yaml:"clientId"`
 	ClientSecret string `yaml:"clientSecret"`
+	Audiance     string `yaml:"audiance"`
 }
 
 func (setting ClientCredentialSetting) Valid() validation.ValidateResult {
