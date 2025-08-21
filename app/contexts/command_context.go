@@ -69,7 +69,10 @@ func GetTokenClaims(wrenchContext *WrenchContext, claimName string) string {
 
 	tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 
-	tokenPayloadMap := auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(tokenString)
+	tokenSplitted := strings.Split(tokenString, ".")
+	tokenPayload := tokenSplitted[1]
+
+	tokenPayloadMap := auth_jwt.ConvertJwtPayloadBase64ToJwtPaylodData(tokenPayload)
 	claimTokenValue, _ := tokenPayloadMap[claimName].(string)
 
 	return claimTokenValue

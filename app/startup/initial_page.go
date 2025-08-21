@@ -6,6 +6,7 @@ import (
 	"wrench/app"
 	"wrench/app/cross_validation"
 	"wrench/app/manifest/application_settings"
+	"wrench/app/startup/token_credentials"
 )
 
 type InitialPage struct {
@@ -29,12 +30,20 @@ func (page *InitialPage) HealthCheckEndpoint(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if result.IsSuccess() {
+	var errors []error
+
+	if token_credentials.CredentialErrors != nil {
+		errors = append(errors, token_credentials.CredentialErrors...)
+	}
+
+	if result.IsSuccess() && len(errors) == 0 {
 		body := make(map[string]interface{})
 		body["status"] = "healthly"
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(body)
 	} else {
+
+		result.AddErrors(errors)
 
 		for _, err := range result.GetErrors() {
 			app.LogError2(err, nil)
