@@ -8,6 +8,7 @@ import (
 	"wrench/app"
 	contexts "wrench/app/contexts"
 	settings "wrench/app/manifest/api_settings"
+	"wrench/app/manifest/otel_settings"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -16,6 +17,7 @@ import (
 
 type RequestDelegate struct {
 	Endpoint *settings.EndpointSettings
+	Otel     *otel_settings.OtelSettings
 }
 
 func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +48,13 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 	request.setSpanAttributes(span, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
 	duration := time.Since(start).Seconds() * 1000
 	request.metricRecord(ctx, duration, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
+
+	for key, value := range request.Otel.TraceTags {
+		tagValue := contexts.GetCalculatedValue(value, wrenchContext, bodyContext, nil)
+		if tagValue != nil {
+			span.SetAttributes(attribute.String(key, fmt.Sprint(tagValue)))
+		}
+	}
 }
 
 func (handler *RequestDelegate) metricRecord(ctx context.Context, duration float64, route string, method string, statusCode int) {
