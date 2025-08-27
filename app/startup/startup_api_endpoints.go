@@ -33,6 +33,7 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 		shouldConfigureAuthorization := endpoint.ShouldConfigureAuthorization(hasAuthorization)
 		var delegate = new(handler.RequestDelegate)
 		delegate.SetEndpoint(&endpoint)
+		delegate.Otel = app.Service.Otel
 
 		if !endpoint.IsProxy {
 			method := strings.ToUpper(string(endpoint.Method))

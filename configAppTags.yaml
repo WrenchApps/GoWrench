@@ -1,0 +1,29 @@
+version: 1
+
+service:
+  name: "my-app-otel-test"
+  version: 1.0.0
+  otel:
+    enable: true
+    metricConsoleExport: false
+    traceConsoleExport: false
+    collectorUrl: "localhost:4318"
+    traceTags:
+      fixed: "fixed-value"
+      headerkey: "{{wrenchContext.request.headers.x-test}}"
+      body: "{{bodyContext.test}}"
+      token: "{{wrenchContext.request.token.claims.partner_key}}"
+    
+api:
+  endpoints:
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    http:
+      mock:
+        contentType: application/json
+        mirrorBody: true

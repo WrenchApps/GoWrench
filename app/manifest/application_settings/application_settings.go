@@ -57,8 +57,8 @@ func (settings *ApplicationSettings) Valid() validation.ValidateResult {
 		result.AppendValidable(settings.Connections)
 	}
 
-	if settings.Api != nil {
-		result.AppendValidable(settings.Api)
+	if settings.Service != nil {
+		result.AppendValidable(settings.Service)
 	}
 
 	if settings.Actions != nil {
