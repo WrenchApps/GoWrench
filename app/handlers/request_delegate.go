@@ -49,10 +49,12 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 	duration := time.Since(start).Seconds() * 1000
 	request.metricRecord(ctx, duration, request.Endpoint.Route, fmt.Sprint(request.Endpoint.Method), bodyContext.HttpStatusCode)
 
-	for key, value := range request.Otel.TraceTags {
-		tagValue := contexts.GetCalculatedValue(value, wrenchContext, bodyContext, nil)
-		if tagValue != nil {
-			span.SetAttributes(attribute.String(key, fmt.Sprint(tagValue)))
+	if request.Otel != nil {
+		for key, value := range request.Otel.TraceTags {
+			tagValue := contexts.GetCalculatedValue(value, wrenchContext, bodyContext, nil)
+			if tagValue != nil {
+				span.SetAttributes(attribute.String(key, fmt.Sprint(tagValue)))
+			}
 		}
 	}
 }
