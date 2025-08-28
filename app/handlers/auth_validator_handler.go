@@ -42,7 +42,7 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 		}
 
 		if authorizationSettings.Type == api_settings.HMACAuthorizationType {
-			isHMACValid := auth.HMACValidate(wrenchContext.Request, authorizationSettings)
+			isHMACValid := auth.HMACValidate(wrenchContext, bodyContext, authorizationSettings)
 			if !isHMACValid {
 				handler.setHasError("Unauthorized", http.StatusUnauthorized, wrenchContext, bodyContext)
 			}
@@ -59,6 +59,8 @@ func (handler *AuthValidatorHandler) SetNext(next Handler) {
 }
 
 func (handler *AuthValidatorHandler) setHasError(msg string, httpStatusCode int, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
+	wrenchContext.SetHasError2()
+	bodyContext.ContentType = "text/plain"
 	bodyContext.HttpStatusCode = httpStatusCode
 	bodyContext.SetBody([]byte(msg))
 }
