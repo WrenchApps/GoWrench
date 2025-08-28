@@ -6,9 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"wrench/app/auth"
 	handler "wrench/app/handlers"
-	"wrench/app/manifest/api_settings"
 	"wrench/app/manifest/application_settings"
 
 	"github.com/gorilla/handlers"
@@ -22,7 +20,6 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 		return nil
 	}
 
-	hasAuthorization := app.Api.HasAuthorization()
 	endpoints := app.Api.Endpoints
 	muxRoute := mux.NewRouter()
 	initialPage := new(InitialPage)
@@ -30,7 +27,6 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 	initialPage.Append("<h2>Endpoints</h2>")
 
 	for _, endpoint := range endpoints {
-		shouldConfigureAuthorization := endpoint.ShouldConfigureAuthorization(hasAuthorization)
 		var delegate = new(handler.RequestDelegate)
 		delegate.SetEndpoint(&endpoint)
 		delegate.Otel = app.Service.Otel
@@ -38,24 +34,14 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 		if !endpoint.IsProxy {
 			method := strings.ToUpper(string(endpoint.Method))
 			route := endpoint.Route
-
-			if shouldConfigureAuthorization {
-				muxRoute.Handle(route, authMiddleware(ctx, app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler))).Methods(method)
-			} else {
-				muxRoute.HandleFunc(route, delegate.HttpHandler).Methods(method)
-			}
+			muxRoute.HandleFunc(route, delegate.HttpHandler).Methods(method)
 			initialPage.Append("Route: <i>" + route + "</i> Method: <i>" + method + "</i> <b>Not is proxy</b>")
 		} else {
 			initialPage.Append("Route: <i>" + endpoint.Route + "</i> <b> IS PROXY</b>")
 			if endpoint.Route == "/" {
 				endpoint.Route = ""
 			}
-
-			if shouldConfigureAuthorization {
-				muxRoute.Handle(endpoint.Route+"/{path:.*}", authMiddleware(ctx, app.Api.Authorization, endpoint, http.HandlerFunc(delegate.HttpHandler)))
-			} else {
-				muxRoute.HandleFunc(endpoint.Route+"/{path:.*}", delegate.HttpHandler)
-			}
+			muxRoute.HandleFunc(endpoint.Route+"/{path:.*}", delegate.HttpHandler)
 		}
 	}
 
@@ -94,45 +80,4 @@ func LoadApiEndpoint(ctx context.Context) http.Handler {
 	}
 
 	return muxRoute
-}
-
-func authMiddleware(ctx context.Context, authorizationSettings *api_settings.AuthorizationSettings, endpoint api_settings.EndpointSettings, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		if authorizationSettings.Type == api_settings.JWKSAuthorizationType {
-			tokenString := r.Header.Get("Authorization")
-			if len(tokenString) == 0 {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Unauthorized"))
-				return
-			}
-			tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
-
-			tokenIsValid := auth.JwksValidationAuthentication(ctx, tokenString, authorizationSettings)
-			if tokenIsValid {
-				tokenIsAuthorized := auth.JwksValidationAuthorization(tokenString, endpoint.Roles, endpoint.Scopes, endpoint.Claims)
-				if !tokenIsAuthorized {
-					w.WriteHeader(http.StatusForbidden)
-					w.Write([]byte("Forbidden"))
-					return
-				}
-			} else {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Unauthorized"))
-				return
-			}
-
-		}
-
-		if authorizationSettings.Type == api_settings.HMACAuthorizationType {
-			isHMACValid := auth.HMACValidate(r, authorizationSettings)
-			if !isHMACValid {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("Unauthorized"))
-				return
-			}
-		}
-
-		next.ServeHTTP(w, r)
-	})
 }

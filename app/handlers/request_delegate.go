@@ -53,7 +53,10 @@ func (request *RequestDelegate) HttpHandler(w http.ResponseWriter, r *http.Reque
 		for key, value := range request.Otel.TraceTags {
 			tagValue := contexts.GetCalculatedValue(value, wrenchContext, bodyContext, nil)
 			if tagValue != nil {
-				span.SetAttributes(attribute.String(key, fmt.Sprint(tagValue)))
+				value := fmt.Sprint(tagValue)
+				if len(value) > 0 {
+					span.SetAttributes(attribute.String(key, value))
+				}
 			}
 		}
 	}
