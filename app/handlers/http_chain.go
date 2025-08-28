@@ -24,10 +24,22 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		return
 	}
 
+	hasAuthorization := settings.Api.HasAuthorization()
+
 	for _, endpoint := range settings.Api.Endpoints {
 		var firstHandler = new(HttpFirstHandler)
+
 		var currentHandler Handler
 		currentHandler = firstHandler
+
+		if hasAuthorization {
+			authValidatorHandler := new(AuthValidatorHandler)
+			authValidatorHandler.EndpointSettings = &endpoint
+			authValidatorHandler.ApiSettings = settings.Api
+
+			currentHandler.SetNext(authValidatorHandler)
+			currentHandler = authValidatorHandler
+		}
 
 		if len(endpoint.RateLimitId) > 0 {
 			rateLimitHandler := new(RateLimitHandler)
