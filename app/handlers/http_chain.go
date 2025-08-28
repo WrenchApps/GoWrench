@@ -24,13 +24,15 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 		return
 	}
 
+	hasAuthorization := settings.Api.HasAuthorization()
+
 	for _, endpoint := range settings.Api.Endpoints {
 		var firstHandler = new(HttpFirstHandler)
 
 		var currentHandler Handler
 		currentHandler = firstHandler
 
-		if settings.Api.HasAuthorization() {
+		if hasAuthorization {
 			authValidatorHandler := new(AuthValidatorHandler)
 			authValidatorHandler.EndpointSettings = &endpoint
 			authValidatorHandler.ApiSettings = settings.Api
