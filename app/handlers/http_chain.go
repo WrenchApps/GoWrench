@@ -27,13 +27,17 @@ func (chain *Chain) BuildChain(settings *settings.ApplicationSettings) {
 	for _, endpoint := range settings.Api.Endpoints {
 		var firstHandler = new(HttpFirstHandler)
 
-		authValidatorHandler := new(AuthValidatorHandler)
-		authValidatorHandler.EndpointSettings = &endpoint
-		authValidatorHandler.ApiSettings = settings.Api
-
 		var currentHandler Handler
-		currentHandler = authValidatorHandler
-		firstHandler.SetNext(authValidatorHandler)
+		currentHandler = firstHandler
+
+		if settings.Api.HasAuthorization() {
+			authValidatorHandler := new(AuthValidatorHandler)
+			authValidatorHandler.EndpointSettings = &endpoint
+			authValidatorHandler.ApiSettings = settings.Api
+
+			currentHandler.SetNext(authValidatorHandler)
+			currentHandler = authValidatorHandler
+		}
 
 		if len(endpoint.RateLimitId) > 0 {
 			rateLimitHandler := new(RateLimitHandler)

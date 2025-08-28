@@ -20,7 +20,7 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 	authorizationSettings := handler.ApiSettings.Authorization
 	endpointSettings := handler.EndpointSettings
 
-	if endpointSettings.ShouldConfigureAuthorization(handler.ApiSettings.HasAuthorization()) {
+	if !endpointSettings.EnableAnonymous {
 
 		if authorizationSettings.Type == api_settings.JWKSAuthorizationType {
 			tokenString := wrenchContext.Request.Header.Get("Authorization")
@@ -47,10 +47,10 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 				handler.setHasError("Unauthorized", http.StatusUnauthorized, wrenchContext, bodyContext)
 			}
 		}
+	}
 
-		if handler.Next != nil {
-			handler.Next.Do(ctx, wrenchContext, bodyContext)
-		}
+	if handler.Next != nil {
+		handler.Next.Do(ctx, wrenchContext, bodyContext)
 	}
 }
 
