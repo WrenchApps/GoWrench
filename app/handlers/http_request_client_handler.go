@@ -57,7 +57,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			wrenchContext.SetHasError(span, "error to call server client", err)
 		} else {
 			if response.StatusCode > 399 {
-				wrenchContext.SetHasError(span, "server client return one error", err)
+				wrenchContext.SetHasError(span, "server client return one error", fmt.Errorf(" http_status_code %v returned from client %v ", response.StatusCode, request.Url))
 			}
 
 			bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
