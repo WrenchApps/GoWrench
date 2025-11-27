@@ -7,7 +7,7 @@ import (
 	"wrench/app/manifest/validation"
 )
 
-var funcValids = []string{"rename", "new", "remove", "duplicate", "parse", "format"}
+var funcValids = []string{"rename", "new", "remove", "duplicate", "parse", "format", "math"}
 
 type ContractMapSetting struct {
 	Id        string          `yaml:"id"`
@@ -18,6 +18,7 @@ type ContractMapSetting struct {
 	Duplicate []string        `yaml:"duplicate"`
 	Parse     *ParseSettings  `yaml:"parse"`
 	Format    *FormatSettings `yaml:"format"`
+	Math      *MathSettings   `yaml:"math"`
 }
 
 func (setting ContractMapSetting) Valid() validation.ValidateResult {
@@ -84,6 +85,11 @@ func (setting ContractMapSetting) Valid() validation.ValidateResult {
 		result.AppendValidable(setting.Format)
 	}
 
+	if setting.Math != nil {
+		totalMapConfigured++
+		result.AppendValidable(setting.Math)
+	}
+
 	if len(setting.Sequence) > 0 {
 
 		if totalMapConfigured != len(setting.Sequence) {
@@ -105,6 +111,8 @@ func (setting ContractMapSetting) Valid() validation.ValidateResult {
 				result.AddError("contract.maps.sequence parse not configured")
 			} else if s == "format" && setting.Format == nil {
 				result.AddError("contract.maps.sequence format not configured")
+			} else if s == "math" && setting.Math == nil {
+				result.AddError("contract.maps.sequence math not configured")
 			}
 		}
 	}

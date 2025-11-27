@@ -105,6 +105,10 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 		errMsg = "Failed to format values."
 	}
 
+	if handler.ContractMap.Math != nil {
+		currentBodyContext, err = contexts.ApplyMathOperations(currentBodyContext, handler.ContractMap.Math)
+	}
+
 	return currentBodyContext, err, errMsg
 }
 
@@ -133,6 +137,8 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 			if err != nil {
 				break
 			}
+		} else if action == "math" {
+			currentBodyContext, err = contexts.ApplyMathOperations(currentBodyContext, handler.ContractMap.Math)
 		}
 	}
 

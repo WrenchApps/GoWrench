@@ -1,0 +1,45 @@
+version: 1
+
+service:
+  name: "math-test"
+  version: 1.0.0
+
+api:
+  endpoints:
+    - route: /api/math
+      method: post
+      actionId: contract_math
+
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+        contentType: "application/json"
+
+  - id: contract_math
+    type: httpRequest
+    trigger:
+      before:
+        contractMapId: map_math_test
+    http:
+      request:
+        method: post
+        url: 'http://localhost:{{PORT}}/api/mock'
+
+contract:
+  maps:
+  - id: map_math_test
+    sequence:
+    - math
+    math:
+      - "budget.value+2"
+      - "budget.value-3"
+      - "budget.value*3"
+      - "budget.value/3"
+      - "budget.value*-1"

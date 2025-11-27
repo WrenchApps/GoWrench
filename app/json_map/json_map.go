@@ -68,7 +68,7 @@ func GetValue(jsonMap map[string]interface{}, propertyName string, deletePropert
 	return value, jsonMap
 }
 
-func SetValue(jsonMap map[string]interface{}, propertyName string, newValue string) map[string]interface{} {
+func SetValue(jsonMap map[string]interface{}, propertyName string, newValue interface{}) map[string]interface{} {
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
