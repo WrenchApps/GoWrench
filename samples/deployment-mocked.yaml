@@ -1,0 +1,89 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-service-config
+data:
+  app-config.yaml: |
+    version: 1
+
+    service:
+      name: "{{SERVICE_NAME}}"
+      version: 1.0.0
+
+    api:
+      endpoints:
+        - route: '/api/mock'
+          method: get
+          actionId: action_mock
+
+    actions:
+      - id: action_mock
+        type: httpRequestMock
+        http:
+          mock:
+            body: "{ 'say':'Hello', 'observation': 'working' }"
+            contentType: "application/json"
+            
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp-container
+        image: wrenchapps/wrench
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/myapp/config
+          readOnly: true
+        env:
+        - name: PATH_FILE_CONFIG
+          value: /etc/myapp/config/app-config.yaml
+        - name: SERVICE_NAME
+          value: wrench-test
+        - name: PORT
+          value: "9092"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: mock-service-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-service
+spec:
+  selector:
+    app: myapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9092
+---
+kind: VirtualService
+apiVersion: networking.istio.io/v1
+metadata:
+  name: mock-service-vs
+  namespace: istio-system
+spec:
+  hosts:
+  - mocked.service-r1.55tech-internal.com
+  gateways:
+  - istio-gateway
+  http:
+  - route:
+    - destination:
+        host: mock-service.default.svc.cluster.local
+        port:
+          number: 80
