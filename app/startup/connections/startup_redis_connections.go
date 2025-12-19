@@ -2,6 +2,7 @@ package connections
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"wrench/app"
@@ -20,11 +21,16 @@ func loadConnectionsRedis(redisSettings []*connection_settings.RedisConnectionSe
 
 	if len(redisSettings) > 0 {
 		for _, setting := range redisSettings {
+			var tlsConfig *tls.Config = nil
+			if setting.Tls {
+				tlsConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+			}
 
 			uClient := redis.NewUniversalClient(&redis.UniversalOptions{
-				Addrs:    setting.Addresses,
-				DB:       setting.Db,
-				Password: setting.Password,
+				Addrs:     setting.Addresses,
+				DB:        setting.Db,
+				Password:  setting.Password,
+				TLSConfig: tlsConfig,
 			})
 
 			if err := uClient.Ping(context.Background()).Err(); err != nil {
