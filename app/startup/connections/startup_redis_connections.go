@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"wrench/app"
+	"wrench/app/converts"
 	"wrench/app/manifest/connection_settings"
 
 	"github.com/redis/go-redis/v9"
@@ -22,7 +23,14 @@ func loadConnectionsRedis(redisSettings []*connection_settings.RedisConnectionSe
 	if len(redisSettings) > 0 {
 		for _, setting := range redisSettings {
 			var tlsConfig *tls.Config = nil
-			if setting.Tls {
+			isTls, err := converts.ConvertStringToBool(setting.Tls)
+
+			if err != nil {
+				app.LogError2(fmt.Sprintf("Error to parse tls value | redis connection id %v", setting.Id), err)
+				return err
+			}
+
+			if isTls {
 				tlsConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 			}
 

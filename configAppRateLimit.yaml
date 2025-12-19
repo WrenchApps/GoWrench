@@ -12,7 +12,7 @@ service:
 connections:
   redis:
   - id: redis_default
-    tls: true
+    tls: '{{REDIS_TLS}}'
     addresses: 
     - 'localhost:6379'
     #password: 123456

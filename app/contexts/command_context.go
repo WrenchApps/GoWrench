@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 	auth_jwt "wrench/app/auth/jwt"
-	"wrench/app/cross_funcs"
+	"wrench/app/converts"
 	"wrench/app/json_map"
 	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/action_settings/func_settings"
@@ -345,47 +345,47 @@ func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (
 	return jsonValueCurrent, nil
 }
 
-func ApplyMathOperations(jsonMap map[string]interface{},  mapSettings *maps.MathSettings) (map[string]interface{}, error) {
-    if mapSettings == nil {
-        return jsonMap, nil
-    }
+func ApplyMathOperations(jsonMap map[string]interface{}, mapSettings *maps.MathSettings) (map[string]interface{}, error) {
+	if mapSettings == nil {
+		return jsonMap, nil
+	}
 
-    for _, expr := range *mapSettings {
+	for _, expr := range *mapSettings {
 
 		operatorIndex := strings.IndexAny(expr, "+-*/")
 
 		operator := expr[operatorIndex : operatorIndex+1]
-    	fieldName := strings.TrimSpace(expr[:operatorIndex])
-    	rawFactor := strings.TrimSpace(expr[operatorIndex+1:])
+		fieldName := strings.TrimSpace(expr[:operatorIndex])
+		rawFactor := strings.TrimSpace(expr[operatorIndex+1:])
 
-		factor, _ := strconv.ParseFloat(rawFactor, 64)		
+		factor, _ := strconv.ParseFloat(rawFactor, 64)
 		rawValue, jsonMapResult := json_map.GetValue(jsonMap, fieldName, true)
-        if rawValue == nil {
-            return nil, fmt.Errorf("field '%s' not found", fieldName)
-        }
+		if rawValue == nil {
+			return nil, fmt.Errorf("field '%s' not found", fieldName)
+		}
 
-        numericValue, err := cross_funcs.ConvertToFloat(rawValue)
+		numericValue, err := converts.ConvertToFloat(rawValue)
 
-		if (err != nil) {
+		if err != nil {
 			return nil, err
 		}
 
-  		var result float64
-        switch operator {
-			case "*":
-				result = numericValue * factor
-			case "/":
-				result = numericValue / factor
-			case "+":
-				result = numericValue + factor
-			case "-":
-				result = numericValue - factor
-			default:
-				return nil, fmt.Errorf("invalid operation in math")
-        }
+		var result float64
+		switch operator {
+		case "*":
+			result = numericValue * factor
+		case "/":
+			result = numericValue / factor
+		case "+":
+			result = numericValue + factor
+		case "-":
+			result = numericValue - factor
+		default:
+			return nil, fmt.Errorf("invalid operation in math")
+		}
 
 		json_map.SetValue(jsonMapResult, fieldName, result)
 	}
 
-    return jsonMap, nil
+	return jsonMap, nil
 }
