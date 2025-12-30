@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/httputil"
 	"strconv"
 	"strings"
 	"wrench/app/startup/tls_load"
@@ -133,9 +132,6 @@ func HttpClientDo(ctx context.Context, request *HttpClientRequestData) (*HttpCli
 			header.Set(key, value)
 		}
 	}
-
-	dump, _ := httputil.DumpRequestOut(req, true)
-	fmt.Println(string(dump))
 
 	resp, err := client.Do(req)
 
