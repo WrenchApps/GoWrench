@@ -116,9 +116,8 @@ func basicCredentials(setting *credential.TokenCredentialSetting) (*auth.TokenDa
 
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
-	body, _ := json.Marshal(data)
 
-	request.Body = body
+	request.Body = []byte(data.Encode())
 	request.Method = "POST"
 	request.Url = setting.AuthEndpoint
 
