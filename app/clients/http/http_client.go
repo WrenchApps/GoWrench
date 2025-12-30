@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
+	"strconv"
 	"strings"
+	"wrench/app/startup/tls_load"
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -15,23 +18,42 @@ import (
 var httpClient *http.Client = new(http.Client)
 var httpClientInsecure *http.Client
 
-func GetHttpClientStatic() *http.Client {
-	return httpClient
-}
+var clients map[string]*http.Client = map[string]*http.Client{}
 
-func GetHttpClientInsecureStatic() *http.Client {
+func GetHttpClient(request *HttpClientRequestData) (*http.Client, error) {
+	clientKey := fmt.Sprintf("%s-%s", strconv.FormatBool(request.Insecure), request.TlsId)
 
-	if httpClientInsecure == nil {
-		httpClientInsecure = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		}
+	client := clients[clientKey]
+	if client != nil {
+		return client, nil
 	}
 
-	return httpClientInsecure
+	var tlsConfig *tls.Config
+
+	if len(request.TlsId) > 0 {
+		tlsConfigById, tlsErr := tls_load.GetTlsConfigById(request.TlsId)
+
+		if tlsErr != nil {
+			return nil, tlsErr
+		}
+
+		tlsConfig = tlsConfigById
+	}
+
+	if tlsConfig == nil {
+		tlsConfig = &tls.Config{}
+	}
+
+	tlsConfig.InsecureSkipVerify = request.Insecure
+
+	client = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}
+
+	clients[clientKey] = client
+	return client, nil
 }
 
 type HttpClientRequestData struct {
@@ -40,6 +62,7 @@ type HttpClientRequestData struct {
 	Body     []byte
 	Headers  map[string]string
 	Insecure bool
+	TlsId    string
 }
 
 type HttpClientResponseData struct {
@@ -83,12 +106,11 @@ func (httpClientRequestData *HttpClientRequestData) SetHeader(key string, value 
 }
 
 func HttpClientDo(ctx context.Context, request *HttpClientRequestData) (*HttpClientResponseData, error) {
-	var client *http.Client
+	client, err := GetHttpClient(request)
 
-	if !request.Insecure {
-		client = GetHttpClientStatic()
-	} else {
-		client = GetHttpClientInsecureStatic()
+	if err != nil {
+		fmt.Println("Error creating client:", err)
+		return nil, err
 	}
 
 	method := strings.ToUpper(request.Method)
@@ -112,7 +134,11 @@ func HttpClientDo(ctx context.Context, request *HttpClientRequestData) (*HttpCli
 		}
 	}
 
+	dump, _ := httputil.DumpRequestOut(req, true)
+	fmt.Println(string(dump))
+
 	resp, err := client.Do(req)
+
 	if err != nil {
 		fmt.Println("Error making request:", err)
 		return nil, err

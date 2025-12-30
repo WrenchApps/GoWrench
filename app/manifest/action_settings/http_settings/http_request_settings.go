@@ -11,6 +11,7 @@ type HttpRequestSetting struct {
 	Headers           map[string]string `yaml:"headers"`
 	TokenCredentialId string            `yaml:"tokenCredentialId"`
 	Insecure          bool              `yaml:"insecure"`
+	TlsId             string            `yaml:"tlsId"`
 }
 
 func (setting *HttpRequestSetting) Valid() validation.ValidateResult {

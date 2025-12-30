@@ -7,6 +7,7 @@ type RedisConnectionSettings struct {
 	Addresses []string `yaml:"addresses"`
 	Password  string   `yaml:"password"`
 	Db        int      `yaml:"db"`
+	Tls       any      `yaml:"tls"`
 }
 
 func (setting *RedisConnectionSettings) GetId() string {

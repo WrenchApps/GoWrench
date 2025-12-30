@@ -84,6 +84,8 @@ func authenticateClientCredentials(setting *credential.TokenCredentialSetting) (
 	request.Body = []byte(data.Encode())
 	request.Method = "POST"
 	request.Url = setting.AuthEndpoint
+	request.TlsId = setting.TlsId
+	request.Insecure = setting.Insecure
 
 	request.SetHeader("Content-Type", "application/x-www-form-urlencoded")
 	ctx := context.Background()
@@ -111,10 +113,12 @@ func authenticateClientCredentials(setting *credential.TokenCredentialSetting) (
 
 func basicCredentials(setting *credential.TokenCredentialSetting) (*auth.TokenData, error) {
 	request := new(client.HttpClientRequestData)
+
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
+	body, _ := json.Marshal(data)
 
-	request.Body = []byte(data.Encode())
+	request.Body = body
 	request.Method = "POST"
 	request.Url = setting.AuthEndpoint
 
@@ -123,9 +127,10 @@ func basicCredentials(setting *credential.TokenCredentialSetting) (*auth.TokenDa
 
 	request.SetHeader("Content-Type", "application/x-www-form-urlencoded")
 	request.SetHeader("Authorization", fmt.Sprintf("Basic %s", credentialEncoded))
+	request.TlsId = setting.TlsId
+	request.Insecure = setting.Insecure
 
 	ctx := context.Background()
-
 	response, err := client.HttpClientDo(ctx, request)
 
 	if err != nil {
@@ -174,6 +179,8 @@ func customAuthentication(setting *credential.TokenCredentialSetting) (*auth.Tok
 
 	request.Method = string(setting.Custom.Method)
 	request.Url = setting.AuthEndpoint
+	request.TlsId = setting.TlsId
+	request.Insecure = setting.Insecure
 
 	ctx := context.Background()
 	response, err := client.HttpClientDo(ctx, request)

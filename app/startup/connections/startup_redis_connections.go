@@ -2,9 +2,11 @@ package connections
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"wrench/app"
+	"wrench/app/converts"
 	"wrench/app/manifest/connection_settings"
 
 	"github.com/redis/go-redis/v9"
@@ -20,11 +22,23 @@ func loadConnectionsRedis(redisSettings []*connection_settings.RedisConnectionSe
 
 	if len(redisSettings) > 0 {
 		for _, setting := range redisSettings {
+			var tlsConfig *tls.Config = nil
+			isTls, err := converts.ConvertStringToBool(setting.Tls)
+
+			if err != nil {
+				app.LogError2(fmt.Sprintf("Error to parse tls value | redis connection id %v", setting.Id), err)
+				return err
+			}
+
+			if isTls {
+				tlsConfig = &tls.Config{MinVersion: tls.VersionTLS12}
+			}
 
 			uClient := redis.NewUniversalClient(&redis.UniversalOptions{
-				Addrs:    setting.Addresses,
-				DB:       setting.Db,
-				Password: setting.Password,
+				Addrs:     setting.Addresses,
+				DB:        setting.Db,
+				Password:  setting.Password,
+				TLSConfig: tlsConfig,
 			})
 
 			if err := uClient.Ping(context.Background()).Err(); err != nil {

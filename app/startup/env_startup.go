@@ -35,7 +35,7 @@ func EnvInterpolation(values map[string][]byte) map[string][]byte {
 		for _, env := range envs {
 			envArray := strings.Split(env, "=")
 			envKey := envArray[0]
-			envValue := envArray[1]
+			envValue := strings.ReplaceAll(env, fmt.Sprintf("%s=", envKey), "")
 
 			toReplace := fmt.Sprintf("{{%s}}", envKey)
 			if toReplace != "{{}}" {
@@ -76,7 +76,7 @@ func setEnvFileToSystemEnv(pathEnvFile string) {
 			if lineText[0] != '#' {
 				arrayLineText := strings.Split(lineText, "=")
 				envKey := arrayLineText[0]
-				envValue := arrayLineText[1]
+				envValue := strings.ReplaceAll(lineText, fmt.Sprintf("%s=", envKey), "")
 
 				if !strings.ContainsAny(envKey, " ") {
 					os.Setenv(envKey, envValue)

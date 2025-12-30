@@ -11,6 +11,8 @@ type TokenCredentialSetting struct {
 	Type             TokenCredentialType      `yaml:"type"`
 	AuthEndpoint     string                   `yaml:"authEndpoint"`
 	IsOpaque         bool                     `yaml:"isOpaque"`
+	TlsId            string                   `yaml:"tlsId"`
+	Insecure         bool                     `yaml:"insecure"`
 	ClientCredential *ClientCredentialSetting `yaml:"clientCredential"`
 	Basic            *BasicSetting            `yaml:"basic"`
 	ForceReload      string                   `yaml:"forceReload"`
