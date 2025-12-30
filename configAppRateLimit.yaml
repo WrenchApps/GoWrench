@@ -18,7 +18,7 @@ connections:
   - id: redis_default
     tls: '{{REDIS_TLS}}'
     addresses: 
-    - '{{REDIS_ENDPOINT}}'
+    - 'localhost:6379'
     #password: 123456
     #db: 0
 
