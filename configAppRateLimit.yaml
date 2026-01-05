@@ -9,6 +9,10 @@ service:
     traceConsoleExport: false
     collectorUrl: "localhost:4318"
 
+keys:
+  - id: private_carat
+    privateRsaKeyDERBase64: '{{PRIVATE_KEY_BASE64}}'
+
 connections:
   redis:
   - id: redis_default

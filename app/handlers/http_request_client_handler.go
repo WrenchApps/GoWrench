@@ -40,6 +40,7 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			request.Method = handler.getMethod(wrenchContext)
 			request.Url = handler.getUrl(wrenchContext, bodyContext)
 			request.Insecure = handler.ActionSettings.Http.Request.Insecure
+			request.TlsId = handler.ActionSettings.Http.Request.TlsId
 			request.SetHeaderTracestate(ctx)
 			request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
 

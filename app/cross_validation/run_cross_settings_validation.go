@@ -11,13 +11,15 @@ func Valid() validation.ValidateResult {
 
 	var result validation.ValidateResult
 
-	result.Append(httpRequestCrossValid(appSetting))
+	result.Append(httpRequestCrossValidation(appSetting))
 	result.Append(kafkaProducerCronsValidation(appSetting))
 	result.Append(idempCrossValidation(appSetting))
 	result.Append(rateLimitCrossValidation(appSetting))
 	result.Append(endpointSettingsCrossValidation(appSetting))
 	result.Append(dynamodbCrossValidation(appSetting))
 	result.Append(keyCrossValidation(appSetting))
+	result.Append(tlsCrossValidation(appSetting))
+	result.Append(tokenCredentialsCrossValidation(appSetting))
 
 	if len(appSetting.Actions) > 0 {
 		hasIds := toHasIdSlice(appSetting.Actions)
@@ -25,15 +27,6 @@ func Valid() validation.ValidateResult {
 
 		for _, id := range duplicateIds {
 			result.AddError(fmt.Sprintf("actions.id %v duplicated", id))
-		}
-	}
-
-	if len(appSetting.TokenCredentials) > 0 {
-		hasIds := toHasIdSlice(appSetting.TokenCredentials)
-		duplicateIds := duplicateIdsValid(hasIds)
-
-		for _, id := range duplicateIds {
-			result.AddError(fmt.Sprintf("tokenCredentials.id %v duplicated", id))
 		}
 	}
 
@@ -64,24 +57,6 @@ func Valid() validation.ValidateResult {
 			result.AddError(fmt.Sprintf("connections.redis.id %v duplicated", id))
 		}
 
-	}
-
-	if len(appSetting.Idemps) > 0 {
-		hasIds := toHasIdSlice(appSetting.Idemps)
-		duplicateIds := duplicateIdsValid(hasIds)
-
-		for _, id := range duplicateIds {
-			result.AddError(fmt.Sprintf("idemps.id %v duplicated", id))
-		}
-	}
-
-	if len(appSetting.RateLimits) > 0 {
-		hasIds := toHasIdSlice(appSetting.RateLimits)
-		duplicateIds := duplicateIdsValid(hasIds)
-
-		for _, id := range duplicateIds {
-			result.AddError(fmt.Sprintf("rateLimits.id %v duplicated", id))
-		}
 	}
 
 	return result

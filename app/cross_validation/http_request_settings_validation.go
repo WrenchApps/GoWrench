@@ -6,21 +6,47 @@ import (
 	"wrench/app/manifest/application_settings"
 	"wrench/app/manifest/validation"
 	"wrench/app/manifest_cross_funcs"
+	"wrench/app/startup/tls_load"
 )
 
-func httpRequestCrossValid(appSetting *application_settings.ApplicationSettings) validation.ValidateResult {
+func httpRequestCrossValidation(appSetting *application_settings.ApplicationSettings) validation.ValidateResult {
 	var result validation.ValidateResult
 
 	actionHttpRequest := getActionsByType(appSetting.Actions, action_settings.ActionTypeHttpRequest)
 
-	if len(actionHttpRequest) > 0 {
-		for _, action := range actionHttpRequest {
+	result.Append(actionHttpRequestTokenCredential(actionHttpRequest))
+	result.Append(actionHttpRequestTlsId(actionHttpRequest))
+
+	return result
+}
+
+func actionHttpRequestTokenCredential(actions []*action_settings.ActionSettings) validation.ValidateResult {
+	var result validation.ValidateResult
+	if len(actions) > 0 {
+		for _, action := range actions {
 			// valid if exist tokenCredential
 			if action.Http.Request != nil && len(action.Http.Request.TokenCredentialId) > 0 {
 				_, err := manifest_cross_funcs.GetTokenCredentialSettingById(action.Http.Request.TokenCredentialId)
 
 				if err != nil {
 					result.AddError(fmt.Sprintf("actions.http.request.tokenCredentialId %v don't exist in tokenCredentials", action.Http.Request.TokenCredentialId))
+				}
+			}
+		}
+	}
+	return result
+}
+
+func actionHttpRequestTlsId(actions []*action_settings.ActionSettings) validation.ValidateResult {
+	var result validation.ValidateResult
+
+	if len(actions) > 0 {
+		for _, action := range actions {
+			if action.Http.Request != nil && len(action.Http.Request.TlsId) > 0 {
+				_, err := tls_load.GetTlsConfigById(action.Http.Request.TlsId)
+
+				if err != nil {
+					result.AddError(fmt.Sprintf("actions[%v].tlsId %v don't exist in tls", action.Id, action.Http.Request.TlsId))
 				}
 			}
 		}

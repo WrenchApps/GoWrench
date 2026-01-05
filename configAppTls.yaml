@@ -1,0 +1,50 @@
+version: 1
+
+service:
+  name: "my-app-otel-test"
+  version: 1.0.0
+
+keys:
+  - id: antares_key
+    privateRsaKeyDERBase64: '{{KEY_BASE64}}'
+
+tls:
+  - id: antares_crt
+    type: crt
+    certificateBase64: '{{CERT_BASE64_CRT}}'
+    intermediateBase64: '{{INTERMEDIATE_BASE64_CRT}}'
+    caBase64: '{{CA_BASE64}}'
+    keyId: antares_key
+    
+
+tokenCredentials:
+  - id: custom_client
+    type: custom_authentication
+    tlsId: antares_crt
+    insecure: false
+    authEndpoint: "https://antares-facade.softwareexpress.com.br/soase/antares_facade/oauth/access-token"
+    forceReload: 30m
+    custom:
+      method: post
+      requestHeaders:
+        Content-Type: application/json
+        Authorization: '{{BASIC_AUTH}}'
+      requestBody:
+        grant_type: 'client_credentials'
+      configs:
+        tokenType: "Bearer"
+
+
+api:
+  endpoints:
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+actions:
+  - id: mock_mirror
+    type: httpRequestMock
+    contentType: application/json
+    http:
+      mock:
+        mirrorBody: true

@@ -8,6 +8,7 @@ import (
 	"wrench/app/manifest/api_settings"
 	"wrench/app/manifest/key_settings"
 	"wrench/app/manifest/rate_limit_settings"
+	"wrench/app/manifest/tls_settings"
 
 	"wrench/app/manifest/connection_settings"
 	"wrench/app/manifest/contract_settings"
@@ -31,6 +32,7 @@ type ApplicationSettings struct {
 	Idemps           []*idemp_settings.IdempSettings          `yaml:"idemps"`
 	RateLimits       []*rate_limit_settings.RateLimitSettings `yaml:"rateLimits"`
 	Keys             []*key_settings.KeySettings              `yaml:"keys"`
+	Tls              []*tls_settings.TlsSettings              `yaml:"tls"`
 }
 
 func (settings *ApplicationSettings) GetActionById(actionId string) (*action_settings.ActionSettings, error) {
@@ -181,6 +183,14 @@ func (settings *ApplicationSettings) Merge(toMerge *ApplicationSettings) error {
 			settings.Keys = toMerge.Keys
 		} else {
 			settings.Keys = append(settings.Keys, toMerge.Keys...)
+		}
+	}
+
+	if len(toMerge.Tls) > 0 {
+		if len(settings.Tls) == 0 {
+			settings.Tls = toMerge.Tls
+		} else {
+			settings.Tls = append(settings.Tls, toMerge.Tls...)
 		}
 	}
 

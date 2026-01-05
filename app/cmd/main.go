@@ -13,6 +13,7 @@ import (
 	"wrench/app/startup"
 	"wrench/app/startup/connections"
 	keys_load "wrench/app/startup/keys"
+	"wrench/app/startup/tls_load"
 	"wrench/app/startup/token_credentials"
 )
 
@@ -66,6 +67,7 @@ func main() {
 
 	connections.LoadConnections(ctx)
 	keys_load.LoadKeys()
+	tls_load.LoadTls(ctx)
 
 	go token_credentials.LoadTokenCredentialAuthentication()
 	hanlder := startup.LoadApplicationSettings(ctx, applicationSetting)
