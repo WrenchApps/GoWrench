@@ -9,6 +9,7 @@ import (
 	client "wrench/app/clients/http"
 	"wrench/app/contexts"
 	settings "wrench/app/manifest/action_settings"
+	"wrench/app/manifest/service_settings"
 	"wrench/app/startup/token_credentials"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -19,6 +20,7 @@ import (
 type HttpRequestClientHandler struct {
 	Next           Handler
 	ActionSettings *settings.ActionSettings
+	Service        *service_settings.ServiceSettings
 }
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
@@ -41,8 +43,9 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 			request.Url = handler.getUrl(wrenchContext, bodyContext)
 			request.Insecure = handler.ActionSettings.Http.Request.Insecure
 			request.TlsId = handler.ActionSettings.Http.Request.TlsId
-			request.SetHeaderTracestate(ctx)
+			request.SetDefaultHeader(ctx)
 			request.SetHeaders(contexts.GetCalculatedMap(handler.ActionSettings.Http.Request.Headers, wrenchContext, bodyContext, handler.ActionSettings))
+			request.SetHeaders(handler.getPropagationHeader(wrenchContext))
 
 			if len(handler.ActionSettings.Http.Request.TokenCredentialId) > 0 {
 				tokenData := token_credentials.GetTokenCredentialById(handler.ActionSettings.Http.Request.TokenCredentialId)
@@ -63,7 +66,8 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 				wrenchContext.SetHasError(span, "error to call server client", err)
 			} else {
 				if response.StatusCode > 399 {
-					wrenchContext.SetHasError(span, "server client return one error", err)
+					err = fmt.Errorf("response_status_code: %d, response_body: %s", response.StatusCode, string(response.Body))
+					wrenchContext.SetHasError(span, "request client return one error", err)
 				}
 
 				bodyContext.SetBodyAction(handler.ActionSettings, response.Body)
@@ -178,4 +182,24 @@ func mapHttpResponseHeaders(response *client.HttpClientResponseData, mapResponse
 	}
 
 	return mapResponseHeaderResult
+}
+
+func (handler *HttpRequestClientHandler) getPropagationHeader(wrenchContext *contexts.WrenchContext) map[string]interface{} {
+	header := wrenchContext.Request.Header
+	prefix := strings.ToLower(handler.Service.GetConfigHttpHeadersPrefixPropagation())
+
+	mapHeader := make(map[string]interface{})
+
+	for key, values := range header {
+		keyLower := strings.ToLower(key)
+
+		if strings.HasPrefix(keyLower, prefix) {
+			for _, value := range values {
+				newKey := strings.Replace(keyLower, prefix, "", 1)
+				mapHeader[newKey] = value
+			}
+		}
+	}
+
+	return mapHeader
 }

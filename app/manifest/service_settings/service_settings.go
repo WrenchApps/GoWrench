@@ -11,9 +11,10 @@ type ServiceSettings struct {
 	Version string                      `yaml:"version"`
 	Otel    *otel_settings.OtelSettings `yaml:"otel"`
 	Aws     *aws_settings.AwsSettings   `yaml:"aws"`
+	Configs *ServiceConfigsSettings     `yaml:"configs"`
 }
 
-func (setting ServiceSettings) Valid() validation.ValidateResult {
+func (setting *ServiceSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
 	if len(setting.Name) == 0 {
@@ -33,4 +34,15 @@ func (setting ServiceSettings) Valid() validation.ValidateResult {
 	}
 
 	return result
+}
+
+func (setting *ServiceSettings) GetConfigHttpHeadersPrefixPropagation() string {
+	if setting.Configs != nil {
+		httpHeadersPrefixPropagation := setting.Configs.HttpHeadersPrefixPropagation
+		if len(httpHeadersPrefixPropagation) != 0 {
+			return httpHeadersPrefixPropagation
+		}
+	}
+
+	return "x-gowrench-"
 }

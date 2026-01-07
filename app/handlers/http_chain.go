@@ -98,6 +98,7 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 	if action.Type == action_settings.ActionTypeHttpRequest {
 		httpRequestHadler := new(HttpRequestClientHandler)
 		httpRequestHadler.ActionSettings = action
+		httpRequestHadler.Service = settings.Service
 		currentHandler.SetNext(httpRequestHadler)
 		currentHandler = httpRequestHadler
 	}

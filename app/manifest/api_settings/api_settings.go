@@ -25,6 +25,22 @@ func (setting *ApiSettings) GetEndpointByRoute(route string) (*EndpointSettings,
 	return nil, errors.New("endpoint not found")
 }
 
+func (setting *ApiSettings) GetEndpointsByActionId(actionId string) ([]*EndpointSettings, error) {
+	var endpoints []*EndpointSettings
+
+	for _, endpoint := range setting.Endpoints {
+		if endpoint.ActionID == actionId {
+			endpoints = append(endpoints, &endpoint)
+		}
+	}
+
+	if len(endpoints) > 0 {
+		return endpoints, nil
+	}
+
+	return nil, errors.New("endpoint not found")
+}
+
 func (settings *ApiSettings) Merge(toMerge *ApiSettings) error {
 
 	if toMerge == nil {

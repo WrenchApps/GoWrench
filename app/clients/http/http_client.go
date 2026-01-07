@@ -71,11 +71,15 @@ type HttpClientResponseData struct {
 	HttpClientResponse *http.Response
 }
 
-func (httpClientRequestData *HttpClientRequestData) SetHeaderTracestate(ctx context.Context) {
+func (httpClientRequestData *HttpClientRequestData) SetDefaultHeader(ctx context.Context) {
 	spanContext := trace.SpanContextFromContext(ctx)
 	traceId := spanContext.TraceID().String()
 	traceparent := fmt.Sprintf("00-%s-%s-%s", traceId, spanContext.SpanID(), "01")
 	httpClientRequestData.SetHeader("traceparent", traceparent)
+
+	if _, err := httpClientRequestData.GetHeaderValue("Content-Type"); err != nil {
+		httpClientRequestData.SetHeader("Content-Type", "application/json")
+	}
 }
 
 func (httpClientRequestData *HttpClientRequestData) SetHeaders(headers map[string]interface{}) {
@@ -102,6 +106,16 @@ func (httpClientRequestData *HttpClientRequestData) SetHeader(key string, value 
 
 		httpClientRequestData.Headers[key] = value
 	}
+}
+
+func (httpClientRequestData *HttpClientRequestData) GetHeaderValue(key string) (string, error) {
+	if len(key) > 0 && httpClientRequestData.Headers != nil {
+		value := httpClientRequestData.Headers[key]
+		if value != "" {
+			return value, nil
+		}
+	}
+	return "", fmt.Errorf("header key '%s' not found ", key)
 }
 
 func HttpClientDo(ctx context.Context, request *HttpClientRequestData) (*HttpClientResponseData, error) {
