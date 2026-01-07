@@ -149,7 +149,7 @@ func (handler *HttpRequestClientHandler) getUrl(wrenchContext *contexts.WrenchCo
 		prefix := wrenchContext.Endpoint.Route
 		routeTriggered := wrenchContext.Request.RequestURI
 
-		routeWithoutPrefix := strings.ReplaceAll(routeTriggered, prefix, "")
+		routeWithoutPrefix := strings.Replace(routeTriggered, prefix, "", 1)
 		return handler.ActionSettings.Http.Request.Url + routeWithoutPrefix
 	}
 }
