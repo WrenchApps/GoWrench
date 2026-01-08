@@ -79,6 +79,10 @@ func actionHttpRequestMethod(actions []*action_settings.ActionSettings, api *api
 
 			endpoints, err := api.GetEndpointsByActionId(action.Id)
 
+			if len(endpoints) == 0 {
+				continue
+			}
+
 			isProxyEndpoint := false
 			if err == nil {
 				for _, endpoint := range endpoints {
