@@ -3,48 +3,54 @@ version: 1
 service:
   name: "my-app-otel-test"
   version: 1.0.0
+  
+  # configs:
+  #   httpHeadersPrefixPropagation: "x-gowrench-"
 
 keys:
   - id: antares_key
-    privateRsaKeyDERBase64: '{{KEY_BASE64}}'
+    privateRsaKeyDERBase64: '{{App.Ingress.Antares__KEY_BASE64}}'
 
 tls:
-  - id: antares_crt
+  - id: antares_tls
     type: crt
-    certificateBase64: '{{CERT_BASE64_CRT}}'
-    intermediateBase64: '{{INTERMEDIATE_BASE64_CRT}}'
-    caBase64: '{{CA_BASE64}}'
+    certificateBase64: '{{App.Ingress.Antares__CERT_BASE64_CRT}}'
+    intermediateBase64: '{{App.Ingress.Antares__INTERMEDIATE_BASE64_CRT}}'
+    caBase64: '{{App.Ingress.Antares__CA_BASE64}}'
     keyId: antares_key
     
-
 tokenCredentials:
-  - id: custom_client
+  - id: antares_token_credential
     type: custom_authentication
-    tlsId: antares_crt
+    tlsId: antares_tls
     insecure: false
-    authEndpoint: "https://antares-facade.softwareexpress.com.br/soase/antares_facade/oauth/access-token"
-    forceReload: 30m
+    authEndpoint: "{{ANTARES_BASE_URL}}/soase/antares_facade/oauth/access-token"
+    forceReload: 25m
     custom:
       method: post
       requestHeaders:
         Content-Type: application/json
-        Authorization: '{{BASIC_AUTH}}'
+        Authorization: '{{App.Ingress.Antares__BASIC_AUTH}}'
       requestBody:
         grant_type: 'client_credentials'
       configs:
+        accessTokenPropertyName: "access_token"
         tokenType: "Bearer"
-
+        headerName: "Authorization"
 
 api:
   endpoints:
-    - route: /api/mock
-      method: post
-      actionId: mock_mirror
+    - route: /antares
+      isProxy: true
+      actionId: antares_http_action
+      enableAnonymous: true
 
 actions:
-  - id: mock_mirror
-    type: httpRequestMock
+  - id: antares_http_action
+    type: httpRequest
     contentType: application/json
     http:
-      mock:
-        mirrorBody: true
+      request:
+        url: '{{ANTARES_BASE_URL}}'
+        tlsId: antares_tls
+        tokenCredentialId: antares_token_credential
