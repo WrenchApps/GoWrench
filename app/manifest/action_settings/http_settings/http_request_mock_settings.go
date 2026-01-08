@@ -15,13 +15,5 @@ type HttpRequestMockSettings struct {
 func (setting HttpRequestMockSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
-	if len(setting.Body) == 0 && setting.MirrorBody == false {
-		result.AddError("actions.http.mock.body is required or setting.mirrorBody equals true")
-	}
-
-	if len(setting.ContentType) == 0 {
-		result.AddError("actions.http.mock.contentType is required")
-	}
-
 	return result
 }
