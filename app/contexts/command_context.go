@@ -21,6 +21,11 @@ const prefixWrenchContextRequestUri = "wrenchContext.request.uri"
 const prefixWrenchContextRequestUriParams = "wrenchContext.request.uri.params."
 const prefixWrenchContextRequestTokenClaims = "wrenchContext.request.token.claims."
 const prefixWrenchContextRequestHeaders = "wrenchContext.request.headers."
+
+const prefixWrenchContextResponse = "wrenchContext.response."
+const prefixWrenchContextResponseHttpStatusCode = "wrenchContext.response.httpStatusCode"
+const prefixWrenchContextResponseHttpStatusCodeFamily = "wrenchContext.response.httpStatusCodeFamily"
+
 const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
 const prefixFunc = "func."
@@ -38,7 +43,7 @@ func ReplacePrefixBodyContextPreserved(command string) string {
 }
 
 func IsWrenchContextCommand(command string) bool {
-	return strings.HasPrefix(command, prefixWrenchContextRequest)
+	return strings.HasPrefix(command, prefixWrenchContextRequest) || strings.HasPrefix(command, prefixWrenchContextResponse)
 }
 
 func IsBodyContextCommand(command string) bool {
@@ -80,12 +85,22 @@ func GetTokenClaims(wrenchContext *WrenchContext, claimName string) string {
 	return claimTokenValue
 }
 
-func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string {
+func GetValueWrenchContext(command string, wrenchContext *WrenchContext, bodyContext *BodyContext) string {
 
 	if IsCalculatedValue(command) {
 		command = ReplaceCalculatedValue(command)
 	}
 
+	if strings.HasPrefix(command, prefixWrenchContextRequest) {
+		return getValueWrenchContextPrefixWrenchContextRequest(command, wrenchContext)
+	} else if strings.HasPrefix(command, prefixWrenchContextResponse) {
+		return getValueWrenchContextPrefixWrenchContextResponse(command, wrenchContext, bodyContext)
+	}
+
+	return ""
+}
+
+func getValueWrenchContextPrefixWrenchContextRequest(command string, wrenchContext *WrenchContext) string {
 	if strings.HasPrefix(command, prefixWrenchContextRequestHeaders) {
 		headerName := strings.ReplaceAll(command, prefixWrenchContextRequestHeaders, "")
 		return wrenchContext.Request.Header.Get(headerName)
@@ -104,6 +119,22 @@ func GetValueWrenchContext(command string, wrenchContext *WrenchContext) string 
 	if strings.HasPrefix(command, prefixWrenchContextRequestUri) {
 		return wrenchContext.Request.RequestURI
 	}
+	return ""
+}
+
+func getValueWrenchContextPrefixWrenchContextResponse(command string, wrenchContext *WrenchContext, bodyContext *BodyContext) string {
+
+	if strings.HasPrefix(command, prefixWrenchContextResponseHttpStatusCode) {
+		return fmt.Sprint(bodyContext.HttpStatusCode)
+	}
+
+	if strings.HasPrefix(command, prefixWrenchContextResponseHttpStatusCodeFamily) {
+		statusCode := bodyContext.HttpStatusCode
+		if statusCode < 100 || statusCode > 599 {
+			return "0"
+		}
+		return fmt.Sprint((statusCode / 100) * 100)
+	}
 
 	return ""
 }
@@ -121,7 +152,7 @@ func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContex
 		if IsBodyContextCommand(command) {
 			return GetValueBodyContext(command, bodyContext)
 		} else if IsWrenchContextCommand(command) {
-			return GetValueWrenchContext(command, wrenchContext)
+			return GetValueWrenchContext(command, wrenchContext, bodyContext)
 		} else if IsFunc(command) {
 			value, _ := GetFuncValue(func_settings.FuncGeneralType(command), wrenchContext, bodyContext, action)
 			return value
@@ -212,7 +243,7 @@ func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyNa
 				valueResult = timeNow.String()
 			}
 		} else if strings.HasPrefix(rawValue, "wrenchContext") {
-			valueResult = GetValueWrenchContext(rawValue, wrenchContext)
+			valueResult = GetValueWrenchContext(rawValue, wrenchContext, bodyContext)
 		} else if strings.HasPrefix(rawValue, "bodyContext") {
 			valueResult = GetValueBodyContext(rawValue, bodyContext)
 		}

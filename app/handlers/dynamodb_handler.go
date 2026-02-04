@@ -50,7 +50,7 @@ func createDynamoDbCommandResultError(httpStatusCode int, errorMessage string, e
 
 func (handler *DynamoDbHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenThereIsFlowError) &&
 		!wrenchContext.HasCache {
 
 		start := time.Now()

@@ -90,6 +90,7 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 
 		contractMapId := action.Trigger.Before.ContractMapId
 		httpContractMapHandler.ContractMap = settings.Contract.GetContractById(contractMapId)
+		httpContractMapHandler.ActionSettings = action
 
 		currentHandler.SetNext(httpContractMapHandler)
 		currentHandler = httpContractMapHandler
@@ -192,6 +193,7 @@ func buildChainToAction(currentHandler Handler, settings *settings.ApplicationSe
 
 		contractMapId := action.Trigger.After.ContractMapId
 		httpContractMapHandler.ContractMap = settings.Contract.GetContractById(contractMapId)
+		httpContractMapHandler.ActionSettings = action
 
 		currentHandler.SetNext(httpContractMapHandler)
 		currentHandler = httpContractMapHandler

@@ -5,19 +5,21 @@ import (
 	"fmt"
 	contexts "wrench/app/contexts"
 	"wrench/app/json_map"
+	settings "wrench/app/manifest/action_settings"
 	"wrench/app/manifest/contract_settings/maps"
 
 	"go.opentelemetry.io/otel/trace"
 )
 
 type HttpContractMapHandler struct {
-	Next        Handler
-	ContractMap *maps.ContractMapSetting
+	Next           Handler
+	ContractMap    *maps.ContractMapSetting
+	ActionSettings *settings.ActionSettings
 }
 
 func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenThereIsFlowError) &&
 		!wrenchContext.HasCache {
 		spanDisplay := fmt.Sprintf("contract.maps.%v", handler.ContractMap.Id)
 		ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)

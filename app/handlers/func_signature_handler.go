@@ -20,7 +20,7 @@ type FuncSignatureHandler struct {
 
 func (handler *FuncSignatureHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError && !wrenchContext.HasCache {
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenThereIsFlowError) && !wrenchContext.HasCache {
 
 		ctxSpan, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
 		ctx = ctxSpan
