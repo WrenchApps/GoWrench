@@ -14,17 +14,18 @@ import (
 )
 
 type ActionSettings struct {
-	Id       string                              `yaml:"id"`
-	Type     ActionType                          `yaml:"type"`
-	Http     *http_settings.HttpSettings         `yaml:"http"`
-	SNS      *sns_settings.SnsSettings           `yaml:"sns"`
-	Trigger  *trigger_settings.TriggerSetting    `yaml:"trigger"`
-	File     *file_settings.FileSettings         `yaml:"file"`
-	Nats     *nats_settings.NatsSettings         `yaml:"nats"`
-	Kafka    *kafka_settings.KafkaSettings       `yaml:"kafka"`
-	Func     *func_settings.FuncSettings         `yaml:"func"`
-	DynamoDb *dynamodb_settings.DynamoDbSettings `yaml:"dynamodb"`
-	Body     *BodyActionSettings                 `yaml:"body"`
+	Id                    string                              `yaml:"id"`
+	Type                  ActionType                          `yaml:"type"`
+	Http                  *http_settings.HttpSettings         `yaml:"http"`
+	SNS                   *sns_settings.SnsSettings           `yaml:"sns"`
+	Trigger               *trigger_settings.TriggerSetting    `yaml:"trigger"`
+	File                  *file_settings.FileSettings         `yaml:"file"`
+	Nats                  *nats_settings.NatsSettings         `yaml:"nats"`
+	Kafka                 *kafka_settings.KafkaSettings       `yaml:"kafka"`
+	Func                  *func_settings.FuncSettings         `yaml:"func"`
+	DynamoDb              *dynamodb_settings.DynamoDbSettings `yaml:"dynamodb"`
+	Body                  *BodyActionSettings                 `yaml:"body"`
+	RunEvenIfFlowHasError bool                                `yaml:"runEvenIfFlowHasError"`
 }
 
 func (setting *ActionSettings) GetId() string {

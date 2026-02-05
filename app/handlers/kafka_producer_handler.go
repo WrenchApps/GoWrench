@@ -23,7 +23,7 @@ type KafkaProducerHandler struct {
 
 func (handler *KafkaProducerHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
 		!wrenchContext.HasCache {
 		start := time.Now()
 

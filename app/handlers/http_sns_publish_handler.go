@@ -43,7 +43,7 @@ func (snsActions *SnsActions) Load() {
 
 func (handler *SnsPublishHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
 		!wrenchContext.HasCache {
 		start := time.Now()
 
@@ -113,7 +113,7 @@ func getCalculatedValue(getCalculatedValue string, wrenchContext *contexts.Wrenc
 		if contexts.IsCalculatedValue(getCalculatedValue) {
 			command := contexts.ReplaceCalculatedValue(getCalculatedValue)
 			if contexts.IsWrenchContextCommand(command) {
-				value = contexts.GetValueWrenchContext(command, wrenchContext)
+				value = contexts.GetValueWrenchContext(command, wrenchContext, bodyContext)
 			} else {
 				if contexts.IsBodyContextCommand(command) {
 					propertyName := contexts.ReplacePrefixBodyContext(command)

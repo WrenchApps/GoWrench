@@ -1,0 +1,106 @@
+version: 1
+
+service:
+  name: "my-app-otel-test"
+  version: 1.0.0
+  # hideBodyLogs: true
+    
+api:
+  endpoints:
+    - route: /api/test
+      method: post
+      flowActionId:
+        - http_request
+        - http_request_to_contractMap
+
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
+
+    - route: /route/500
+      method: post
+      actionId: mock_mirror500
+
+    - route: /route/400
+      method: post
+      actionId: mock_mirror400
+
+    - route: /route/{http_status_code}
+      method: post
+      actionId: mock_mirrorGeneral
+
+actions:
+  
+
+  - id: http_request
+    type: httpRequest
+    http:
+      request:
+        method: post
+        url: 'http://127.0.0.1:9092/api/mock'
+
+  - id: mock_mirror
+    type: httpRequestMock
+    http:
+      mock:
+        contentType: application/json
+        statusCode: 400
+        mirrorBody: true
+
+  - id: http_request_to_contractMap
+    type: httpRequest
+    runEvenIfFlowHasError: true
+    http:
+      request:
+        headers:
+          "x-original-status-code": "{{wrenchContext.response.httpStatusCode}}"
+        method: post
+        url: 'http://127.0.0.1:9092/route/{{wrenchContext.response.httpStatusCode}}'
+
+  - id: mock_mirror500
+    type: httpRequestMock
+    trigger:
+      after:
+        contractMapId: http_500
+    http:
+      mock:
+        contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
+        mirrorBody: true
+
+  - id: mock_mirror400
+    type: httpRequestMock
+    trigger:
+      after:
+        contractMapId: http_400
+    http:
+      mock:
+        contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
+        mirrorBody: true
+
+  - id: mock_mirrorGeneral
+    type: httpRequestMock
+    trigger:
+      after:
+        contractMapId: http_general
+    http:
+      mock:
+        contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
+        mirrorBody: true
+
+
+contract:
+  maps:
+  - id: http_general
+    new:
+    - "http_status_code: general ***"
+
+  - id: http_400
+    new:
+    - "http_status_code:400"
+
+  - id: http_500
+    new:
+    - "http_status_code:500"

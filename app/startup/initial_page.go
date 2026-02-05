@@ -30,26 +30,26 @@ var statusCode int
 
 func (page *InitialPage) HealthCheckEndpoint(w http.ResponseWriter, r *http.Request) {
 
-	if bodyHcResult == nil {
+	var errors []error
+
+	if token_credentials.CredentialErrors != nil {
+		errors = append(errors, token_credentials.CredentialErrors...)
+	}
+
+	if connections.ErrorLoadConnections != nil {
+		errors = append(errors, connections.ErrorLoadConnections...)
+	}
+
+	if keys_load.ErrorLoadKeys != nil {
+		errors = append(errors, keys_load.ErrorLoadKeys...)
+	}
+
+	if bodyHcResult == nil || len(errors) > 0 {
 		application := application_settings.ApplicationSettingsStatic
 		result := application.Valid()
 		result.Append(cross_validation.Valid())
 
 		w.Header().Set("Content-Type", "application/json")
-
-		var errors []error
-
-		if token_credentials.CredentialErrors != nil {
-			errors = append(errors, token_credentials.CredentialErrors...)
-		}
-
-		if connections.ErrorLoadConnections != nil {
-			errors = append(errors, connections.ErrorLoadConnections...)
-		}
-
-		if keys_load.ErrorLoadKeys != nil {
-			errors = append(errors, keys_load.ErrorLoadKeys...)
-		}
 
 		if result.IsSuccess() && len(errors) == 0 {
 			statusCode = http.StatusOK

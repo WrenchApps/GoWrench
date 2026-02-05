@@ -25,7 +25,7 @@ type HttpRequestClientHandler struct {
 
 func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if !wrenchContext.HasError &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
 		!wrenchContext.HasCache {
 
 		start := time.Now()
@@ -66,7 +66,12 @@ func (handler *HttpRequestClientHandler) Do(ctx context.Context, wrenchContext *
 				wrenchContext.SetHasError(span, "error to call server client", err)
 			} else {
 				if response.StatusCode > 399 {
-					err = fmt.Errorf("response_status_code: %d, response_body: %s", response.StatusCode, string(response.Body))
+					if handler.Service.HideBodyLogs {
+						err = fmt.Errorf("response_status_code: %d", response.StatusCode)
+					} else {
+						err = fmt.Errorf("response_status_code: %d, response_body: %s", response.StatusCode, string(response.Body))
+					}
+
 					wrenchContext.SetHasError(span, "request client return one error", err)
 				}
 
