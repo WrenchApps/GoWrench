@@ -7,11 +7,12 @@ import (
 )
 
 type ServiceSettings struct {
-	Name    string                      `yaml:"name"`
-	Version string                      `yaml:"version"`
-	Otel    *otel_settings.OtelSettings `yaml:"otel"`
-	Aws     *aws_settings.AwsSettings   `yaml:"aws"`
-	Configs *ServiceConfigsSettings     `yaml:"configs"`
+	Name         string                      `yaml:"name"`
+	Version      string                      `yaml:"version"`
+	Otel         *otel_settings.OtelSettings `yaml:"otel"`
+	Aws          *aws_settings.AwsSettings   `yaml:"aws"`
+	Configs      *ServiceConfigsSettings     `yaml:"configs"`
+	HideBodyLogs bool                        `yaml:"hideBodyLogs"`
 }
 
 func (setting *ServiceSettings) Valid() validation.ValidateResult {
