@@ -6,11 +6,15 @@ service:
     
 api:
   endpoints:
-    - route: /api/mock
+    - route: /api/test
       method: post
       flowActionId:
-        - mock_mirror
+        - http_request
         - http_request_to_contractMap
+
+    - route: /api/mock
+      method: post
+      actionId: mock_mirror
 
     - route: /route/500
       method: post
@@ -25,6 +29,15 @@ api:
       actionId: mock_mirrorGeneral
 
 actions:
+  
+
+  - id: http_request
+    type: httpRequest
+    http:
+      request:
+        method: post
+        url: 'http://127.0.0.1:9092/api/mock'
+
   - id: mock_mirror
     type: httpRequestMock
     http:
@@ -35,8 +48,11 @@ actions:
 
   - id: http_request_to_contractMap
     type: httpRequest
+    runEvenThereIsFlowError: true
     http:
       request:
+        headers:
+          "x-original-status-code": "{{wrenchContext.response.httpStatusCode}}"
         method: post
         url: 'http://127.0.0.1:9092/route/{{wrenchContext.response.httpStatusCode}}'
 
@@ -45,10 +61,10 @@ actions:
     trigger:
       after:
         contractMapId: http_500
-    forceExecution: true
     http:
       mock:
         contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
         mirrorBody: true
 
   - id: mock_mirror400
@@ -59,6 +75,7 @@ actions:
     http:
       mock:
         contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
         mirrorBody: true
 
   - id: mock_mirrorGeneral
@@ -69,6 +86,7 @@ actions:
     http:
       mock:
         contentType: application/json
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
         mirrorBody: true
 
 

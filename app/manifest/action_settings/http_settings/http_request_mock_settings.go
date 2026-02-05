@@ -8,7 +8,7 @@ type HttpRequestMockSettings struct {
 	Body        string            `yaml:"body"`
 	ContentType string            `default:"application/json" yaml:"contentType"`
 	Headers     map[string]string `yaml:"headers"`
-	StatusCode  int               `default:"200" yaml:"statusCode"`
+	StatusCode  string            `default:"200" yaml:"statusCode"`
 	MirrorBody  bool              `yaml:"mirrorBody"`
 }
 
