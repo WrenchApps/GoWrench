@@ -19,7 +19,7 @@ type HttpContractMapHandler struct {
 
 func (handler *HttpContractMapHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
-	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenThereIsFlowError) &&
+	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
 		!wrenchContext.HasCache {
 		spanDisplay := fmt.Sprintf("contract.maps.%v", handler.ContractMap.Id)
 		ctxSpan, span := wrenchContext.GetSpan2(ctx, spanDisplay)

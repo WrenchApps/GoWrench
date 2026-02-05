@@ -49,7 +49,7 @@ actions:
 
   - id: http_request_to_contractMap
     type: httpRequest
-    runEvenThereIsFlowError: true
+    runEvenIfFlowHasError: true
     http:
       request:
         headers:
