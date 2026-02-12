@@ -17,7 +17,8 @@ type HttpRequestClientMockHandler struct {
 func (handler *HttpRequestClientMockHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
 	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
-		!wrenchContext.HasCache {
+		!wrenchContext.HasCache &&
+		!wrenchContext.Unauthorized {
 
 		ctx2, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)
 		defer span.End()

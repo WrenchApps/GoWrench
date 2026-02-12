@@ -25,6 +25,7 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 		if authorizationSettings.Type == api_settings.JWKSAuthorizationType {
 			tokenString := wrenchContext.Request.Header.Get("Authorization")
 			if len(tokenString) == 0 {
+				wrenchContext.SetUnauthorized()
 				handler.setHasError("Unauthorized", http.StatusUnauthorized, wrenchContext, bodyContext)
 			} else {
 				tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
@@ -33,9 +34,11 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 				if tokenIsValid {
 					tokenIsAuthorized := auth.JwksValidationAuthorization(tokenString, endpointSettings.Roles, endpointSettings.Scopes, endpointSettings.Claims)
 					if !tokenIsAuthorized {
+						wrenchContext.SetUnauthorized()
 						handler.setHasError("Forbidden", http.StatusForbidden, wrenchContext, bodyContext)
 					}
 				} else {
+					wrenchContext.SetUnauthorized()
 					handler.setHasError("Unauthorized", http.StatusUnauthorized, wrenchContext, bodyContext)
 				}
 			}
@@ -44,6 +47,7 @@ func (handler *AuthValidatorHandler) Do(ctx context.Context, wrenchContext *cont
 		if authorizationSettings.Type == api_settings.HMACAuthorizationType {
 			isHMACValid := auth.HMACValidate(wrenchContext, bodyContext, authorizationSettings)
 			if !isHMACValid {
+				wrenchContext.SetUnauthorized()
 				handler.setHasError("Unauthorized", http.StatusUnauthorized, wrenchContext, bodyContext)
 			}
 		}

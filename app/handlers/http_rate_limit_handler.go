@@ -31,7 +31,8 @@ type RateLimitHandler struct {
 func (handler *RateLimitHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
 	if !wrenchContext.HasError &&
-		!wrenchContext.HasCache {
+		!wrenchContext.HasCache &&
+		!wrenchContext.Unauthorized {
 		start := time.Now()
 		rtSettings := handler.RateLimitSettings
 

@@ -19,6 +19,7 @@ type WrenchContext struct {
 	Request        *http.Request
 	HasError       bool
 	HasCache       bool
+	Unauthorized   bool
 	Endpoint       *api_settings.EndpointSettings
 	Tracer         trace.Tracer
 	Meter          metric.Meter
@@ -81,4 +82,8 @@ func (wrenchContext *WrenchContext) SetHasError3(span trace.Span, msg string, er
 	wrenchContext.SetHasError(span, msg, err)
 	bodyContext.HttpStatusCode = httpStatusCode
 	bodyContext.SetBody([]byte(msg))
+}
+
+func (wrenchContext *WrenchContext) SetUnauthorized() {
+	wrenchContext.Unauthorized = true
 }

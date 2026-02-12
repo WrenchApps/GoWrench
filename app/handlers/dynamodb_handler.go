@@ -51,7 +51,8 @@ func createDynamoDbCommandResultError(httpStatusCode int, errorMessage string, e
 func (handler *DynamoDbHandler) Do(ctx context.Context, wrenchContext *contexts.WrenchContext, bodyContext *contexts.BodyContext) {
 
 	if (!wrenchContext.HasError || handler.ActionSettings.RunEvenIfFlowHasError) &&
-		!wrenchContext.HasCache {
+		!wrenchContext.HasCache &&
+		!wrenchContext.Unauthorized {
 
 		start := time.Now()
 		ctx, span := wrenchContext.GetSpan(ctx, *handler.ActionSettings)

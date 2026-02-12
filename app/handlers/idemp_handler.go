@@ -49,7 +49,7 @@ func (handler *IdempHandler) Do(ctx context.Context, wrenchContext *contexts.Wre
 	defer span.End()
 	start := time.Now()
 
-	if !wrenchContext.HasError {
+	if !wrenchContext.HasError && !wrenchContext.Unauthorized {
 
 		keyValue := contexts.GetCalculatedValue(handler.IdempSettings.Key, wrenchContext, bodyContext, nil)
 		valueArray := []byte(fmt.Sprint(keyValue))
