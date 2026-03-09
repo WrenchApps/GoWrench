@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"wrench/app"
 	"wrench/app/manifest/application_settings"
 )
@@ -45,7 +46,14 @@ func LoadEncryptedPrivateKey(keyId, privateRsakeyDERBase64 string) (*rsa.Private
 
 	key, err := x509.ParsePKCS8PrivateKey(derBytes)
 	if err != nil {
-		return nil, fmt.Errorf("parse key: %w", err)
+
+		if strings.Contains(err.Error(), "use ParsePKCS1PrivateKey") {
+			key, err = x509.ParsePKCS1PrivateKey(derBytes)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("parse key: %w", err)
+		}
 	}
 
 	rsaKey, ok := key.(*rsa.PrivateKey)
