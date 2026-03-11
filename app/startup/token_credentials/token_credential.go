@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"wrench/app"
 	"wrench/app/auth"
 	client "wrench/app/clients/http"
 	"wrench/app/json_map"
@@ -36,6 +37,13 @@ func LoadTokenCredentialAuthentication() {
 
 		for {
 			for _, setting := range app_settings.TokenCredentials {
+
+				clear(CredentialErrors)
+
+				if setting.Disabled {
+					app.LogWarning(fmt.Sprintf("Token credential '%s' is disabled", setting.Id))
+					continue
+				}
 
 				tokenData := GetTokenCredentialById(setting.Id)
 				if tokenData != nil {

@@ -21,6 +21,7 @@ tls:
     
 tokenCredentials:
   - id: antares_token_credential
+    #disabled: true
     type: custom_authentication
     tlsId: antares_tls
     insecure: false

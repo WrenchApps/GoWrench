@@ -17,6 +17,7 @@ type TokenCredentialSetting struct {
 	Basic            *BasicSetting            `yaml:"basic"`
 	ForceReload      string                   `yaml:"forceReload"`
 	Custom           *CustomAuthentication    `yaml:"custom"`
+	Disabled         bool                     `yaml:"disabled"`
 }
 
 func (setting *TokenCredentialSetting) GetId() string {
