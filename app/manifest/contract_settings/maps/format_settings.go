@@ -20,11 +20,6 @@ func (setting FormatSettings) Valid() validation.ValidateResult {
 			if strings.Contains(property, " ") {
 				result.AddError(errorSplitted)
 			}
-
-			propertySplitted := strings.Split(property, ":")
-			if len(propertySplitted) != 2 {
-				result.AddError(errorSplitted)
-			}
 		}
 	}
 
