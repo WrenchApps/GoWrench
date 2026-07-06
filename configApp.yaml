@@ -86,6 +86,10 @@ api:
     - route: /api/json
       method: get
       actionId: read_json_file
+    
+    - route: /api/json2
+      method: get
+      actionId: api_json_mapped
 
 actions:
 
@@ -183,6 +187,17 @@ actions:
       # fifo:
       #   groupId: "{{wrenchContext.request.headers.partner-key}}"
       #   dedupId: "{{wrenchContext.request.headers.partner-key}}"
+
+
+  - id: api_json_mapped
+    type: httpRequest
+    http:
+      request:
+        method: get
+        url: 'http://localhost:{{PORT}}/api/json'
+    trigger:
+      after:
+        contractMapId: api_json_mapped_contract_map
         
 contract:
   maps:
@@ -215,3 +230,17 @@ contract:
   - id: after_customer_create
     remove:
     - "uncleName"
+  
+  - id: api_json_mapped_contract_map
+    sequence:
+    - parse
+    - format
+    - concatenate
+    parse:
+      toDate:
+        - "payment.authorizer_date"
+    format:
+      date:
+      - "payment.authorizer_date:yyyy-MM-ddTHH:mm:ss"
+    concatenate:
+      - "payment.authorizer_date:-03:00"

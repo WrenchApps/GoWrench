@@ -7,18 +7,19 @@ import (
 	"wrench/app/manifest/validation"
 )
 
-var funcValids = []string{"rename", "new", "remove", "duplicate", "parse", "format", "math"}
+var funcValids = []string{"rename", "new", "remove", "duplicate", "parse", "format", "math", "concatenate"}
 
 type ContractMapSetting struct {
-	Id        string          `yaml:"id"`
-	Rename    []string        `yaml:"rename"`
-	Remove    []string        `yaml:"remove"`
-	Sequence  []string        `yaml:"sequence"`
-	New       []string        `yaml:"new"`
-	Duplicate []string        `yaml:"duplicate"`
-	Parse     *ParseSettings  `yaml:"parse"`
-	Format    *FormatSettings `yaml:"format"`
-	Math      *MathSettings   `yaml:"math"`
+	Id          string          `yaml:"id"`
+	Rename      []string        `yaml:"rename"`
+	Remove      []string        `yaml:"remove"`
+	Sequence    []string        `yaml:"sequence"`
+	New         []string        `yaml:"new"`
+	Duplicate   []string        `yaml:"duplicate"`
+	Parse       *ParseSettings  `yaml:"parse"`
+	Format      *FormatSettings `yaml:"format"`
+	Math        *MathSettings   `yaml:"math"`
+	Concatenate []string        `yaml:"concatenate"`
 }
 
 func (setting ContractMapSetting) Valid() validation.ValidateResult {
@@ -90,6 +91,10 @@ func (setting ContractMapSetting) Valid() validation.ValidateResult {
 		result.AppendValidable(setting.Math)
 	}
 
+	if len(setting.Concatenate) > 0 {
+		totalMapConfigured++
+	}
+
 	if len(setting.Sequence) > 0 {
 
 		if totalMapConfigured != len(setting.Sequence) {
@@ -113,6 +118,8 @@ func (setting ContractMapSetting) Valid() validation.ValidateResult {
 				result.AddError("contract.maps.sequence format not configured")
 			} else if s == "math" && setting.Math == nil {
 				result.AddError("contract.maps.sequence math not configured")
+			} else if s == "concatenate" && setting.Concatenate == nil {
+				result.AddError("contract.maps.sequence concatenate not configured")
 			}
 		}
 	}
