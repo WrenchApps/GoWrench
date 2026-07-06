@@ -113,6 +113,10 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 		currentBodyContext, err = contexts.ApplyMathOperations(currentBodyContext, handler.ContractMap.Math)
 	}
 
+	if handler.ContractMap.Concatenate != nil {
+		currentBodyContext = contexts.ConcatenatePropertiesOrValues(currentBodyContext, handler.ContractMap.Concatenate, wrenchContext, bodyContext)
+	}
+
 	return currentBodyContext, err, errMsg
 }
 
@@ -143,6 +147,8 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 			}
 		} else if action == "math" {
 			currentBodyContext, err = contexts.ApplyMathOperations(currentBodyContext, handler.ContractMap.Math)
+		} else if action == "concatenate" {
+			currentBodyContext = contexts.ConcatenatePropertiesOrValues(currentBodyContext, handler.ContractMap.Concatenate, wrenchContext, bodyContext)
 		}
 	}
 

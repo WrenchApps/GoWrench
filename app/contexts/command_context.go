@@ -30,6 +30,34 @@ const prefixBodyContext = "bodyContext."
 const prefixBodyContextPreserved = "bodyContext.actions."
 const prefixFunc = "func."
 
+var layoutsDates = []string{
+	// --- 1. Standard ISO / RFC / API Formats (Highly Recommended) ---
+	time.RFC3339,                 // "2006-01-02T15:04:05Z07:00"
+	time.RFC3339Nano,             // "2006-01-02T15:04:05.999999999Z07:00" (Catches almost all standard API payloads)
+	"2006-01-02 15:04:05.999999", // MySQL / PostgreSQL timestamp with microseconds
+	"2006-01-02 15:04:05",        // Standard SQL Date Time
+
+	// --- 2. Slanted / European / Latin American Formats (DD/MM) ---
+	"02/01/2006 15:04:05.999", // 31/12/2026 14:30:15.123
+	"02/01/2006 15:04:05",     // 31/12/2026 14:30:15
+	"02/01/2006 15:04",        // 31/12/2026 14:30
+	"02/01/2006",              // 31/12/2026 (Pure Date)
+
+	// --- 3. Dashed / European Formats (DD-MM) ---
+	"02-01-2006 15:04:05.999", // 31-12-2026 14:30:15.123
+	"02-01-2006 15:04:05",     // 31-12-2026 14:30:15
+	"02-01-2006",              // 31-12-2026
+
+	// --- 4. Pure Dates (No Time Components) ---
+	"2006-01-02", // 2026-12-31 (Standard ISO Date)
+	"20060102",   // 20261231 (Compact Date)
+
+	// --- 5. US Standard Formats (MM/DD) *Keep at the bottom due to ambiguity* ---
+	"01/02/2006 15:04:05.999", // 12/31/2026 14:30:15.123
+	"01/02/2006 15:04:05",     // 12/31/2026 14:30:15
+	"01/02/2006",              // 12/31/2026
+}
+
 func IsCalculatedValue(value string) bool {
 	return strings.HasPrefix(value, "{{") && strings.HasSuffix(value, "}}")
 }
@@ -322,11 +350,48 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 		}
 	}
 
+	if len(parse.ToDate) > 0 {
+		for _, toDate := range parse.ToDate {
+			toDateSplitted := strings.Split(toDate, ":")
+
+			originPropertyName := toDateSplitted[0]
+			var destinyPropertyName string
+			if len(toDateSplitted) == 1 {
+				destinyPropertyName = originPropertyName
+			} else {
+				destinyPropertyName = toDateSplitted[1]
+			}
+
+			value, jsonMapResult := json_map.GetValue(jsonValueCurrent, originPropertyName, true)
+			result, _ := parseStringToDateUsingLayouts(fmt.Sprint(value))
+			jsonValueCurrent = json_map.CreateProperty(jsonMapResult, destinyPropertyName, result.Format(time.RFC3339Nano))
+		}
+	}
+
 	return jsonValueCurrent
 }
 
+func parseStringToDateUsingLayouts(dateString string) (time.Time, error) {
+
+	var sanitized = dateString
+	if !strings.Contains(dateString, "Z") {
+		sanitized = strings.Replace(fmt.Sprint(dateString), "T", " ", 1)
+	}
+
+	for _, layout := range layoutsDates {
+
+		if t, err := time.Parse(layout, sanitized); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateString)
+}
+
 func formatDate(dateValue string, targetFormat string) (string, error) {
-	t, err := time.Parse(time.RFC3339Nano, dateValue)
+
+	dateParsed, err := parseStringToDateUsingLayouts(dateValue)
+
 	if err != nil {
 		return "", err
 	}
@@ -341,21 +406,22 @@ func formatDate(dateValue string, targetFormat string) (string, error) {
 		"mm", "04",
 		"ss", "05",
 		"tt", "PM",
+		"zz", "-07:00",
 	)
 
 	layout := replacer.Replace(targetFormat)
 
-	return t.Format(layout), nil
+	return dateParsed.Format(layout), nil
 }
 
 func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (map[string]interface{}, error) {
 	jsonValueCurrent := jsonMap
 	if len(format.Date) > 0 {
-		for _, Date := range format.Date {
-			DateSplitted := strings.Split(Date, ":")
+		for _, date := range format.Date {
+			dateSplitted := strings.Split(date, ":")
 
-			propertyName := DateSplitted[0]
-			targetFormat := DateSplitted[1]
+			propertyName := dateSplitted[0]
+			targetFormat := dateSplitted[1:]
 
 			dateValue, jsonMapResult := json_map.GetValue(jsonValueCurrent, propertyName, true)
 
@@ -364,7 +430,7 @@ func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (
 				continue
 			}
 
-			formatedDate, err := formatDate(strDate, targetFormat)
+			formatedDate, err := formatDate(strDate, strings.Join(targetFormat, ":"))
 			if err != nil {
 				return jsonValueCurrent, err
 			}
@@ -374,6 +440,23 @@ func FormatValues(jsonMap map[string]interface{}, format *maps.FormatSettings) (
 	}
 
 	return jsonValueCurrent, nil
+}
+
+func ConcatenatePropertiesOrValues(jsonMap map[string]interface{}, concatenatePropertiesValues []string, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+
+	jsonValueCurrent := jsonMap
+	for _, propertyValue := range concatenatePropertiesValues {
+		propertyValueSplitted := strings.Split(propertyValue, ":")
+
+		propertyName := propertyValueSplitted[0]
+		valueToConcatenate := propertyValueSplitted[1:]
+		currentValue, jsonValueCurrent := json_map.GetValue(jsonValueCurrent, propertyName, true)
+		concatenatedValue := GetCalculatedValue(strings.Join(valueToConcatenate, ":"), wrenchContext, bodyContext, nil)
+		finalValue := fmt.Sprintf("%v%v", currentValue, concatenatedValue)
+
+		jsonValueCurrent = json_map.SetValue(jsonValueCurrent, propertyName, finalValue)
+	}
+	return jsonValueCurrent
 }
 
 func ApplyMathOperations(jsonMap map[string]interface{}, mapSettings *maps.MathSettings) (map[string]interface{}, error) {
