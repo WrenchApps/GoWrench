@@ -8,6 +8,7 @@ type ParseSettings struct {
 	WhenEquals []string `yaml:"whenEquals"`
 	ToArray    []string `yaml:"toArray"`
 	ToMap      []string `yaml:"toMap"`
+	ToDate     []string `yaml:"toDate"`
 }
 
 func (setting ParseSettings) Valid() validation.ValidateResult {
@@ -15,8 +16,9 @@ func (setting ParseSettings) Valid() validation.ValidateResult {
 
 	if len(setting.WhenEquals) == 0 &&
 		len(setting.ToArray) == 0 &&
-		len(setting.ToMap) == 0 {
-		result.AddError("contract.maps.parse should configure whenEquals, toArray or ToMap")
+		len(setting.ToMap) == 0 &&
+		len(setting.ToDate) == 0 {
+		result.AddError("contract.maps.parse should configure whenEquals, toArray, ToMap or ToDate")
 	}
 
 	return result

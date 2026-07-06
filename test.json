@@ -1,4 +1,10 @@
 {
-  "name": "test",
-  "motherName": "test1"
+    "code": "0",
+    "message": "OK. Transaction successful.",
+    "payment": {
+        "authorizer_code": "000",
+        "authorizer_date": "01/07/2026T18:23",
+        "payment_date": "01/07/2026T18:23",
+        "installments": 2
+    }
 }
