@@ -89,7 +89,8 @@ func (handler *HttpContractMapHandler) doDefault(wrenchContext *contexts.WrenchC
 			currentBodyContext,
 			handler.ContractMap.New,
 			wrenchContext,
-			bodyContext)
+			bodyContext,
+			handler.ActionSettings)
 	}
 
 	if handler.ContractMap.Duplicate != nil {
@@ -132,7 +133,8 @@ func (handler *HttpContractMapHandler) doSequency(wrenchContext *contexts.Wrench
 				currentBodyContext,
 				handler.ContractMap.New,
 				wrenchContext,
-				bodyContext)
+				bodyContext,
+				handler.ActionSettings)
 		} else if action == "remove" {
 			currentBodyContext = json_map.RemoveProperties(currentBodyContext, handler.ContractMap.Remove)
 		} else if action == "duplicate" {
