@@ -72,17 +72,26 @@ actions:
       after:
         contractMapId: api_json_mapped_final_error_map
         
+   
 contract:
   maps:
 
   - id: api_json_mapped_final_success_map
     sequence:
     - new
-    - parse
-    - format
-    - concatenate
+    # - parse
+    # - format
+    # - concatenate
     new:
-    - "status:success"
+    # ?? when is null, it will use the next value in the list
+    # ??? when is null or empty, it will use the next value in the list
+    # - "status:success"
+    - "createAt:{{payment2}}??{{payment.authorizer_date}}"
+    - "createAt2:{{payment2.authorizer_date}}??{{payment.authorizer_date}}"
+    - "createAt3:{{payment2.authorizer_date}}??0001-01-01T00:00:00Z"
+    - "createAt4:{{payment.authorizer_date}}??0001-01-01T00:00:00Z"
+    - "createAt5:{{payment2.authorizer_date}}??{{time 2006-02-01 15:04:05}}"
+    - "id:{{payment2.id}}??{{uuid}}"
     parse:
       toDate:
         - "payment.authorizer_date"

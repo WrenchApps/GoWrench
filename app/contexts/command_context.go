@@ -175,6 +175,29 @@ func ReplacePrefixBodyContext(command string) string {
 }
 
 func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContext *BodyContext, action *settings.ActionSettings) interface{} {
+
+	if strings.Contains(command, "???") {
+		commandNullOrEmptySpllited := strings.Split(command, "???")
+		for _, commandNullOrEmpty := range commandNullOrEmptySpllited {
+
+			value := GetCalculatedValue(commandNullOrEmpty, wrenchContext, bodyContext, action)
+			if value != nil && len(fmt.Sprint(value)) > 0 {
+				return value
+			}
+		}
+	}
+
+	if strings.Contains(command, "??") {
+		commandNullOrEmptySpllited := strings.Split(command, "??")
+		for _, commandNull := range commandNullOrEmptySpllited {
+
+			value := GetCalculatedValue(commandNull, wrenchContext, bodyContext, action)
+			if value != nil {
+				return value
+			}
+		}
+	}
+
 	if IsCalculatedValue(command) {
 		command = ReplaceCalculatedValue(command)
 		if IsBodyContextCommand(command) {
@@ -184,6 +207,17 @@ func GetCalculatedValue(command string, wrenchContext *WrenchContext, bodyContex
 		} else if IsFunc(command) {
 			value, _ := GetFuncValue(func_settings.FuncGeneralType(command), wrenchContext, bodyContext, action)
 			return value
+		} else if command == "uuid" {
+			return uuid.New().String()
+		} else if strings.HasPrefix(command, "time") {
+			timeFormat := strings.ReplaceAll(command, "time ", "")
+			timeNow := time.Now()
+
+			if len(timeFormat) > 0 {
+				return timeNow.Format(timeFormat)
+			} else {
+				return timeNow.String()
+			}
 		} else {
 			command = fmt.Sprintf("%v%v", prefixBodyContext, command)
 			return GetValueBodyContext(command, bodyContext)
@@ -239,43 +273,22 @@ func GetCalculatedMap(mapConfigured map[string]string, wrenchContext *WrenchCont
 	return mapResult
 }
 
-func CreatePropertiesInterpolationValue(jsonMap map[string]interface{}, propertiesValues []string, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+func CreatePropertiesInterpolationValue(jsonMap map[string]interface{}, propertiesValues []string, wrenchContext *WrenchContext, bodyContext *BodyContext, action *settings.ActionSettings) map[string]interface{} {
 	jsonValueCurrent := jsonMap
 	for _, propertyValue := range propertiesValues {
 		propertyValueSplitted := strings.Split(propertyValue, ":")
 		propertyName := propertyValueSplitted[0]
 		valueArray := propertyValueSplitted[1:]
 		value := strings.Join(valueArray, ":")
-		jsonValueCurrent = CreatePropertyInterpolationValue(jsonValueCurrent, propertyName, value, wrenchContext, bodyContext)
+		jsonValueCurrent = CreatePropertyInterpolationValue(jsonValueCurrent, propertyName, value, wrenchContext, bodyContext, action)
 	}
 	return jsonValueCurrent
 }
 
-func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyName string, value interface{}, wrenchContext *WrenchContext, bodyContext *BodyContext) map[string]interface{} {
+func CreatePropertyInterpolationValue(jsonMap map[string]interface{}, propertyName string, value interface{}, wrenchContext *WrenchContext, bodyContext *BodyContext, action *settings.ActionSettings) map[string]interface{} {
 	valueResult := value
 	valueString := fmt.Sprint(valueResult)
-
-	if IsCalculatedValue(valueString) {
-
-		rawValue := ReplaceCalculatedValue(valueString)
-
-		if rawValue == "uuid" {
-			valueResult = uuid.New().String()
-		} else if strings.HasPrefix(rawValue, "time") {
-			timeFormat := strings.ReplaceAll(rawValue, "time ", "")
-			timeNow := time.Now()
-
-			if len(timeFormat) > 0 {
-				valueResult = timeNow.Format(timeFormat)
-			} else {
-				valueResult = timeNow.String()
-			}
-		} else if strings.HasPrefix(rawValue, "wrenchContext") {
-			valueResult = GetValueWrenchContext(rawValue, wrenchContext, bodyContext)
-		} else if strings.HasPrefix(rawValue, "bodyContext") {
-			valueResult = GetValueBodyContext(rawValue, bodyContext)
-		}
-	}
+	valueResult = GetCalculatedValue(valueString, wrenchContext, bodyContext, action)
 
 	return json_map.CreateProperty(jsonMap, propertyName, valueResult)
 }
