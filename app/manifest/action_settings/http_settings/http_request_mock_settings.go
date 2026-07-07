@@ -15,5 +15,9 @@ type HttpRequestMockSettings struct {
 func (setting HttpRequestMockSettings) Valid() validation.ValidateResult {
 	var result validation.ValidateResult
 
+	if len(setting.StatusCode) == 0 {
+		result.AddError("actions.http.mock.statusCode is required")
+	}
+
 	return result
 }

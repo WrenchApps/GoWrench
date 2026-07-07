@@ -233,14 +233,30 @@ contract:
   
   - id: api_json_mapped_contract_map
     sequence:
+    - duplicate
     - parse
     - format
     - concatenate
+    duplicate:
+    - "payment.status:paymentStatus"
     parse:
       toDate:
         - "payment.authorizer_date"
+      whenEquals:
+        - "{{bodyContext.paymentStatus.CON:SUCCESS}}"
     format:
       date:
       - "payment.authorizer_date:yyyy-MM-ddTHH:mm:ss"
     concatenate:
       - "payment.authorizer_date:-03:00"
+
+
+  - id: api_json_mapped_contract_map_analyze
+    sequence:
+    - duplicate
+    - parse
+    duplicate:
+    - "payment.status:paymentStatus"
+    parse:
+      whenEquals:
+        - "{{bodyContext.paymentStatus.CON:SUCCESS}}"

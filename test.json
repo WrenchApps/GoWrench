@@ -1,9 +1,29 @@
 {
+
     "code": "0",
     "message": "OK. Transaction successful.",
     "payment": {
         "authorizer_code": "000",
+        "authorizer_message": "Transacao Aprov.",
+        "status": "CON",
+        "nit": "6917bdb1068b377c08c45d6b413aa537cdacb0839f55867f0f10f684115f8f2f",
+        "order_id": "TST-DEGUB",
+        "customer_receipt": ".....S.O.F.T.W.A.R.E.E.X.P.R.E.S.S....                                          \nSI                              Rede 5                                          \nMU               Codigo transacao: 200                                          \nLA               Codigo operacao: 3000                                          \nDO                    Valor: 19.900,00                                          \n.....S...I...M...U...L...A...D...O....                                          \nSI                    NSU SiTef: 10258                                          \nMU                      01/07/26 18:23                                          \nLA                    ID PDV: ES000059                                          \nDO             Estab.: 000000000000005                                          \n.....S...I...M...U...L...A...D...O....                                          \nSI                     Host: 999010258                                          \nMU         Transacao Simulada Aprovada                                          \n          SiTef from Fiserv                                                     \n",
+        "merchant_receipt": ".....S.O.F.T.W.A.R.E.E.X.P.R.E.S.S....                                          \nSI                              Rede 5                                          \nMU               Codigo transacao: 200                                          \nLA               Codigo operacao: 3000                                          \nDO                    Valor: 19.900,00                                          \n.....S...I...M...U...L...A...D...O....                                          \nSI                    NSU SiTef: 10258                                          \nMU                      01/07/26 18:23                                          \nLA                    ID PDV: ES000059                                          \nDO             Estab.: 000000000000005                                          \n.....S...I...M...U...L...A...D...O....                                          \nSI                     Host: 999010258                                          \nMU         Transacao Simulada Aprovada                                          \n          SiTef from Fiserv                                                     \n",
+        "authorizer_id": "1",
+        "acquirer_id": "5",
+        "acquirer_name": "Redecard",
         "authorizer_date": "01/07/2026T18:23",
+        "authorization_number": "010258",
+        "merchant_usn": "260701212309",
+        "esitef_usn": "260701149048410",
+        "sitef_usn": "010258",
+        "host_usn": "999010258   ",
+        "amount": "1990000",
+        "payment_type": "C",
+        "issuer": "1",
+        "authorizer_merchant_id": "000000000000005",
+        "terminal_id": "ES000059",
         "payment_date": "01/07/2026T18:23",
         "installments": 2
     }

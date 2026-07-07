@@ -1,0 +1,100 @@
+version: 1
+
+service:
+  name: "{{SERVICE_NAME}}"
+  version: 1.0.0
+
+api:
+  endpoints:
+
+    - route: /api/file
+      method: get
+      actionId: read_json_file
+    
+    - route: /api/json
+      method: get
+      flowActionId: 
+      - api_json_mapped
+      - api_json_mapped_from_status
+
+    - route: /api/mapped/con
+      method: post
+      actionId: api_json_mapped_final_success
+
+    - route: /api/mapped/{status}
+      method: post
+      actionId: api_json_mapped_final_error
+
+actions:
+
+  - id: read_json_file
+    type: fileReader
+    file:
+      path: ../.././test.json
+
+  - id: api_json_mapped
+    type: httpRequest
+    http:
+      request:
+        method: get
+        url: 'http://localhost:{{PORT}}/api/file'
+
+  - id: api_json_mapped_from_status
+    type: httpRequest
+    http:
+      request:
+        headers:
+          "x-original-status-code": "{{wrenchContext.response.httpStatusCode}}"
+        method: post
+        url: 'http://localhost:{{PORT}}/api/mapped/{{bodyContext.payment.status}}'
+
+    
+  - id: api_json_mapped_final_success
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
+        contentType: application/json
+    trigger:
+      after:
+        contractMapId: api_json_mapped_final_success_map
+
+
+  - id: api_json_mapped_final_error
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+        statusCode: "{{wrenchContext.request.headers.x-original-status-code}}"
+        contentType: application/json
+    trigger:
+      after:
+        contractMapId: api_json_mapped_final_error_map
+        
+contract:
+  maps:
+
+  - id: api_json_mapped_final_success_map
+    sequence:
+    - new
+    - parse
+    - format
+    - concatenate
+    new:
+    - "status:success"
+    parse:
+      toDate:
+        - "payment.authorizer_date"
+    format:
+      date:
+      - "payment.authorizer_date:yyyy-MM-ddTHH:mm:ss"
+    concatenate:
+      - "payment.authorizer_date:-03:00"
+
+
+  - id: api_json_mapped_final_error_map
+    sequence:
+    - new
+    new:
+    - "status:error"
