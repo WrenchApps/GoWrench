@@ -25,5 +25,9 @@ func (settings RedisConnectionSettings) Valid() validation.ValidateResult {
 		result.AddError("the connections.redis.addresses is required")
 	}
 
+	if settings.Tls == nil {
+    	result.AddError("connections.redis.tls is required")
+	}
+
 	return result
 }
