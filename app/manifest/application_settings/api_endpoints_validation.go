@@ -22,7 +22,7 @@ func apiEndpointsValidation() validation.ValidateResult {
 				}
 
 				if endpoint.IsProxy && action.Type != action_settings.ActionTypeHttpRequest &&
-					endpoint.IsProxy && action.Type != action_settings.ActionTypeHttpRequestMock {
+					action.Type != action_settings.ActionTypeHttpRequestMock {
 					result.AddError("when endpoint is Proxy the action type should be httpRequest or httpRequestMock")
 				}
 			}

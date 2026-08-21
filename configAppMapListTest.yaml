@@ -1,0 +1,45 @@
+version: 1
+
+service:
+  name: "gowrench-list-when-equals-test"
+  version: 1.0.0
+  otel:
+    enable: false
+
+api:
+  endpoints:
+    - route: /api/test/list-map
+      method: post
+      actionId: convert
+
+    - route: /api/test/echo
+      method: post
+      actionId: echo
+
+actions:
+  - id: echo
+    type: httpRequestMock
+    http:
+      mock:
+        mirrorBody: true
+        contentType: "application/json"
+        statusCode: "200"
+
+  - id: convert
+    type: httpRequest
+    trigger:
+      before:
+        contractMapId: map_list_test
+    http:
+      request:
+        method: post
+        url: 'http://localhost:{{PORT}}/api/test/echo'
+
+contract:
+  maps:
+  - id: map_list_test
+    parse:
+      whenEquals:
+      - "{{BankAccounts.Arranjo.Visa:1}}"
+      - "{{BankAccounts.Arranjo.Mastercard:2}}"
+      - "{{BankAccounts.Arranjo.Elo:3}}"

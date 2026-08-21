@@ -298,8 +298,9 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 	if parse.WhenEquals != nil {
 		for _, whenEqual := range parse.WhenEquals {
 			if IsCalculatedValue(whenEqual) {
+				whenEqual = ReplaceCalculatedValue(whenEqual)
 				whenEqual = ReplacePrefixBodyContext(whenEqual)
-				rawWhenEqual := ReplaceCalculatedValue(whenEqual)
+				rawWhenEqual := whenEqual
 
 				whenEqualSplitted := strings.Split(rawWhenEqual, ":")
 				propertyNameWithEqualValue := whenEqualSplitted[0]
@@ -314,11 +315,7 @@ func ParseValues(jsonMap map[string]interface{}, parse *maps.ParseSettings) map[
 
 				parseToValue := whenEqualSplitted[1] // value if equals should be used
 
-				valueCurrent, _ := json_map.GetValue(jsonMap, propertyName, false)
-
-				if valueCurrent == equalValue {
-					jsonValueCurrent = json_map.SetValue(jsonValueCurrent, propertyName, parseToValue)
-				}
+				jsonValueCurrent = json_map.SetValueWhenEquals(jsonValueCurrent, propertyName, equalValue, parseToValue)
 			}
 		}
 	}

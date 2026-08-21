@@ -160,6 +160,43 @@ func RemoveProperties(jsonMap map[string]interface{}, propertiesName []string) m
 	return currentJsonValue
 }
 
+func SetValueWhenEquals(jsonMap map[string]interface{}, propertyName string, expectedValue string, newValue string) map[string]interface{} {
+	propertyNameSplitted := strings.Split(propertyName, ".")
+	setValueWhenEquals(jsonMap, propertyNameSplitted, expectedValue, newValue)
+	return jsonMap
+}
+
+func setValueWhenEquals(valueCurrent interface{}, propertyNameSplitted []string, expectedValue string, newValue string) {
+	if len(propertyNameSplitted) == 0 {
+		return
+	}
+
+	jsonArray, ok := valueCurrent.([]interface{})
+	if ok {
+		for _, item := range jsonArray {
+			setValueWhenEquals(item, propertyNameSplitted, expectedValue, newValue)
+		}
+		return
+	}
+
+	jsonMapCurrent, ok := valueCurrent.(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	property := propertyNameSplitted[0]
+	valueTemp := jsonMapCurrent[property]
+
+	if len(propertyNameSplitted) == 1 {
+		if currentValue, isString := valueTemp.(string); isString && currentValue == expectedValue {
+			jsonMapCurrent[property] = newValue
+		}
+		return
+	}
+
+	setValueWhenEquals(valueTemp, propertyNameSplitted[1:], expectedValue, newValue)
+}
+
 func RemoveProperty(jsonMap map[string]interface{}, propertyName string) map[string]interface{} {
 	var jsonMapCurrent map[string]interface{}
 	jsonMapCurrent = jsonMap
