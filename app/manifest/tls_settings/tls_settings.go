@@ -33,7 +33,7 @@ func (settings *TlsSettings) Valid() validation.ValidateResult {
 		result.AddError("tls.id is required")
 	}
 
-	if settings.Type != CertificateFileTypePem ||
+	if settings.Type != CertificateFileTypePem &&
 		settings.Type != CertificateFileTypeCrt {
 		result.AddError(fmt.Sprintf("tls[%s].type invalid type %s. Should be a valid value -> 'pem', 'crt' ", settings.Id, settings.Type))
 	}
