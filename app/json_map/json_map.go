@@ -90,29 +90,46 @@ func SetValue(jsonMap map[string]interface{}, propertyName string, newValue inte
 }
 
 func CreateProperty(jsonMap map[string]interface{}, propertyName string, value interface{}) map[string]interface{} {
-
-	var jsonMapCurrent map[string]interface{}
-	jsonMapCurrent = jsonMap
 	propertyNameSplitted := strings.Split(propertyName, ".")
-	total := len(propertyNameSplitted)
-
-	for i, property := range propertyNameSplitted {
-		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
-		if ok {
-			jsonMapCurrent = valueTemp
-		} else {
-			if i+1 < total {
-				jsonMapNew := make(map[string]interface{})
-				jsonMapCurrent[property] = jsonMapNew
-				jsonMapCurrent = jsonMapNew
-			}
-		}
-
-		if i+1 == total {
-			jsonMapCurrent[property] = value
-		}
-	}
+	createProperty(jsonMap, propertyNameSplitted, value)
 	return jsonMap
+}
+
+func createProperty(valueCurrent interface{}, propertyNameSplitted []string, value interface{}) {
+	if len(propertyNameSplitted) == 0 {
+		return
+	}
+
+	jsonArray, ok := valueCurrent.([]interface{})
+	if ok {
+		for _, item := range jsonArray {
+			createProperty(item, propertyNameSplitted, value)
+		}
+		return
+	}
+
+	jsonMapCurrent, ok := valueCurrent.(map[string]interface{})
+	if !ok {
+		return
+	}
+
+	property := propertyNameSplitted[0]
+
+	if len(propertyNameSplitted) == 1 {
+		jsonMapCurrent[property] = value
+		return
+	}
+
+	switch next := jsonMapCurrent[property].(type) {
+	case []interface{}:
+		createProperty(next, propertyNameSplitted[1:], value)
+	case map[string]interface{}:
+		createProperty(next, propertyNameSplitted[1:], value)
+	default:
+		jsonMapNew := make(map[string]interface{})
+		jsonMapCurrent[property] = jsonMapNew
+		createProperty(jsonMapNew, propertyNameSplitted[1:], value)
+	}
 }
 
 func RenameProperties(jsonMap map[string]interface{}, properties []string) map[string]interface{} {
@@ -138,11 +155,44 @@ func DuplicatePropertiesValue(jsonMap map[string]interface{}, properties []strin
 }
 
 func DuplicatePropertyValue(jsonMap map[string]interface{}, propertyNameSource string, propertyNameDestination string) map[string]interface{} {
+	sourceSplitted := strings.Split(propertyNameSource, ".")
+	destinationSplitted := strings.Split(propertyNameDestination, ".")
+
+	handled, sawArray := walkListPath(jsonMap, sourceSplitted, destinationSplitted, func(jsonMapCurrent map[string]interface{}, sourceKey string, destinationKey string) bool {
+		value, exists := jsonMapCurrent[sourceKey]
+		if !exists {
+			return false
+		}
+		jsonMapCurrent[destinationKey] = value
+		return true
+	})
+
+	if sawArray || handled {
+		return jsonMap
+	}
+
 	value, jsonValue := GetValue(jsonMap, propertyNameSource, false)
 	return CreateProperty(jsonValue, propertyNameDestination, value)
 }
 
 func RenameProperty(jsonMap map[string]interface{}, propertyNameOld string, propertyNameNew string) map[string]interface{} {
+	oldSplitted := strings.Split(propertyNameOld, ".")
+	newSplitted := strings.Split(propertyNameNew, ".")
+
+	handled, sawArray := walkListPath(jsonMap, oldSplitted, newSplitted, func(jsonMapCurrent map[string]interface{}, oldKey string, newKey string) bool {
+		value, exists := jsonMapCurrent[oldKey]
+		if !exists {
+			return false
+		}
+		delete(jsonMapCurrent, oldKey)
+		jsonMapCurrent[newKey] = value
+		return true
+	})
+
+	if sawArray || handled {
+		return jsonMap
+	}
+
 	value, jsonValue := GetValue(jsonMap, propertyNameOld, true)
 	return CreateProperty(jsonValue, propertyNameNew, value)
 }
@@ -158,6 +208,51 @@ func RemoveProperties(jsonMap map[string]interface{}, propertiesName []string) m
 	}
 
 	return currentJsonValue
+}
+
+// walkListPath walks source and destination paths in parallel while they share
+// the same structure, fanning out to every item whenever a list is found. The
+// apply function runs at the leaf parent of each branch.
+func walkListPath(valueCurrent interface{}, sourceSplitted []string, destinationSplitted []string, apply func(jsonMapCurrent map[string]interface{}, sourceKey string, destinationKey string) bool) (handled bool, sawArray bool) {
+	if len(sourceSplitted) == 0 || len(sourceSplitted) != len(destinationSplitted) {
+		return false, false
+	}
+
+	jsonArray, ok := valueCurrent.([]interface{})
+	if ok {
+		handled = len(jsonArray) > 0
+		sawArray = true
+		for _, item := range jsonArray {
+			itemHandled, _ := walkListPath(item, sourceSplitted, destinationSplitted, apply)
+			if !itemHandled {
+				handled = false
+			}
+		}
+		return handled, sawArray
+	}
+
+	jsonMapCurrent, ok := valueCurrent.(map[string]interface{})
+	if !ok {
+		return false, false
+	}
+
+	sourceKey := sourceSplitted[0]
+	destinationKey := destinationSplitted[0]
+
+	if len(sourceSplitted) == 1 {
+		return apply(jsonMapCurrent, sourceKey, destinationKey), false
+	}
+
+	if sourceKey != destinationKey {
+		return false, false
+	}
+
+	child, exists := jsonMapCurrent[sourceKey]
+	if !exists {
+		return false, false
+	}
+
+	return walkListPath(child, sourceSplitted[1:], destinationSplitted[1:], apply)
 }
 
 func SetValueWhenEquals(jsonMap map[string]interface{}, propertyName string, expectedValue string, newValue string) map[string]interface{} {
@@ -198,26 +293,12 @@ func setValueWhenEquals(valueCurrent interface{}, propertyNameSplitted []string,
 }
 
 func RemoveProperty(jsonMap map[string]interface{}, propertyName string) map[string]interface{} {
-	var jsonMapCurrent map[string]interface{}
-	jsonMapCurrent = jsonMap
-
 	propertyNameSplitted := strings.Split(propertyName, ".")
-	total := len(propertyNameSplitted)
 
-	for i, property := range propertyNameSplitted {
-		if i == total-1 {
-			delete(jsonMapCurrent, property)
-			break
-		}
-
-		valueTemp, ok := jsonMapCurrent[property].(map[string]interface{})
-
-		if !ok {
-			break
-		}
-
-		jsonMapCurrent = valueTemp
-	}
+	walkListPath(jsonMap, propertyNameSplitted, propertyNameSplitted, func(jsonMapCurrent map[string]interface{}, sourceKey string, _ string) bool {
+		delete(jsonMapCurrent, sourceKey)
+		return true
+	})
 
 	return jsonMap
 }

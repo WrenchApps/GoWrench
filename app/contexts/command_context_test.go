@@ -92,3 +92,35 @@ func TestParseValuesWhenEqualsForeachListWithBodyContextPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestCreatePropertiesInterpolationValueInsideListItems(t *testing.T) {
+	payload := []byte(`{
+	  "ProposalId": "124",
+	  "BankAccounts": [
+	    { "Arranjo": "Visa", "numero": "111" },
+	    { "Arranjo": "Mastercard", "numero": "222" },
+	    { "Arranjo": "Hipersom", "numero": "444" }
+	  ]
+	}`)
+
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(payload, &jsonMap); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	result := CreatePropertiesInterpolationValue(jsonMap, []string{"BankAccounts.Teste:Qualquercoisa"}, nil, nil, nil)
+
+	accounts, ok := result["BankAccounts"].([]interface{})
+	if !ok {
+		t.Fatalf("expected BankAccounts to remain an array, got %T", result["BankAccounts"])
+	}
+	for i, itemValue := range accounts {
+		item := itemValue.(map[string]interface{})
+		if item["Teste"] != "Qualquercoisa" {
+			t.Errorf("index %d: expected Teste 'Qualquercoisa', got %v", i, item["Teste"])
+		}
+	}
+	if result["ProposalId"] != "124" {
+		t.Errorf("expected ProposalId intact, got %v", result["ProposalId"])
+	}
+}

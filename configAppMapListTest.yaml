@@ -38,6 +38,12 @@ actions:
 contract:
   maps:
   - id: map_list_test
+    rename:
+    - "BankAccounts.Numero:BankAccounts.Numbers"
+    new:
+    - "BankAccounts.Teste:Qualquercoisa"
+    remove:
+    - "BankAccounts.Agencia"
     parse:
       whenEquals:
       - "{{BankAccounts.Arranjo.Visa:1}}"
